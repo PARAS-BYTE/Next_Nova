@@ -30,7 +30,7 @@ export const palette = {
   progressFill: "#A78BFA"
 };
 
-const genAI = new GoogleGenerativeAI("AIzaSyC3zdUM5E658bwknlsqVjLlFJqmR2okSa4");
+const genAI = new GoogleGenerativeAI("use-your-key");
 const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
 const cleanHTML = (html) => {
