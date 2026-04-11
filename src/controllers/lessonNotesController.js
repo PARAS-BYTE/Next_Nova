@@ -1,4 +1,4 @@
-import UserLessonNote from '../Models/UserLessonNote.js';
+import UserLessonNote from '../models/UserLessonNote.js';
 
 export const saveNote = async (req, res) => {
   try {

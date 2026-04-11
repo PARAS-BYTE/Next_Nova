@@ -1,6 +1,6 @@
 import asyncHandler from "express-async-handler";
-import Course from "../Models/Course.js";
-import User from "../Models/User.js";
+import Course from "../models/Course.js";
+import User from "../models/User.js";
 import jwt from 'jsonwebtoken'
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Groq from "groq-sdk";

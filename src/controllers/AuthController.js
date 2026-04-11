@@ -1,8 +1,8 @@
 import asyncHandler from "express-async-handler";
 import jwt from "jsonwebtoken";
-import User from "../Models/User.js";
-import Calendar from "../Models/Calendar.js";
-import generateToken from "../Utils/generateToken.js";
+import User from "../models/User.js";
+import Calendar from "../models/Calendar.js";
+import generateToken from "../utils/generateToken.js";
 
 //
 // ─── REGISTER USER ─────────────────────────────────────────────

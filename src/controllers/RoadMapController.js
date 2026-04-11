@@ -1,8 +1,8 @@
 import asyncHandler from "express-async-handler";
 import jwt from "jsonwebtoken";
-import User from "../Models/User.js";
-import Roadmap from "../Models/RoadMapSchema.js";
-// import Roadmap from "../Models/Roadmap.js";
+import User from "../models/User.js";
+import Roadmap from "../models/RoadMapSchema.js";
+// import Roadmap from "../models/Roadmap.js";
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";

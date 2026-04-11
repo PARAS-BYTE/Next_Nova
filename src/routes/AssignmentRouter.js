@@ -9,8 +9,8 @@ import {
   getAssignmentSubmissions,
   gradeAssignment,
   aiGradeAssignment,
-} from "../Controllers/AssignmentController.js";
-import { protectAdmin } from "../MiddleWare/adminAuthMiddleware.js";
+} from "../controllers/AssignmentController.js";
+import { protectAdmin } from "../middleware/adminAuthMiddleware.js";
 
 const router = express.Router();
 

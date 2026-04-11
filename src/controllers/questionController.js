@@ -1,5 +1,5 @@
-import ForumQuestion from '../Models/Question.js';
-import User from '../Models/User.js';
+import ForumQuestion from '../models/Question.js';
+import User from '../models/User.js';
 
 // Get all questions
 export const getAllQuestions = async (req, res) => {

@@ -25,7 +25,7 @@ const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 const DEFAULT_JWT_SECRET = 'novalearn_dev_secret_key';
 if (!process.env.JWT_SECRET) {
@@ -69,9 +69,9 @@ app.prepare().then(() => {
     return handle(req, res);
   });
 
-  server.listen(PORT, (err) => {
+  server.listen(PORT, '0.0.0.0', (err) => {
     if (err) throw err;
-    console.log(`> Ready on http://localhost:${PORT}`);
-    console.log(`> Nova Learn API active at http://localhost:${PORT}/api`);
+    console.log(`> Ready on http://0.0.0.0:${PORT}`);
+    console.log(`> Nova Learn API active at http://0.0.0.0:${PORT}/api`);
   });
 });

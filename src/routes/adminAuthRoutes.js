@@ -10,8 +10,8 @@ import {
   getAdminStudents,
   getAdminDashboardActivity,
   getAdminAssessments
-} from '../Controllers/adminAuthController.js';
-import { protectAdmin, requireSuperAdmin } from '../MiddleWare/adminAuthMiddleware.js';
+} from '../controllers/adminAuthController.js';
+import { protectAdmin, requireSuperAdmin } from '../middleware/adminAuthMiddleware.js';
 
 const router = express.Router();
 

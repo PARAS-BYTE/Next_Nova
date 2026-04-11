@@ -1,8 +1,8 @@
 import asyncHandler from "express-async-handler";
-import Assignment from "../Models/Assignment.js";
-import Course from "../Models/Course.js";
-import User from "../Models/User.js";
-import Admin from "../Models/Admin.js";
+import Assignment from "../models/Assignment.js";
+import Course from "../models/Course.js";
+import User from "../models/User.js";
+import Admin from "../models/Admin.js";
 import jwt from "jsonwebtoken";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 

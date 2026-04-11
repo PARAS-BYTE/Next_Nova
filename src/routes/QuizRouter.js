@@ -1,7 +1,7 @@
 import express from "express";
 
-import { evaluateQuiz, generateAIQuiz, getAllQuizzes, getQuizDetails, getUserQuizAttempts } from "../Controllers/QuizController.js";
-// import { getAllQuizzes, getQuizDetails } from "../Controllers/QuizController";
+import { evaluateQuiz, generateAIQuiz, getAllQuizzes, getQuizDetails, getUserQuizAttempts } from "../controllers/QuizController.js";
+// import { getAllQuizzes, getQuizDetails } from "../controllers/QuizController";
 // import { getAllQuizzes, getQuizDetails } from "../controllers/quizController.js";
 
 const router = express.Router();

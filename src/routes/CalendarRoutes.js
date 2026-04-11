@@ -8,7 +8,7 @@ import {
   updateTaskStatus,
   getTaskById,
   createCustomTask,
-} from "../Controllers/CalendarController.js";
+} from "../controllers/CalendarController.js";
 
 const router = express.Router();
 

@@ -6,8 +6,8 @@ import express from "express";
 //   getUserProfile,
 // } from "../controllers/authController.js";
 // import { protect } from "../middleware/authMiddleware.js";
-import { registerUser, loginUser, logoutUser, getUserProfile, getStudentDashboard, getUserProfilesetting, updateUserProfile } from "../Controllers/AuthController.js";
-import { protect } from "../MiddleWare/authMiddleware.js";  
+import { registerUser, loginUser, logoutUser, getUserProfile, getStudentDashboard, getUserProfilesetting, updateUserProfile } from "../controllers/AuthController.js";
+import { protect } from "../middleware/authMiddleware.js";  
 
 
 const router = express.Router();

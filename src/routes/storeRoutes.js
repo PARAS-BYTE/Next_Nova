@@ -1,5 +1,5 @@
 import express from "express";
-import { getRedemptions, getStoreItems, redeemItem } from "../Controllers/StoreController.js";
+import { getRedemptions, getStoreItems, redeemItem } from "../controllers/StoreController.js";
 // import { getStoreItems, redeemItem } from "../controllers/storeController.js";
 
 const router = express.Router();

@@ -1,4 +1,4 @@
-import PersonalNote from '../Models/PersonalNote.js';
+import PersonalNote from '../models/PersonalNote.js';
 
 // Get all notes for a user (organized by folders)
 export const getAllNotes = async (req, res) => {

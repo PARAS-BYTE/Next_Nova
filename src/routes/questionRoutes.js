@@ -1,6 +1,6 @@
 import express from 'express';
-import { getAllQuestions, getQuestion, createQuestion, replyToQuestion, upvoteQuestion, markResolved } from '../Controllers/questionController.js';
-import { protect } from '../MiddleWare/authMiddleware.js';
+import { getAllQuestions, getQuestion, createQuestion, replyToQuestion, upvoteQuestion, markResolved } from '../controllers/questionController.js';
+import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 

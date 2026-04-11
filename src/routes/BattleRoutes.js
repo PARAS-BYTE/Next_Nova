@@ -1,5 +1,5 @@
 import express from "express";
-import { createBattle, evaluateBattle, getAllBattles, getBattleAnalysis, getUserBattleHistory, joinBattle } from "../Controllers/BattleController.js";
+import { createBattle, evaluateBattle, getAllBattles, getBattleAnalysis, getUserBattleHistory, joinBattle } from "../controllers/BattleController.js";
 // import { createBattle, joinBattle } from "../controllers/battleController.js";
 
 
