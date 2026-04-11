@@ -1,36 +1,37 @@
 import React from "react";
 import { palette } from "../theme/palette";
+import { Blocks, Zap } from "lucide-react";
 
 const Footer = () => {
   return (
     <footer
-      className="w-full px-4 md:px-10 py-6 border-t flex flex-col md:flex-row items-center md:justify-between gap-3 text-center md:text-left mt-auto"
+      className="w-full px-4 md:px-10 py-4 flex flex-col md:flex-row items-center md:justify-between gap-2 text-center md:text-left"
       style={{
-        background: palette.card,
-        borderColor: palette.border,
+        background: palette.bgCard,
+        borderTop: `1px solid ${palette.border}`,
         color: palette.text2,
       }}
     >
-      {/* Left Section - Branding */}
-      <div className="flex flex-col">
-        <h2 className="text-lg font-bold" style={{ color: palette.text }}>
-          Hex Visionaries
-        </h2>
-        <p className="text-sm opacity-80">
-          Vision-led builders of next-gen tech
-        </p>
+      <div className="flex items-center gap-2">
+        <div className="w-6 h-6 rounded-lg flex items-center justify-center btn-game">
+          <Blocks className="w-3 h-3 text-white" />
+        </div>
+        <span className="text-sm font-bold text-gradient-purple">LearnNova</span>
+        <span className="text-xs opacity-60" style={{ color: palette.text2 }}>// by Hex Visionaries</span>
       </div>
 
-      {/* Middle Section - Made with Love */}
-      <div className="text-sm opacity-80">
-        Made with <span className="text-red-500">❤️</span> by 
-        <span className="font-medium"> Paras</span> & 
-        <span className="font-medium"> Harshit</span>
+      <div className="flex items-center gap-1.5 text-xs" style={{ color: palette.text2 }}>
+        <Zap className="w-3 h-3" style={{ color: palette.gold }} />
+        <span>Built with</span>
+        <span style={{ color: palette.red }}>❤️</span>
+        <span>by</span>
+        <span className="font-semibold" style={{ color: palette.text }}>Paras</span>
+        <span>&</span>
+        <span className="font-semibold" style={{ color: palette.text }}>Harshit</span>
       </div>
 
-      {/* Right Section - Copyright */}
-      <div className="text-sm opacity-70">
-        © {new Date().getFullYear()} Hex Visionaries. All Rights Reserved.
+      <div className="text-xs opacity-50" style={{ color: palette.text2 }}>
+        © {new Date().getFullYear()} Hex Visionaries
       </div>
     </footer>
   );

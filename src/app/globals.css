@@ -1,86 +1,54 @@
 @import "tailwindcss";
 @config "../../tailwind.config.ts";
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
-/* Custom Scrollbar (Light, clean) */
-.scrollbar-thin::-webkit-scrollbar {
-  width: 8px;
-}
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: #d1d5db;
-  border-radius: 9999px;
-}
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: #9ca3af;
-}
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* Hide horizontal scrollbar */
-.scrollbar-thin {
-  overflow-x: hidden;
-}
+/* ── GAME DARK THEME ─────────────────────────────── */
 
 @layer base {
   :root {
-    /* Clean White/Black/Gray Theme - Matching Landing Page */
-    --background: 0 0% 100%;  /* #FFFFFF - White */
-    --foreground: 0 0% 0%;    /* #000000 - Black */
+    --background: 225 40% 5%;
+    --foreground: 220 30% 90%;
 
-    --card: 0 0% 100%;        /* #FFFFFF - White */
-    --card-foreground: 0 0% 0%;
+    --card: 228 38% 9%;
+    --card-foreground: 220 30% 90%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
+    --popover: 228 38% 9%;
+    --popover-foreground: 220 30% 90%;
 
-    --primary: 0 0% 0%;    /* #000000 - Black */
+    --primary: 262 80% 56%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 40%;  /* #666666 - Gray */
+    --secondary: 190 95% 44%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 225 30% 14%;
+    --muted-foreground: 225 20% 50%;
 
-    --accent: 0 0% 10%;    /* #1A1A1A - Dark Gray */
+    --accent: 262 80% 56%;
     --accent-foreground: 0 0% 100%;
 
-    --success: 142 71% 45%;   /* #10B981 - Green */
+    --success: 160 70% 40%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 43 96% 56%;    /* #F59E0B - Amber */
+    --warning: 38 96% 56%;
     --warning-foreground: 0 0% 0%;
 
-    --destructive: 0 84% 60%;  /* #EF4444 - Red */
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 0%;
+    --border: 228 30% 13%;
+    --input: 228 30% 13%;
+    --ring: 262 80% 56%;
 
-    --radius: 1.25rem;
+    --radius: 0.875rem;
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 0%;
-    --sidebar-primary: 0 0% 0%;
+    --sidebar-background: 228 38% 7%;
+    --sidebar-foreground: 220 30% 85%;
+    --sidebar-primary: 262 80% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 96%;
-    --sidebar-accent-foreground: 0 0% 0%;
-    --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 0 0% 0%;
-
-    /* Custom gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(0 0% 0%), hsl(0 0% 40%));
-    --gradient-glow: radial-gradient(circle at center, hsl(0 0% 0% / 0.1), transparent);
-    
-    /* Shadows */
-    --shadow-glow: 0 0 20px hsl(0 0% 0% / 0.1);
-    --shadow-glow-accent: 0 0 20px hsl(0 0% 0% / 0.15);
-    --shadow-elevated: 0 10px 30px -10px hsl(0 0% 0% / 0.1);
+    --sidebar-accent: 228 30% 12%;
+    --sidebar-accent-foreground: 220 30% 90%;
+    --sidebar-border: 228 30% 13%;
+    --sidebar-ring: 262 80% 56%;
   }
 }
 
@@ -89,39 +57,188 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
-  body {
+  html, body {
     @apply bg-background text-foreground;
+    background-color: #080B16;
+    color: #E2E8FF;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #080B16;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #2D3260;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #7C3AED;
+  }
 }
 
 @layer utilities {
-  .glow-primary {
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.2);
+  /* ── Glow utilities ── */
+  .glow-purple {
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.5), 0 0 40px rgba(124, 58, 237, 0.2);
+  }
+  .glow-cyan {
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.5), 0 0 40px rgba(6, 182, 212, 0.2);
+  }
+  .glow-gold {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.5), 0 0 40px rgba(245, 158, 11, 0.2);
+  }
+  .glow-green {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.4), 0 0 30px rgba(16, 185, 129, 0.15);
+  }
+  .glow-text-purple {
+    text-shadow: 0 0 12px rgba(124, 58, 237, 0.8), 0 0 24px rgba(124, 58, 237, 0.4);
+  }
+  .glow-text-cyan {
+    text-shadow: 0 0 12px rgba(6, 182, 212, 0.8), 0 0 24px rgba(6, 182, 212, 0.4);
+  }
+  .glow-text-gold {
+    text-shadow: 0 0 12px rgba(245, 158, 11, 0.8), 0 0 24px rgba(245, 158, 11, 0.4);
   }
 
-  .glow-accent {
-    box-shadow: 0 0 20px hsl(var(--secondary) / 0.2);
+  /* ── Glassmorphism ── */
+  .glass {
+    background: rgba(15, 18, 33, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(45, 50, 96, 0.6);
+  }
+  .glass-dark {
+    background: rgba(8, 11, 22, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(30, 35, 64, 0.8);
   }
 
-  .text-gradient {
-    @apply bg-gradient-to-r from-black to-gray-600 bg-clip-text text-transparent;
+  /* ── Gradient text ── */
+  .text-gradient-purple {
+    background: linear-gradient(135deg, #9D6FF7, #06B6D4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #F59E0B, #FCD34D);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
+  /* ── Neon border ── */
+  .border-neon-purple {
+    border: 1px solid rgba(124, 58, 237, 0.5);
+    box-shadow: inset 0 0 10px rgba(124, 58, 237, 0.05), 0 0 10px rgba(124, 58, 237, 0.2);
+  }
+  .border-neon-cyan {
+    border: 1px solid rgba(6, 182, 212, 0.5);
+    box-shadow: inset 0 0 10px rgba(6, 182, 212, 0.05), 0 0 10px rgba(6, 182, 212, 0.2);
+  }
+
+  /* ── Game button ── */
+  .btn-game {
+    background: linear-gradient(135deg, #7C3AED, #5B21B6);
+    border: 1px solid rgba(124, 58, 237, 0.6);
+    box-shadow: 0 0 15px rgba(124, 58, 237, 0.35), 0 4px 12px rgba(0,0,0,0.4);
+    transition: all 0.2s ease;
+  }
+  .btn-game:hover {
+    box-shadow: 0 0 25px rgba(124, 58, 237, 0.6), 0 4px 20px rgba(0,0,0,0.5);
+    transform: translateY(-1px);
+  }
+  .btn-game-cyan {
+    background: linear-gradient(135deg, #06B6D4, #0891B2);
+    border: 1px solid rgba(6, 182, 212, 0.6);
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.35), 0 4px 12px rgba(0,0,0,0.4);
+    transition: all 0.2s ease;
+  }
+
+  /* ── Particle bg ── */
+  .game-bg {
+    background-color: #080B16;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(124, 58, 237, 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 60% 10%, rgba(245, 158, 11, 0.04) 0%, transparent 40%);
+  }
+
+  /* ── XP bar animation ── */
+  @keyframes xp-fill {
+    from { width: 0%; }
+    to { width: var(--xp-width); }
+  }
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 10px rgba(124,58,237,0.4); }
+    50% { box-shadow: 0 0 25px rgba(124,58,237,0.8), 0 0 50px rgba(124,58,237,0.3); }
+  }
+  @keyframes float-up {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-80px) scale(1.2); }
+  }
+  @keyframes scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+  }
+  @keyframes flicker {
+    0%, 95%, 100% { opacity: 1; }
+    96% { opacity: 0.7; }
+    97% { opacity: 1; }
+    98% { opacity: 0.8; }
+  }
+  @keyframes orbit {
+    from { transform: rotate(0deg) translateX(28px) rotate(0deg); }
+    to { transform: rotate(360deg) translateX(28px) rotate(-360deg); }
+  }
+
+  .animate-float-up {
+    animation: float-up 1.5s ease-out forwards;
+  }
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+  .animate-flicker {
+    animation: flicker 8s ease-in-out infinite;
+  }
+  .animate-orbit {
+    animation: orbit 4s linear infinite;
+  }
   .animate-float {
     animation: float 6s ease-in-out infinite;
   }
-
   @keyframes float {
-    0%, 100% {
-      transform: translateY(0px);
-    }
-    50% {
-      transform: translateY(-20px);
-    }
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+  }
+
+  /* ── HUD scan line ── */
+  .hud-scanline::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(124,58,237,0.4), transparent);
+    animation: scanline 4s linear infinite;
+    pointer-events: none;
+  }
+
+  /* ── Rank badge ── */
+  .rank-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
   }
 }
