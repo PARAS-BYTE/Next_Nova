@@ -16,7 +16,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 21
           cache: 'npm'
 
       - name: Set up Java
@@ -30,9 +30,12 @@ jobs:
 
       - name: Build Next.js Static Site
         run: |
+          # Remove API routes temporarily for static export (APK doesn't need them)
+          rm -rf src/app/api
           npm run build
         env:
           NEXT_PUBLIC_GEMINI_API_KEY: ${{ secrets.NEXT_PUBLIC_GEMINI_API_KEY }}
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
       - name: Setup Capacitor Android
         run: |
