@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "LearnNova — AI-Powered Learning Platform",
   description: "Experience adaptive learning that evolves with you. Master any subject with AI-powered insights, gamification, and personalized study paths.",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({

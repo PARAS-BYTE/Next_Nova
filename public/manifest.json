@@ -1,0 +1,22 @@
+{
+  "name": "Learn Nova",
+  "short_name": "LearnNova",
+  "description": "Gamified AI Learning Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B0D17",
+  "theme_color": "#7C6AFA",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3413/3413535.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
