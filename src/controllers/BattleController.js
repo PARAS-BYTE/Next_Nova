@@ -1,13 +1,13 @@
 import asyncHandler from "express-async-handler";
 import jwt from "jsonwebtoken";
-// import Battle from "../Models/Battle.js";
+// import Battle from "../models/Battle.js";
 // import { GoogleGenerativeAI } from "@google/generative-ai";
-// import Question from "../Models/Question.js";
+// import Question from "../models/Question.js";
 
-import User from "../Models/User.js";
+import User from "../models/User.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import Battle from "../Models/BattleSchema.js";
-import Question from "../Models/Questions.js";
+import Battle from "../models/BattleSchema.js";
+import Question from "../models/Questions.js";
 
 //
 // ─── AUTH HELPER ───────────────────────────────────────────────

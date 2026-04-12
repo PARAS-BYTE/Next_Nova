@@ -1,8 +1,8 @@
 import asyncHandler from "express-async-handler";
 import jwt from "jsonwebtoken";
-import User from "../Models/User.js";
-import StoreItem from "../Models/StoreSchema.js";
-import Redemption from "../Models/Redemption.js";
+import User from "../models/User.js";
+import StoreItem from "../models/StoreSchema.js";
+import Redemption from "../models/Redemption.js";
 
 //
 // ─── AUTH HELPER ─────────────────────────────────

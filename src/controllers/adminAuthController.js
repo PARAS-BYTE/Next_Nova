@@ -1,6 +1,6 @@
 import asyncHandler from "express-async-handler";
 import jwt from "jsonwebtoken";
-import Admin from "../Models/Admin.js";
+import Admin from "../models/Admin.js";
 
 //
 // ─── GENERATE ADMIN TOKEN ──────────────────────────────────────
@@ -252,9 +252,9 @@ export const getAdminDashboardStats = asyncHandler(async (req, res) => {
     }
 
     // Import models
-    const Course = (await import("../Models/Course.js")).default;
-    const Assignment = (await import("../Models/Assignment.js")).default;
-    const Quiz = (await import("../Models/Quiz.js")).default;
+    const Course = (await import("../models/Course.js")).default;
+    const Assignment = (await import("../models/Assignment.js")).default;
+    const Quiz = (await import("../models/Quiz.js")).default;
 
     // Count active courses (published courses created by this admin)
     const activeCoursesCount = await Course.countDocuments({
@@ -380,8 +380,8 @@ export const getAdminDashboardStats = asyncHandler(async (req, res) => {
 export const getAdminStudents = asyncHandler(async (req, res) => {
   try {
     // Import Course and User models
-    const Course = (await import("../Models/Course.js")).default;
-    const User = (await import("../Models/User.js")).default;
+    const Course = (await import("../models/Course.js")).default;
+    const User = (await import("../models/User.js")).default;
 
     // Get all courses created by this admin
     const adminCourses = await Course.find({
@@ -465,8 +465,8 @@ export const getAdminStudents = asyncHandler(async (req, res) => {
 export const getAdminDashboardActivity = asyncHandler(async (req, res) => {
   try {
     // Import Course and User models
-    const Course = (await import("../Models/Course.js")).default;
-    const User = (await import("../Models/User.js")).default;
+    const Course = (await import("../models/Course.js")).default;
+    const User = (await import("../models/User.js")).default;
 
     // Get all courses created by this admin
     const adminCourses = await Course.find({
@@ -544,8 +544,8 @@ function formatTimeAgo(date) {
 export const getAdminAssessments = asyncHandler(async (req, res) => {
   try {
     // Import Course and Quiz models
-    const Course = (await import("../Models/Course.js")).default;
-    const Quiz = (await import("../Models/Quiz.js")).default;
+    const Course = (await import("../models/Course.js")).default;
+    const Quiz = (await import("../models/Quiz.js")).default;
 
     // Get all courses created by this admin
     const adminCourses = await Course.find({

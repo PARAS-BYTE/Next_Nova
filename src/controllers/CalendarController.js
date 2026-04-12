@@ -1,8 +1,8 @@
 import asyncHandler from "express-async-handler";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-import Calendar from "../Models/Calendar.js";
-import User from "../Models/User.js";
+import Calendar from "../models/Calendar.js";
+import User from "../models/User.js";
 
 const authenticateUser = async (req) => {
   let token;

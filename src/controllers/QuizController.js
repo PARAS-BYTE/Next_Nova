@@ -1,6 +1,6 @@
 import asyncHandler from "express-async-handler";
-import Quiz from "../Models/Quiz.js";
-import User from "../Models/User.js";
+import Quiz from "../models/Quiz.js";
+import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
