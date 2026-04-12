@@ -51,7 +51,11 @@ app.prepare().then(() => {
   server.use(cookieParser());
 
   // MongoDB Connection 
-  const mongoURI = process.env.MONGO_URI || 'mongodb+srv://parasji014_db_user:1234@cluster0.lxqfkju.mongodb.net/?appName=Cluster0';
+  const mongoURI = process.env.MONGO_URI;
+  if (!mongoURI) {
+    console.error("❌ CRITICAL: MONGO_URI missing from environment variables.");
+    process.exit(1);
+  }
   mongoose.connect(mongoURI).catch(console.error);
   const db = mongoose.connection;
   db.on('error', (err) => console.error('MongoDB connection error:', err));

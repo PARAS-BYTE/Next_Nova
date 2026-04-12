@@ -21,8 +21,8 @@ export default function ChatBot() {
   const endRef = useRef<HTMLDivElement>(null);
 
   // Note: Using a public key on the frontend enables "Ultra-Fast" mode 
-  // by removing the backend overhead.
-  const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "AIzaSyDZPm9sORPGFyyHo9JmhrSyzPAEFlCsyCY";
+  // by removing the backend overhead. Ensure NEXT_PUBLIC_GEMINI_API_KEY is set in .env.
+  const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
