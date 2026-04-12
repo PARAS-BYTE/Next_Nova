@@ -29,12 +29,13 @@ jobs:
           java-version: '21'
 
       - name: Install Dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Build Next.js Static Site
         run: |
-          # Remove API routes temporarily for static export (APK doesn't need them)
+          # Remove dynamic routes and API temporarily for static export (APK doesn't need them)
           rm -rf src/app/api
+          rm -rf src/app/task
           npm run build
         env:
           NEXT_PUBLIC_GEMINI_API_KEY: ${{ secrets.NEXT_PUBLIC_GEMINI_API_KEY }}
