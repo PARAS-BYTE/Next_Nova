@@ -19,4 +19,4 @@ const RoadmapSchema = new mongoose.Schema({
   modules: [ModuleSchema]
 }, { timestamps: true });
 
-export default mongoose.model("Roadmap", RoadmapSchema);
+export default mongoose.models.Roadmap || mongoose.model("Roadmap", RoadmapSchema);
