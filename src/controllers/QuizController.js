@@ -201,23 +201,54 @@ export const generateAIQuiz = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "Topic is required to generate quiz" });
 
   try {
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY1 || process.env.GEMINI_API_KEY2;
+    const genAI = new GoogleGenerativeAI(apiKey);
 
-    const prompt = `
-      Generate a ${numberOfQuestions}-question quiz on "${topic}" with difficulty "${difficulty}".
-      Return a pure JSON array with each question in this format:
-      {
-        "questionText": "string",
-        "options": ["option1", "option2", "option3", "option4"],
-        "correctIndex": number (1-based),
-        "marks": number (1 or 2)
+    const modelNames = [
+      "gemini-flash-latest",
+      "gemini-flash-latest",
+      "gemini-flash-latest",
+      "gemini-1.5-pro",
+    ];
+
+    let lastError = null;
+    let textResponse = null;
+
+    for (const modelName of modelNames) {
+      try {
+        console.log(`🤖 [Server] Summoning Quiz AI: ${modelName}...`);
+        const model = genAI.getGenerativeModel({ model: modelName });
+
+        const prompt = `
+          Generate a ${numberOfQuestions}-question quiz on "${topic}" with difficulty "${difficulty}".
+          Return a pure JSON array with each question in this format:
+          {
+            "questionText": "string",
+            "options": ["option1", "option2", "option3", "option4"],
+            "correctIndex": number (1-based),
+            "marks": number (1 or 2)
+          }
+          Only return valid JSON array.
+        `;
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        textResponse = response.text();
+        
+        if (textResponse) {
+          console.log(`✅ [Server] SUCCESS: Quiz AI ${modelName} responded.`);
+          break;
+        }
+      } catch (err) {
+        console.warn(`⚠️ [Server] Quiz AI REJECTED: ${modelName} - ${err.message}`);
+        lastError = err;
+        continue;
       }
-      Only return valid JSON array.
-    `;
+    }
 
-    const result = await model.generateContent(prompt);
-    const textResponse = result.response.text();
+    if (!textResponse) {
+      throw lastError || new Error("All Quiz AI models failed");
+    }
 
     const jsonMatch = textResponse.match(/\[[\s\S]*\]/);
     if (!jsonMatch)

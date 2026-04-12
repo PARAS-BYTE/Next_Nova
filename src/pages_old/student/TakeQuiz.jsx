@@ -24,6 +24,7 @@ const TakeQuiz = () => {
   const [error, setError] = useState("");
   const [startTime, setStartTime] = useState(null);
   const [submissionData, setSubmissionData] = useState(null);
+  const [tabSwitches, setTabSwitches] = useState(0);
 
   // ─── Fetch Quiz Data ───────────────────────────────
   async function fetchQuiz() {
@@ -65,6 +66,29 @@ const TakeQuiz = () => {
 
     return () => clearInterval(timer);
   }, [timeLeft, submitted]);
+
+  // ─── Anti-Cheating: Tab Switch Detection ─────────────────────
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && !submitted && quiz) {
+        setTabSwitches(prev => {
+          const newCount = prev + 1;
+          if (newCount >= 3) {
+            alert("🚨 Quiz automatically submitted due to multiple tab switches!");
+            handleSubmit(true);
+          } else {
+            alert(`⚠️ Warning ${newCount}/3: Tab switching is not allowed during the quiz!`);
+          }
+          return newCount;
+        });
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [submitted, quiz, answers]); // pass answers to ensure handleSubmit gets latest state if called by closure
 
   // ─── Handle Option Select ─────────────────────
   const handleOptionSelect = (qId, optionIndex) => {
@@ -225,6 +249,13 @@ const TakeQuiz = () => {
       {error && (
         <div className="flex items-center gap-2 text-sm mt-2 p-3 rounded-lg" style={{ background: '#EF44441A', color: '#EF4444', border: `1px solid #EF444480` }}>
           <XCircle className="w-4 h-4" /> {error}
+        </div>
+      )}
+
+      {/* Tab Switch Warning */}
+      {tabSwitches > 0 && (
+        <div className="flex items-center gap-2 text-sm mt-2 p-3 rounded-lg" style={{ background: '#F59E0B1A', color: '#F59E0B', border: `1px solid #F59E0B80` }}>
+          ⚠️ Cheating Detected: Tab Switch ({tabSwitches}/3 warnings)
         </div>
       )}
 

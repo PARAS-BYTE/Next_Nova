@@ -13,6 +13,7 @@ import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import gsap from "gsap";
 import { palette } from "@/theme/palette";
+import LiveBattleArena from "@/components/LiveBattleArena";
 
 const API_URL = "/api/battle";
 
@@ -24,6 +25,16 @@ const BattleSetup = () => {
   const [createdBattle, setCreatedBattle] = useState(null);
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
+  const [dbUser, setDbUser] = useState(null);
+
+  // Fetch dbUser to get the real username for socket
+  useEffect(() => {
+    let mounted = true;
+    axios.get('/api/auth/dashboard', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+      .then(res => { if(mounted) { setDbUser(res.data); setUsername(res.data.name || "Hero"); } })
+      .catch(() => {});
+    return () => mounted = false;
+  }, []);
 
   // Recent battles
   const [recentBattles, setRecentBattles] = useState([]);
@@ -266,6 +277,16 @@ const BattleSetup = () => {
           </p>
         </motion.div>
 
+        {/* LIVE 1V1 QUEUE ROW */}
+        <motion.div
+           initial={{ opacity: 0, y: 18 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ duration: 0.4 }}
+           className="mb-10"
+        >
+           <LiveBattleArena username={username || "Player"} />
+        </motion.div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
 
           {/* CREATE BATTLE */}
@@ -293,7 +314,7 @@ const BattleSetup = () => {
                         value={battleName}
                         onChange={(e) => setBattleName(e.target.value)}
                         className="mt-2"
-                        style={{ backgroundColor: palette.card, color: palette.text, borderColor: palette.border }}
+                        style={{ backgroundColor: palette.bgSecondary, color: palette.text, borderColor: palette.border }}
                       />
                     </div>
 
@@ -304,17 +325,15 @@ const BattleSetup = () => {
                         value={tags}
                         onChange={(e) => setTags(e.target.value)}
                         className="mt-2"
-                        style={{ backgroundColor: palette.card, color: palette.text, borderColor: palette.border }}
+                        style={{ backgroundColor: palette.bgSecondary, color: palette.text, borderColor: palette.border }}
                       />
                     </div>
 
                     <Button
                       onClick={handleCreateBattle}
                       disabled={loading}
-                      className="w-full py-3 mt-2 rounded-lg shadow-lg"
-                      style={{ backgroundColor: palette.accentDeep, color: palette.card, boxShadow: `0 4px 6px -1px ${palette.accentDeep}33, 0 2px 4px -2px ${palette.accentDeep}33` }}
-                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = palette.accent}
-                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = palette.accentDeep}
+                      className="w-full py-3 mt-2 rounded-xl shadow-lg border-0"
+                      style={{ background: palette.gradient1, color: '#fff', boxShadow: `0 4px 20px ${palette.accentGlow}` }}
                     >
                       {loading ? (
                         <>
@@ -328,7 +347,7 @@ const BattleSetup = () => {
                   </>
                 ) : (
                   <div className="text-center py-6">
-                    <h3 className="text-2xl font-bold" style={{ color: palette.accentDeep }}>Battle Created!</h3>
+                    <h3 className="text-2xl font-bold text-gradient">Battle Created!</h3>
                     <p className="mt-3" style={{ color: palette.text2 }}>
                       <span className="font-medium">Name:</span> {safe(createdBattle.battleName)}
                     </p>
@@ -383,7 +402,7 @@ const BattleSetup = () => {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     className="mt-2"
-                    style={{ backgroundColor: palette.card, color: palette.text, borderColor: palette.border }}
+                    style={{ backgroundColor: palette.bgSecondary, color: palette.text, borderColor: palette.border }}
                   />
                 </div>
 
@@ -401,10 +420,8 @@ const BattleSetup = () => {
                 <Button
                   onClick={handleJoinBattle}
                   disabled={loading}
-                  className="w-full py-3 mt-2 rounded-lg shadow-lg"
-                  style={{ backgroundColor: palette.accentDeep, color: palette.card, boxShadow: `0 4px 6px -1px ${palette.accentDeep}33, 0 2px 4px -2px ${palette.accentDeep}33` }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = palette.accent}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = palette.accentDeep}
+                  className="w-full py-3 mt-2 rounded-xl shadow-lg border-0"
+                  style={{ background: palette.gradient1, color: '#fff', boxShadow: `0 4px 20px ${palette.accentGlow}` }}
                 >
                   {loading ? (
                     <>
@@ -453,9 +470,7 @@ const BattleSetup = () => {
                   <div className="mt-4 flex gap-3">
                     <Button
                       className="flex-1 shadow-lg"
-                      style={{ backgroundColor: palette.accent, color: palette.card, boxShadow: `0 4px 6px -1px ${palette.accent}33, 0 2px 4px -2px ${palette.accent}33` }}
-                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = palette.accentDeep}
-                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = palette.accent}
+                      style={{ background: palette.gradient1, color: '#fff', boxShadow: `0 4px 20px ${palette.accentGlow}` }}
                       onClick={() => openBattleAnalysis(battle._id)}
                     >
                       View Analysis

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, createContext, useContext } from "react";
+import axios from "axios";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -61,6 +62,8 @@ const StopwatchProvider = ({ children }: { children: React.ReactNode }) => {
       })
     );
 
+    let lastSyncTime = Date.now();
+
     const timer = setInterval(() => {
       const now = Date.now();
       const sessionElapsed = now - sessionStartTime;
@@ -76,13 +79,34 @@ const StopwatchProvider = ({ children }: { children: React.ReactNode }) => {
           sessionStartTime: sessionStartTime,
         })
       );
+
+      // Sync with database every 60 seconds
+      if (now - lastSyncTime >= 60000) {
+        syncToDB(1); // sync 1 minute
+        lastSyncTime = now;
+      }
     }, 1000);
 
-    const handleBeforeUnload = () => {
+    const syncToDB = async (mins: number) => {
+      try {
+        const token = localStorage.getItem("token");
+        const headers: any = {};
+        if (token) headers.Authorization = `Bearer ${token}`;
+        
+        await axios.post("/api/focus/sync", { minutes: mins }, { headers, withCredentials: true });
+      } catch (err) {
+        console.warn("Back-end sync failed. Progress saved locally.");
+      }
+    };
+
+    const handleBeforeUnload = async () => {
       const now = Date.now();
       const sessionElapsed = now - sessionStartTime;
       const totalElapsed = elapsed + sessionElapsed;
       
+      const unSyncedMins = Math.floor((now - lastSyncTime) / 60000);
+      if (unSyncedMins > 0) syncToDB(unSyncedMins);
+
       localStorage.setItem(
         "stopwatchData",
         JSON.stringify({

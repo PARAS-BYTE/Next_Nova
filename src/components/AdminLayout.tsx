@@ -2,6 +2,7 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { ReactNode, useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { NavLink } from '@/components/NavLink';
 import { cn } from '@/lib/utils';
@@ -15,7 +16,8 @@ import {
   Menu,
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Rocket,
 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import axios from 'axios';
@@ -67,65 +69,65 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   return (
     <div className="flex h-screen" style={{ background: palette.bg }}>
 
-      {/* MOBILE TOP BAR (FIXED MATCHING STUDENT LAYOUT) */}
+      {/* MOBILE TOP BAR (FIXED) */}
       <div
-        className="md:hidden flex items-center justify-between p-4 border-b z-50 fixed top-0 left-0 w-full"
-        style={{ background: palette.card, borderColor: palette.border }}
+        className="md:hidden flex items-center justify-between p-4 z-50 fixed top-0 left-0 w-full glass"
+        style={{ borderBottom: `1px solid ${palette.border}` }}
       >
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: palette.accent }}>
-            <Sparkles className="w-4 h-4" style={{ color: palette.card }} />
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: palette.gradient1 }}>
+            <Rocket className="w-4 h-4 text-white" />
           </div>
-          <span className="text-lg font-bold" style={{ color: palette.text }}>learnNova</span>
+          <span className="text-lg font-bold shimmer-text">LearnNova</span>
         </Link>
 
-        <button onClick={() => setOpen(!open)}>
-          {open ? <X className="w-6 h-6" style={{ color: palette.text }} /> : <Menu className="w-6 h-6" style={{ color: palette.text }} />}
+        <button onClick={() => setOpen(!open)} className="p-2 rounded-xl" style={{ color: palette.text }}>
+          {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </div>
 
       {/* SIDEBAR */}
       <aside
         className={cn(
-          'fixed md:static top-0 left-0 h-full transition-all duration-300 z-40 border-r flex flex-col',
-          collapsed ? 'w-16' : 'w-64',
+          'fixed md:static top-0 left-0 h-full transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] z-40 flex flex-col',
+          collapsed ? 'w-[72px]' : 'w-64',
           open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         )}
-        style={{ background: palette.card, borderColor: palette.border }}
+        style={{ background: palette.card, borderRight: `1px solid ${palette.border}` }}
       >
 
         {/* Logo Section */}
         <div
           className={cn(
-            "p-4 border-b flex items-center",
-            collapsed ? "justify-center flex-col gap-2 py-4" : "justify-between"
+            "p-4 flex items-center",
+            collapsed ? "justify-center flex-col gap-3 py-5" : "justify-between"
           )}
-          style={{ borderColor: palette.border }}
+          style={{ borderBottom: `1px solid ${palette.border}` }}
         >
           {!collapsed ? (
             <>
-              <Link href="/" className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: palette.accent }}>
-                  <Sparkles className="w-4 h-4" style={{ color: palette.card }} />
+              <Link href="/" className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: palette.gradient1 }}>
+                  <Rocket className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <span className="text-lg font-bold block" style={{ color: palette.text }}>Learn Nova</span>
-                  <span className="text-xs" style={{ color: palette.text2 }}>Educator Portal</span>
+                  <span className="text-lg font-bold block shimmer-text">LearnNova</span>
+                  <span className="text-[10px] font-medium uppercase tracking-widest" style={{ color: palette.text2 }}>Educator Portal</span>
                 </div>
               </Link>
-              <button onClick={() => setCollapsed(!collapsed)} className="p-1 rounded-lg hover:bg-gray-100 transition-colors">
-                <ChevronLeft className="w-4 h-4" style={{ color: palette.text2 }} />
+              <button onClick={() => setCollapsed(!collapsed)} className="p-1.5 rounded-lg transition-all duration-200 hover:scale-110" style={{ color: palette.text2 }}>
+                <ChevronLeft className="w-4 h-4" />
               </button>
             </>
           ) : (
             <>
               <Link href="/" className="flex items-center justify-center">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: palette.accent }}>
-                  <Sparkles className="w-4 h-4" style={{ color: palette.card }} />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: palette.gradient1 }}>
+                  <Rocket className="w-5 h-5 text-white" />
                 </div>
               </Link>
-              <button onClick={() => setCollapsed(!collapsed)} className="p-1 rounded-lg hover:bg-gray-100 transition-colors mt-2">
-                <ChevronRight className="w-4 h-4" style={{ color: palette.text2 }} />
+              <button onClick={() => setCollapsed(!collapsed)} className="p-1.5 rounded-lg transition-all duration-200 hover:scale-110" style={{ color: palette.text2 }}>
+                <ChevronRight className="w-4 h-4" />
               </button>
             </>
           )}
@@ -140,20 +142,29 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               key={item.name}
               href={item.href}
               className={cn(
-                'flex items-center transition-all group relative',
-                collapsed ? 'justify-center p-3 rounded-lg' : 'gap-3 px-3 py-2.5 rounded-xl'
+                'flex items-center transition-all duration-300 group relative rounded-xl',
+                collapsed ? 'justify-center p-3' : 'gap-3 px-3 py-2.5'
               )}
               style={{
                 color: isActive ? palette.text : palette.text2,
                 background: isActive ? palette.accentSoft : 'transparent',
+                boxShadow: isActive ? `inset 3px 0 0 ${palette.accent}` : 'none',
               }}
               onClick={() => setOpen(false)}
             >
-              <item.icon className="w-5 h-5 flex-shrink-0" />
-              {!collapsed && <span>{item.name}</span>}
+              <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 0.2 }}>
+                <item.icon className="w-5 h-5 flex-shrink-0" style={{ color: isActive ? palette.accent : palette.text2 }} />
+              </motion.div>
+              {!collapsed && <span className={cn("text-sm", isActive && "font-medium")}>{item.name}</span>}
+
+              {collapsed && isActive && (
+                <div className="absolute -right-0.5 w-1.5 h-1.5 rounded-full" style={{ background: palette.accent }} />
+              )}
 
               {collapsed && (
-                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-sm rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
+                <div className="absolute left-full ml-3 px-3 py-1.5 rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none"
+                  style={{ background: palette.card, color: palette.text, border: `1px solid ${palette.border}`, boxShadow: `0 4px 20px rgba(0,0,0,0.3)` }}
+                >
                   {item.name}
                 </div>
               )}
@@ -163,11 +174,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
         {/* User Profile */}
         {!loading && (
-          <div className="p-3 border-t" style={{ borderColor: palette.border }}>
-            <div className={cn("rounded-xl p-3", collapsed && "p-2 flex justify-center")} style={{ background: palette.cardHover }}>
+          <div className="p-3" style={{ borderTop: `1px solid ${palette.border}` }}>
+            <div className={cn("rounded-xl p-3", collapsed && "p-2 flex justify-center")} style={{ background: palette.accentSoft }}>
               <div className={cn("flex items-center", collapsed ? "justify-center" : "gap-3")}>
                 <Avatar className={collapsed ? "w-8 h-8" : "w-10 h-10"}>
-                  <AvatarFallback style={{ background: palette.accent, color: palette.card }}>
+                  <AvatarFallback style={{ background: palette.gradient1, color: '#fff', fontWeight: 700, fontSize: '0.75rem' }}>
                     {admin?.fullName
                       ? admin.fullName.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()
                       : "AD"}
@@ -187,26 +198,32 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       </aside>
 
       {/* MOBILE OVERLAY */}
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/30 md:hidden z-30"
-          onClick={() => setOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 md:hidden z-30"
+            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+            onClick={() => setOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* RIGHT SIDE AREA */}
       <div className="flex-1 flex flex-col overflow-hidden w-full">
 
         {/* TOP BAR (DESKTOP) */}
         <header
-          className="hidden md:flex h-14 border-b items-center justify-between px-6"
-          style={{ background: palette.card, borderColor: palette.border }}
+          className="hidden md:flex h-14 items-center justify-between px-6"
+          style={{ background: palette.card, borderBottom: `1px solid ${palette.border}` }}
         >
           <h1 className="text-lg font-semibold" style={{ color: palette.text }}>
             {navigation.find(n => pathname.startsWith(n.href))?.name || "Dashboard"}
           </h1>
 
-          <button onClick={() => setCollapsed(!collapsed)} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+          <button onClick={() => setCollapsed(!collapsed)} className="p-2 rounded-lg transition-all duration-200 hover:scale-110" style={{ color: palette.text2 }}>
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
         </header>

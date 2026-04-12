@@ -275,10 +275,16 @@ export const getStudentDashboard = asyncHandler(async (req, res) => {
         return completionDate && sameDay(completionDate, target);
       });
 
-      const minutes = completedTasks.reduce(
+      const taskMinutes = completedTasks.reduce(
         (sum, task) => sum + (task.estimatedDuration || 30),
         0
       );
+
+      // Add minutes from study timer history (Stopwatch)
+      const timerEntry = (user.studyTimerHistory || []).find(s => sameDay(s.date, target));
+      const timerMinutes = timerEntry ? (timerEntry.totalMinutes || 0) : 0;
+      
+      const totalMinutes = taskMinutes + timerMinutes;
       const taskXP = completedTasks.reduce((sum, task) => sum + taskXp(task), 0);
 
       // Calculate XP from user.xpHistory (quizzes, lessons, assignments)
@@ -297,7 +303,7 @@ export const getStudentDashboard = asyncHandler(async (req, res) => {
 
       last7DaysStudy.push({
         day: dailyLabel(target),
-        hours: minutesToHours(minutes),
+        hours: minutesToHours(totalMinutes),
       });
 
       xpHistory.push({

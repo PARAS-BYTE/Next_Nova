@@ -174,12 +174,16 @@ export const getCalendar = asyncHandler(async (req, res) => {
     tasks: calendar.tasks || [],
     todayTasks: todayTasksArray,
     upcomingTasks: [],
-    streak: calendar.streak || { currentStreak: 0, longestStreak: 0 },
-    statistics: calendar.statistics || {
-      totalTasksCompleted: 0,
-      completionRate: 0,
-      totalStudyTime: 0,
-      averageDailyTasks: 0
+    streak: { 
+      currentStreak: user.streakDays || 0, 
+      longestStreak: user.personalBestStreak || 0 
+    },
+    statistics: {
+      totalTasksCompleted: (calendar.statistics.totalTasksCompleted || 0) + 
+                          (user.xpHistory?.filter(h => h.reason?.startsWith('Lesson:')).length || 0), 
+      completionRate: calendar.statistics.completionRate || 0,
+      totalStudyTime: user.totalStudyTime || 0,
+      averageDailyTasks: calendar.statistics.averageDailyTasks || 0
     },
     studyPreferences: calendar.studyPreferences || {
       subjects: ["General Learning"],

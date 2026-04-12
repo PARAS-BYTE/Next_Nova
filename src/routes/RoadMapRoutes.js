@@ -6,7 +6,7 @@ import {
   updateRoadmap,
   deleteRoadmap,
   createRoadmapWithAI
-} from "../Controllers/RoadMapController.js";
+} from "../controllers/RoadMapController.js";
 
 const router = express.Router();
 

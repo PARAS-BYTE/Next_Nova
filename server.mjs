@@ -4,6 +4,8 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 
 dotenv.config();
 
@@ -20,6 +22,14 @@ import RoadMapRouter from './src/routes/RoadMapRoutes.js';
 import lessonNotesRoutes from './src/routes/lessonNotesRoutes.js';
 import personalNotesRoutes from './src/routes/personalNotesRoutes.js';
 import questionRoutes from './src/routes/questionRoutes.js';
+import certificateRouter from './src/routes/CertificateRoutes.js';
+import chatbotRouter from './src/routes/chatbotRoutes.js';
+import { chatWithAI } from './src/controllers/ChatbotController.js';
+import aiRouter from './src/routes/aiRoutes.js';
+import focusRouter from './src/routes/focusRoutes.js';
+import notificationRouter from './src/routes/notificationRoutes.js';
+import initBattleSocket from './src/socket/battleManager.js';
+
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
@@ -40,8 +50,9 @@ app.prepare().then(() => {
   server.use(express.json());
   server.use(cookieParser());
 
-  // MongoDB Connection
-  mongoose.connect('mongodb://127.0.0.1:27017/nova_learn').catch(console.error);
+  // MongoDB Connection 
+  const mongoURI = process.env.MONGO_URI || 'mongodb+srv://parasji014_db_user:1234@cluster0.lxqfkju.mongodb.net/?appName=Cluster0';
+  mongoose.connect(mongoURI).catch(console.error);
   const db = mongoose.connection;
   db.on('error', (err) => console.error('MongoDB connection error:', err));
   db.once('open', () => console.log('MongoDB connected successfully'));
@@ -59,6 +70,13 @@ app.prepare().then(() => {
   server.use('/api/notes', lessonNotesRoutes);
   server.use('/api/personal-notes', personalNotesRoutes);
   server.use('/api/questions', questionRoutes);
+  server.use('/api/certificates', certificateRouter);
+  server.use('/api/chatbot', chatbotRouter);
+  server.post('/api/chatbot', chatWithAI);
+  server.use('/api/ai', aiRouter);
+  server.use('/api/focus', focusRouter);
+  server.use('/api/notifications', notificationRouter);
+
 
   server.post("/trans", async (req, res) => {
     res.send({});
@@ -69,9 +87,22 @@ app.prepare().then(() => {
     return handle(req, res);
   });
 
-  server.listen(PORT, (err) => {
+  const httpServer = createServer(server);
+  const io = new SocketIOServer(httpServer, {
+    cors: {
+      origin: true,
+      credentials: true,
+      methods: ["GET", "POST"]
+    }
+  });
+
+  // Initialize features that need socket.io
+  initBattleSocket(io);
+
+  httpServer.listen(PORT, (err) => {
     if (err) throw err;
     console.log(`> Ready on http://localhost:${PORT}`);
     console.log(`> Nova Learn API active at http://localhost:${PORT}/api`);
+    console.log(`> Socket.io Live Battle system active`);
   });
 });

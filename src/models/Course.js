@@ -169,7 +169,7 @@ courseSchema.methods.updatePerformance = function () {
 // Mark a lesson as completed for a student
 courseSchema.methods.markLessonCompleted = function (studentId, lessonId) {
   const student = this.enrolledStudents.find(
-    (s) => s.studentId.toString() === studentId.toString()
+    (s) => s.studentId && s.studentId.toString() === studentId.toString()
   );
   if (!student) return;
 
@@ -191,6 +191,8 @@ courseSchema.methods.markLessonCompleted = function (studentId, lessonId) {
   if (student.progress >= 100) {
     student.completed = true;
   }
+  
+  this.markModified('enrolledStudents');
 };
 
 //

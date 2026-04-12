@@ -7,7 +7,7 @@ const userSchema = new Schema(
   {
     // ─── Identity ───────────────────────────────
     username: { type: String, required: true, unique: true, trim: true },
-    name:String,
+    name: String,
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true, minlength: 6, select: false },
     role: { type: String, enum: ["student", "admin"], default: "student" },
@@ -27,10 +27,10 @@ const userSchema = new Schema(
 
     // ─── Charts / History ────────────────────────
     last7DaysStudy: [{ day: String, hours: Number }],
-    xpHistory: [{ 
+    xpHistory: [{
       date: { type: Date, default: Date.now },
       reason: String,
-      amount: Number 
+      amount: Number
     }],
 
     // ─── Calendar & Tasks ────────────────────────
@@ -102,6 +102,15 @@ const userSchema = new Schema(
       preferredTopics: [String],
       weakAreas: [String],
     },
+    flashcards: [{
+      topic: String,
+      front: String,
+      back: String,
+      repetitions: { type: Number, default: 0 },
+      interval: { type: Number, default: 1 },
+      eFactor: { type: Number, default: 2.5 },
+      nextReview: { type: Date, default: Date.now },
+    }],
     aiTwinProfile: { type: Map, of: Schema.Types.Mixed, default: {} },
 
     // ─── Battle Analytics History (NEW) ───────────
@@ -113,7 +122,7 @@ const userSchema = new Schema(
       {
         title: String,
         message: String,
-        type: String,
+        type: { type: String, default: "system" },
         createdAt: { type: Date, default: Date.now },
         read: { type: Boolean, default: false },
       },

@@ -1,8 +1,7 @@
 "use client";
-import { useNavStore } from '@/store/useNavStore';
-import { usePathname, useRouter } from 'next/navigation';
 import React from "react";
-
+import { useNavStore } from '@/store/useNavStore';
+import { useRouter } from 'next/navigation';
 import {
   PieChart,
   Pie,
@@ -24,8 +23,9 @@ import {
 import { motion } from "framer-motion";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
-  CheckCircle,
+  CheckCircle2,
   XCircle,
   Target,
   Clock,
@@ -34,25 +34,38 @@ import {
   Activity,
   BarChart3,
   PieChart as PieIcon,
+  Sword,
+  Shield,
+  Trophy,
+  Zap,
+  Sparkles,
+  Flame,
+  Scroll,
+  TrendingUp,
+  Brain,
 } from "lucide-react";
 
-const COLORS = ["#22c55e", "#ef4444"];
+// Gaming Theme Colors
+const COLORS = ["#10B981", "#EF4444"]; // Green for Correct, Red for Wrong
+const ACCENT = "#7C6AFA";
+const BG_DARK = "#050507";
+const CARD_BG = "#0A0A0C";
+const BORDER = "rgba(124, 106, 250, 0.15)";
 
 const QuizAnalyzed = () => {
   const state = useNavStore(s => s.navState);
   const router = useRouter();
   const analysis = state?.analysis || state;
-  console.log(analysis)
 
   if (!analysis)
     return (
-      <div className="flex justify-center items-center h-[80vh] text-muted-foreground">
-        No analysis data found.
+      <div className="flex justify-center items-center h-[80vh] text-white/30 font-black uppercase tracking-widest text-xs">
+        Data Desynchronized. Return to base.
       </div>
     );
 
   const {
-    quizTitle = "Quiz Analysis",
+    quizTitle = "Mission Analysis",
     correctCount = 0,
     wrongCount = 0,
     accuracy = 0,
@@ -64,227 +77,278 @@ const QuizAnalyzed = () => {
     charts = { pie: [], bar: [] },
   } = analysis;
 
-  // Safe time parsing
   const timeValue = (() => {
     const t = String(timeTaken).split(" ")[0];
     return isNaN(parseInt(t)) ? 0 : parseInt(t);
   })();
 
+  const isVictory = Number(accuracy) >= 50;
+
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-10">
-      {/* Header */}
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8 space-y-8" style={{ background: BG_DARK, color: '#FFFFFF' }}>
+      
+      {/* ─── Hero Section: Victory/Defeat ───────────────────────────── */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="flex justify-between items-center flex-wrap gap-4"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="relative p-8 rounded-3xl border-2 overflow-hidden text-center"
+        style={{
+          background: `linear-gradient(135deg, ${isVictory ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'}, ${CARD_BG})`,
+          borderColor: isVictory ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)',
+          boxShadow: `0 0 30px ${isVictory ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'}`,
+        }}
       >
-        <div>
-          <h1 className="text-4xl font-bold text-primary">{quizTitle}</h1>
-          <div className="text-muted-foreground mt-2 text-base flex flex-wrap gap-6">
-            <span className="flex items-center gap-1">
-              <Clock className="w-4 h-4 text-primary" /> {timeTaken}
-            </span>
-            <span className="flex items-center gap-1">
-              <Activity className="w-4 h-4 text-green-600" /> {accuracy}% Accuracy
-            </span>
-            <span className="flex items-center gap-1">
-              <Award className="w-4 h-4 text-yellow-500" /> +{xpGained} XP
-            </span>
+        <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(circle, #7C6AFA 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+        
+        <div className="relative z-10 flex flex-col items-center">
+          <motion.div
+            initial={{ y: -20, rotate: -10 }}
+            animate={{ y: 0, rotate: 0 }}
+            transition={{ type: "spring", stiffness: 200 }}
+          >
+            {isVictory ? (
+              <Trophy className="w-20 h-20 text-yellow-400 mb-4 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
+            ) : (
+              <Sword className="w-20 h-20 text-red-500 mb-4 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
+            )}
+          </motion.div>
+
+          <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-2" style={{ background: 'linear-gradient(180deg, #FFFFFF, rgba(255,255,255,0.5))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            {isVictory ? 'Victory Achieved' : 'Mission Failed'}
+          </h1>
+          <p className="text-xs font-black uppercase tracking-[0.4em] text-white/40 mb-6">
+            {quizTitle}
+          </p>
+
+          <div className="flex flex-wrap justify-center gap-4">
+            <div className="px-4 py-2 rounded-xl border border-white/10 bg-black/40 backdrop-blur-sm">
+              <span className="text-[10px] block uppercase font-black text-white/30 tracking-widest">Accuracy</span>
+              <span className="text-lg font-black text-white">{accuracy}%</span>
+            </div>
+            <div className="px-4 py-2 rounded-xl border border-white/10 bg-black/40 backdrop-blur-sm">
+              <span className="text-[10px] block uppercase font-black text-white/30 tracking-widest">Time Spent</span>
+              <span className="text-lg font-black text-white">{timeTaken}</span>
+            </div>
+            <div className="px-4 py-2 rounded-xl border border-[#7C6AFA]/30 bg-[#7C6AFA]/10 backdrop-blur-sm">
+              <span className="text-[10px] block uppercase font-black text-[#7C6AFA] tracking-widest">XP Reward</span>
+              <span className="text-lg font-black text-white">+{xpGained} XP</span>
+            </div>
           </div>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => router.push("/student/quizzes")}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back
-        </Button>
       </motion.div>
 
-      {/* Summary Cards */}
-      <div className="grid md:grid-cols-4 gap-6">
-        <Card className="border-green-500/30">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-green-600">
-              <CheckCircle className="w-5 h-5" /> Correct
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-3xl font-bold">{correctCount}</CardContent>
-        </Card>
-
-        <Card className="border-red-500/30">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-500">
-              <XCircle className="w-5 h-5" /> Wrong
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-3xl font-bold">{wrongCount}</CardContent>
-        </Card>
-
-        <Card className="border-primary/30">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-primary">
-              <Target className="w-5 h-5" /> Score
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-3xl font-bold">
-            {scoredMarks}/{totalMarks}
-          </CardContent>
-        </Card>
-
-        <Card className="border-yellow-400/30">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-yellow-500">
-              <Award className="w-5 h-5" /> XP Gained
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-3xl font-bold">+{xpGained}</CardContent>
-        </Card>
+      {/* ─── Navigation ───────────────────────────── */}
+      <div className="flex justify-between items-center">
+        <Button
+          variant="ghost"
+          onClick={() => router.push("/student/quizzes")}
+          className="font-black text-[10px] uppercase tracking-widest text-white/50 hover:text-white"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" /> Return to Arena
+        </Button>
+        <div className="h-px flex-1 mx-8 bg-white/5" />
+        <p className="text-[10px] font-black uppercase tracking-widest text-[#7C6AFA]">Combat Log #00{Math.floor(Math.random()*999)}</p>
       </div>
 
-      {/* Charts Section */}
-      <div className="grid md:grid-cols-2 gap-8">
-        {/* Pie Chart */}
-        <Card className="border-primary/20 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <PieIcon className="w-5 h-5 text-primary" /> Answer Distribution
+      {/* ─── Battle Stats Grid ───────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { label: "Critical Hits", val: correctCount, icon: <CheckCircle2 className="text-green-400" />, border: "rgba(16, 185, 129, 0.2)" },
+          { label: "Damage Taken", val: wrongCount, icon: <XCircle className="text-red-500" />, border: "rgba(239, 68, 68, 0.2)" },
+          { label: "Total Score", val: `${scoredMarks}/${totalMarks}`, icon: <Target className="text-[#22D3EE]" />, border: "rgba(34, 211, 238, 0.2)" },
+          { label: "Level Up", val: `+${xpGained}`, icon: <Zap className="text-yellow-400" />, border: "rgba(250, 204, 21, 0.2)" },
+        ].map((stat, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+          >
+            <Card className="rounded-2xl border-2 overflow-hidden" style={{ background: CARD_BG, borderColor: stat.border }}>
+              <CardContent className="p-6 flex items-center justify-between">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-1">{stat.label}</p>
+                  <p className="text-2xl font-black text-white">{stat.val}</p>
+                </div>
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center border border-white/5 bg-white/5">
+                  {stat.icon}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* ─── Charts: Data Visualizer ───────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Pie Chart: Distribution */}
+        <Card className="rounded-2xl border-2" style={{ background: CARD_BG, borderColor: BORDER }}>
+          <CardHeader className="border-b border-white/5">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-white/40 flex items-center gap-2">
+              <PieIcon className="w-4 h-4 text-[#7C6AFA]" /> Tactical Distribution
             </CardTitle>
           </CardHeader>
-          <CardContent className="h-72">
+          <CardContent className="h-80 p-6">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Tooltip />
                 <Pie
                   data={charts?.pie || []}
                   dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
+                  innerRadius={60}
                   outerRadius={100}
-                  label={({ name, percent }) =>
-                    `${name} ${(percent * 100).toFixed(0)}%`
-                  }
+                  paddingAngle={5}
                 >
-                  {(charts?.pie || []).map((entry, index) => (
-                    <Cell
-                      key={index}
-                      fill={COLORS[index % COLORS.length]}
-                      stroke="#fff"
-                      strokeWidth={2}
-                    />
+                  {(charts?.pie || []).map((_, index) => (
+                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#0A0A0C', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                />
+                <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px', fontSize: '10px', textTransform: 'uppercase', fontWeight: '900' }} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* Bar Chart */}
-        <Card className="border-primary/20 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-primary" /> Question-wise Performance
+        {/* Bar Chart: Progression */}
+        <Card className="rounded-2xl border-2" style={{ background: CARD_BG, borderColor: BORDER }}>
+          <CardHeader className="border-b border-white/5">
+            <CardTitle className="text-[10px] font-black uppercase tracking-widest text-white/40 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-[#22D3EE]" /> Strike Chain Analysis
             </CardTitle>
           </CardHeader>
-          <CardContent className="h-72">
+          <CardContent className="h-80 p-6">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={charts?.bar || []}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="question" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="result" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="question" stroke="rgba(255,255,255,0.2)" fontSize={10} axisLine={false} tickLine={false} />
+                <YAxis hide />
+                <Tooltip cursor={{ fill: 'rgba(124, 106, 250, 0.1)' }} contentStyle={{ backgroundColor: '#0A0A0C', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }} />
+                <Bar 
+                  dataKey="result" 
+                  fill={ACCENT} 
+                  radius={[4, 4, 0, 0]}
+                  barSize={20}
+                >
+                  {(charts?.bar || []).map((entry, index) => (
+                    <Cell key={index} fill={entry.result === 1 ? '#10B981' : '#EF4444'} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
 
-      {/* Radar Chart */}
-      <Card className="border-primary/20 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="w-5 h-5 text-primary" /> Performance Overview
+      {/* ─── Performance Attribute Radar ───────────────────────────── */}
+      <Card className="rounded-2xl border-2" style={{ background: CARD_BG, borderColor: BORDER }}>
+        <CardHeader className="border-b border-white/5">
+          <CardTitle className="text-[10px] font-black uppercase tracking-widest text-white/40 flex items-center gap-2">
+            <Brain className="w-4 h-4 text-pink-500" /> Cognitive Radar
           </CardTitle>
         </CardHeader>
-        <CardContent className="h-96">
+        <CardContent className="h-96 p-6">
           <ResponsiveContainer width="100%" height="100%">
             <RadarChart
               data={[
                 { metric: "Accuracy", value: Number(accuracy) || 0 },
                 { metric: "Speed", value: Math.max(0, 100 - timeValue * 10) },
-                { metric: "XP", value: Math.min(100, xpGained * 10) },
-                {
-                  metric: "Consistency",
-                  value: Math.min(100, correctCount * 25),
-                },
+                { metric: "Mastery", value: Math.min(100, (scoredMarks / totalMarks) * 100) },
+                { metric: "Perseverance", value: Math.min(100, questionAnalysis.length * 10) },
+                { metric: "XP Potency", value: Math.min(100, xpGained * 5) },
               ]}
             >
-              <PolarGrid />
-              <PolarAngleAxis dataKey="metric" />
-              <PolarRadiusAxis angle={30} domain={[0, 100]} />
+              <PolarGrid stroke="rgba(255,255,255,0.05)" />
+              <PolarAngleAxis dataKey="metric" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 900 }} />
+              <PolarRadiusAxis hide domain={[0, 100]} />
               <Radar
-                name="Performance"
+                name="Stats"
                 dataKey="value"
-                stroke="#3b82f6"
-                fill="#3b82f6"
-                fillOpacity={0.5}
+                stroke={ACCENT}
+                fill={ACCENT}
+                fillOpacity={0.3}
               />
-              <Tooltip />
+              <Tooltip contentStyle={{ backgroundColor: '#0A0A0C', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }} />
             </RadarChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
 
-      {/* Question Breakdown */}
-      <Card className="border-primary/20 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-primary">
-            Detailed Question Breakdown
+      {/* ─── Combat Log: Detailed Breakdown ───────────────────────────── */}
+      <Card className="rounded-2xl border-2" style={{ background: CARD_BG, borderColor: BORDER }}>
+        <CardHeader className="border-b border-white/5 px-8 py-6">
+          <CardTitle className="text-sm font-black uppercase tracking-widest text-[#7C6AFA] flex items-center gap-3">
+            <Scroll className="w-5 h-5" /> Combat Intel Log
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4">
+        <CardContent className="p-8">
+          <div className="space-y-4">
             {questionAnalysis.map((q, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: i * 0.05 }}
-                className={`p-4 rounded-lg border transition-colors duration-300 ${
-                  q.result === "✅"
-                    ? "border-green-400/30 bg-green-50/40"
-                    : "border-red-400/30 bg-red-50/40"
-                }`}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="group flex items-start gap-4 p-5 rounded-2xl border-2 transition-all hover:bg-white/[0.02]"
+                style={{
+                  borderColor: q.result === "✅" ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                  background: q.result === "✅" ? 'rgba(16, 185, 129, 0.02)' : 'rgba(239, 68, 68, 0.02)'
+                }}
               >
-                <div className="flex justify-between items-center">
-                  <p className="font-semibold text-lg text-primary">
-                    Q{i + 1}. {q.questionText}
-                  </p>
-                  {q.result === "✅" ? (
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                  ) : (
-                    <XCircle className="w-5 h-5 text-red-500" />
-                  )}
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border-2" style={{
+                  background: q.result === "✅" ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                  borderColor: q.result === "✅" ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'
+                }}>
+                  {q.result === "✅" ? <CheckCircle2 className="w-5 h-5 text-green-400" /> : <XCircle className="w-5 h-5 text-red-500" />}
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Your Answer:{" "}
-                  <span className="font-medium text-primary">
-                    {q.selected || "Not answered"}
-                  </span>{" "}
-                  | Correct:{" "}
-                  <span className="font-medium text-green-600">
-                    {q.correct}
-                  </span>
-                </p>
+                
+                <div className="flex-1 min-w-0 pt-0.5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-white/30">Mission {i + 1}</span>
+                    <Badge className="text-[8px] font-black uppercase" style={{ background: q.result === "✅" ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: q.result === "✅" ? '#10B981' : '#EF4444' }}>
+                      {q.result === "✅" ? 'Critical Success' : 'Failed'}
+                    </Badge>
+                  </div>
+                  <p className="text-sm font-bold text-white mb-4 leading-relaxed">{q.questionText}</p>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-3 rounded-xl bg-black/40 border border-white/5">
+                      <p className="text-[8px] uppercase font-black text-white/20 tracking-tighter mb-1">Your Strike</p>
+                      <p className={`text-xs font-black ${q.result === "✅" ? 'text-green-400' : 'text-red-400'}`}>
+                        {q.selected || "Fumbled"}
+                      </p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-black/40 border border-white/5">
+                      <p className="text-[8px] uppercase font-black text-white/20 tracking-tighter mb-1">True Path</p>
+                      <p className="text-xs font-black text-white/60">
+                        {q.correct}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </div>
         </CardContent>
       </Card>
+
+      {/* ─── Footer Action ───────────────────────────── */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex justify-center pt-6"
+      >
+        <Button
+          onClick={() => router.push("/student/quizzes")}
+          className="h-14 px-10 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-[#7C6AFA]/20 group"
+          style={{ background: 'linear-gradient(135deg, #7C6AFA, #5D4AD4)', color: '#FFFFFF' }}
+        >
+          <Sparkles className="w-4 h-4 mr-3 group-hover:rotate-12 transition-transform" />
+          Finalize Mission Data
+        </Button>
+      </motion.div>
+
     </div>
   );
 };

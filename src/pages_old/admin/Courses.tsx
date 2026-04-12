@@ -64,6 +64,11 @@ const AdminCourses = () => {
     whatYouWillLearn: '',
   });
   const [submitting, setSubmitting] = useState(false);
+  
+  // YouTube builder states
+  const [ytUrl, setYtUrl] = useState('');
+  const [ytTitle, setYtTitle] = useState('');
+  const [ytGenerating, setYtGenerating] = useState(false);
 
   // ─── Get Admin Token ────────────────────────────────
   const getAdminToken = () => {
@@ -211,6 +216,38 @@ const AdminCourses = () => {
     }
   };
 
+  // ─── Generate Course from YouTube ────────────────────────────────
+  const handleYoutubeGenerate = async () => {
+    if (!ytUrl) {
+      toast.error('YouTube URL is required');
+      return;
+    }
+    
+    try {
+      setYtGenerating(true);
+      const token = getAdminToken();
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      toast.info('Generating AI course... This might take 15-30 seconds', { duration: 5000 });
+      
+      await axios.post(
+        '/api/courses/youtube-builder',
+        { url: ytUrl, title: ytTitle },
+        { withCredentials: true, headers }
+      );
+      
+      toast.success('Course successfully generated!');
+      setYtUrl('');
+      setYtTitle('');
+      fetchCourses();
+    } catch (err: any) {
+      console.error('YouTube Builder Error:', err);
+      toast.error(err.response?.data?.message || 'Failed to generate course from URL');
+    } finally {
+      setYtGenerating(false);
+    }
+  };
+
   // ─── Filtered Courses ────────────────────────────────
   const filteredCourses = courses.filter(
     (course) =>
@@ -243,6 +280,38 @@ const AdminCourses = () => {
           style={{ background: palette.card, color: palette.text, borderColor: palette.border }}
         />
       </div>
+
+      {/* Smart YouTube Builder UI */}
+      <Card style={{ background: 'rgba(124, 106, 250, 0.05)', border: `1px solid ${palette.accentSoft}` }}>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2" style={{ color: palette.text }}>
+            <div className="bg-[#EF4444]/20 p-2 rounded-lg"><BookOpen className="text-[#EF4444] w-5 h-5"/></div>
+            Smart YouTube Course Builder
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Input 
+              placeholder="Topic / Title (Optional)" 
+              value={ytTitle} 
+              onChange={e => setYtTitle(e.target.value)} 
+              className="flex-1"
+              style={{ background: palette.card, color: palette.text, borderColor: palette.border }} 
+            />
+            <Input 
+              placeholder="YouTube URL *" 
+              value={ytUrl} 
+              onChange={e => setYtUrl(e.target.value)} 
+              className="flex-2"
+              style={{ background: palette.card, color: palette.text, borderColor: palette.border }} 
+            />
+            <Button onClick={handleYoutubeGenerate} disabled={ytGenerating} style={{ background: palette.accentDeep, color: '#fff' }}>
+              {ytGenerating ? 'Generating...' : 'Auto-Generate Course'}
+            </Button>
+          </div>
+          <p className="text-xs mt-3 text-white/40">Enter a YouTube URL and our AI will automatically extract timestamps, summary, and generate MCQs for this new course!</p>
+        </CardContent>
+      </Card>
 
       {/* Loading State */}
       {loading && (

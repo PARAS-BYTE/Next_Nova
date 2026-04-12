@@ -98,7 +98,7 @@ const CreateCourse = () => {
     try {
       const some = await axios.post("/api/courses/user", course, { withCredentials: true });
       console.log("The Data i am getting", some);
-      router.push(-1);
+      router.push("/student/courses");
       toast({ description: "✅ Course created successfully!" });
     } catch (err) {
       console.error("Course creation error:", err);

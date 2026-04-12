@@ -6,6 +6,9 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import Groq from "groq-sdk";
 import axios from 'axios';
 import JSON5 from 'json5';
+import blockchainService from "../utils/blockchainService.js";
+import Certificate from "../Models/Certificate.js";
+
 
 const DEFAULT_THUMBNAIL =
   "https://via.placeholder.com/400x250?text=Course+Image";
@@ -544,10 +547,16 @@ export const getMyCourses = asyncHandler(async (req, res) => {
             }
         });
 
-        // Add created courses (will override if user also enrolled in their own course)
+        // Add created courses (will only add if not already present from enrolled, preserving actual progress)
         formattedCreatedCourses.forEach(course => {
             if (course._id) {
-                coursesMap.set(course._id.toString(), course);
+                if (!coursesMap.has(course._id.toString())) {
+                    coursesMap.set(course._id.toString(), course);
+                } else {
+                    // It exists in enrolled courses, so keep the actual progress but mark it as created
+                    const existing = coursesMap.get(course._id.toString());
+                    existing.isCreatedByMe = true;
+                }
             }
         });
 
@@ -703,8 +712,16 @@ export const createUserCourse = asyncHandler(async (req, res) => {
             whatYouWillLearn: whatYouWillLearn || [],
             modules: modules || [],
             instructor: user._id, // Store user ID as instructor
-            published: false, // User-created courses are private by default
+            published: false, // Self-created courses should be private by default
+            enrolledStudents: [{ studentId: user._id, progress: 0 }] // Auto-enroll creator
         });
+
+        // Add to user's enrolledCourses
+        user.enrolledCourses.push({
+            courseId: course._id,
+            title: course.title,
+        });
+        await user.save();
 
         res.status(201).json({
             success: true,
@@ -875,7 +892,7 @@ export const completeLesson = asyncHandler(async (req, res) => {
 
         // Check if already completed
         const courseEnrollment = course.enrolledStudents.find(
-            (s) => s.studentId.toString() === user._id.toString()
+            (s) => s.studentId && s.studentId.toString() === user._id.toString()
         );
 
         if (!courseEnrollment) {
@@ -890,6 +907,7 @@ export const completeLesson = asyncHandler(async (req, res) => {
 
         let xpGained = 0;
         let progressBefore = courseEnrollment.progress;
+        let updatedEnrollment; // Lift scope out of the block
 
         if (!alreadyCompleted) {
             // Mark lesson as completed
@@ -898,8 +916,8 @@ export const completeLesson = asyncHandler(async (req, res) => {
 
             // Refresh course enrollment to get updated progress
             await course.populate('enrolledStudents.studentId');
-            const updatedEnrollment = course.enrolledStudents.find(
-                (s) => s.studentId.toString() === user._id.toString()
+            updatedEnrollment = course.enrolledStudents.find(
+                (s) => s.studentId && (s.studentId._id || s.studentId).toString() === user._id.toString()
             );
 
             // Update user's enrolledCourses progress
@@ -910,6 +928,7 @@ export const completeLesson = asyncHandler(async (req, res) => {
             if (userEnrolledCourse && updatedEnrollment) {
                 userEnrolledCourse.progress = Math.round(updatedEnrollment.progress);
                 userEnrolledCourse.completed = updatedEnrollment.completed || false;
+                user.markModified('enrolledCourses');
                 await user.save();
             }
 
@@ -921,6 +940,15 @@ export const completeLesson = asyncHandler(async (req, res) => {
 
             user.addXP(xpGained);
             
+            // ─── Real Stats Integration ───
+            // 1. Update total study time (real data)
+            const lessonObj = course.modules.flatMap(m => m.lessons).find(l => l._id.toString() === targetLessonId.toString());
+            const minutesLearned = lessonObj?.duration || 15; // fallback to 15m if duration missing
+            user.totalStudyTime = (user.totalStudyTime || 0) + minutesLearned;
+
+            // 2. Update streak (real data)
+            user.updateStreak(true);
+
             // Add to XP history for dashboard charts
             if (!user.xpHistory) user.xpHistory = [];
             user.xpHistory.push({
@@ -930,10 +958,35 @@ export const completeLesson = asyncHandler(async (req, res) => {
             });
             
             await user.save();
+
+            // ─── Blockchain Certificate Issuance ─────────────────
+            if (updatedEnrollment && updatedEnrollment.completed) {
+                try {
+                    console.log("🎓 Issuing Blockchain Certificate...");
+                    const blockchainResult = await blockchainService.mintCertificate(
+                        user.walletAddress || "0x0000000000000000000000000000000000000000", // Fallback if no wallet connected
+                        {
+                            courseTitle: course.title,
+                            studentName: user.name || user.username,
+                            score: 100
+                        }
+                    );
+
+                    await Certificate.create({
+                        user: user._id,
+                        course: course._id,
+                        studentName: user.name || user.username,
+                        courseTitle: course.title,
+                        tokenId: blockchainResult.tokenId,
+                        transactionHash: blockchainResult.transactionHash,
+                        blockchainUrl: `${process.env.EXPLORER_BASE_URL}${blockchainResult.transactionHash}`
+                    });
+                } catch (bcError) {
+                    console.error("⚠️ Blockchain issuance failed but progress saved:", bcError.message);
+                }
+            }
         }
 
-        // Get updated progress
-        const progressAfter = courseEnrollment.progress;
 
         res.status(200).json({
             success: true,
@@ -941,14 +994,16 @@ export const completeLesson = asyncHandler(async (req, res) => {
                 ? "Lesson already completed"
                 : "Lesson marked as completed",
             xpGained: alreadyCompleted ? 0 : xpGained,
-            progress: progressAfter,
+            progress: alreadyCompleted ? courseEnrollment.progress : (updatedEnrollment ? updatedEnrollment.progress : courseEnrollment.progress),
             progressBefore: progressBefore,
-            completed: courseEnrollment.completed,
+            completed: alreadyCompleted ? courseEnrollment.completed : (updatedEnrollment ? updatedEnrollment.completed : courseEnrollment.completed),
         });
     } catch (error) {
-        console.error("Complete Lesson Error:", error.message);
+        console.error("Complete Lesson Error:", error.message, error.stack);
         res.status(500).json({
             message: "Server error while completing lesson",
+            errorDetails: error.message,
+            stack: error.stack
         });
     }
 });
@@ -1262,3 +1317,102 @@ export const getPlaylistVideos = async (req, res) => {
         res.status(500).json({ error: "Failed to create course from playlist"         });
     }
 };
+//
+// ─── SMART YOUTUBE COURSE BUILDER ──────────────────────────────────
+// @route   POST /api/courses/youtube-builder
+// @access  Private (Admin)
+//
+export const buildYoutubeCourse = asyncHandler(async (req, res) => {
+  try {
+    const { url, title } = req.body;
+    if (!url) return res.status(400).json({ message: "YouTube URL is required" });
+
+    // AI API setup
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY1;
+    if (!apiKey) throw new Error("AI service not configured");
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+
+    let prompt = `You are an expert AI Course Architect. I am providing you with a topic/title: "${title || url}" and a YouTube video URL: "${url}".
+Based on this information (using your internal knowledge about this likely topic or video), generate a comprehensive educational course in strictly valid JSON format.
+The output MUST include:
+{
+  "title": "A catchy course title",
+  "description": "A detailed 2-paragraph summary/description of what the video/topic teaches.",
+  "category": "Tech/Science/General",
+  "level": "Beginner/Intermediate/Advanced",
+  "whatYouWillLearn": ["point 1", "point 2", "point 3"],
+  "modules": [
+    {
+      "title": "Module Title",
+      "description": "Short module summary",
+      "videoUrl": "${url}",
+      "duration": 60,
+      "lessons": [
+        {
+          "title": "Lesson 1: Intro",
+          "content": "Comprehensive notes detailing the subject matter.",
+          "duration": 30,
+          "videoUrl": "${url}",
+          "quizzes": [
+             {
+               "question": "Sample MCQ question",
+               "options": ["A", "B", "C", "D"],
+               "correctAnswer": 0
+             }
+          ]
+        }
+      ]
+    }
+  ],
+  "timestamps": [
+    { "time": "0:00", "label": "Introduction" },
+    { "time": "5:30", "label": "Main Concept" }
+  ]
+}
+Return ONLY the raw JSON format, no markdown tags.`;
+
+    const result = await model.generateContent(prompt);
+    let text = result.response.text();
+    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    
+    let courseData;
+    try {
+      courseData = JSON5.parse(text);
+    } catch(err) {
+      console.error("Failed to parse YouTube course JSON", err, text);
+      return res.status(500).json({ message: "Failed to generate valid course structure from AI" });
+    }
+
+    // Save newly generated course in Database
+    const newCourse = new Course({
+      title: courseData.title || title || "AI Generated Course",
+      description: courseData.description || "Generated by Nova AI",
+      category: courseData.category || "General",
+      level: courseData.level || "Beginner",
+      duration: 2,
+      thumbnail: `https://img.youtube.com/vi/${url.split('v=')[1]?.substring(0,11) || 'hqdefault'}/maxresdefault.jpg`,
+      price: 0,
+      link: url,
+      instructor: req.admin?._id || req.user?._id, // Set the instructor to the current admin
+      instructorName: req.admin?.username || "AI Instructor",
+      language: "English",
+      requirements: ["Interest in learning"],
+      whatYouWillLearn: courseData.whatYouWillLearn || ["Various concepts from the video"],
+      modules: courseData.modules || [],
+      published: false // keep it unpublished so teacher can review
+    });
+
+    const savedCourse = await newCourse.save();
+    
+    res.status(201).json({ 
+       message: "Course successfully generated from YouTube URL!", 
+       course: savedCourse,
+       timestamps: courseData.timestamps
+    });
+
+  } catch (error) {
+    console.error("YouTube Builder Error:", error);
+    res.status(500).json({ message: "Failed to generate course from URL", error: error.message });
+  }
+});

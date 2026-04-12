@@ -1,7 +1,7 @@
 import express from "express";
-import { getAllCourses, createCourse, updateCourse, deleteCourse, enrollInCourse, getMyCourses, getCourseDetails, trackCourseAccess, completeLesson, autoCreateCourse, getPlaylistVideos, getMyCreatedCourses, createUserCourse } from "../Controllers/CourseController.js";
-import { protectAdmin } from "../MiddleWare/adminAuthMiddleware.js";
-import { protect } from "../MiddleWare/authMiddleware.js";
+import { getAllCourses, createCourse, updateCourse, deleteCourse, enrollInCourse, getMyCourses, getCourseDetails, trackCourseAccess, completeLesson, autoCreateCourse, getPlaylistVideos, getMyCreatedCourses, createUserCourse, buildYoutubeCourse } from "../controllers/CourseController.js";
+import { protectAdmin } from "../middleware/adminAuthMiddleware.js";
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -32,5 +32,6 @@ router.delete("/:id", protectAdmin, deleteCourse);
 // AI and playlist routes
 router.post("/aigen", autoCreateCourse);
 router.post("/ytcr", getPlaylistVideos);
+router.post("/youtube-builder", protectAdmin, buildYoutubeCourse);
 
 export default router;
