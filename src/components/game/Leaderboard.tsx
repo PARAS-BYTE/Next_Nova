@@ -4,6 +4,8 @@
    ═══════════════════════════════════════════════════════ */
 
 import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Crown, TrendingUp, Medal, Star } from 'lucide-react';
 import { useGameStore } from '@/game/useGameStore';
 import { getRankForLevel } from '@/game/gameConfig';
@@ -12,7 +14,24 @@ import { palette } from '@/theme/palette';
 import type { AvatarSkin } from '@/game/types';
 
 export default function Leaderboard() {
-  const leaderboard = useGameStore(s => s.leaderboard);
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLead = async () => {
+      try {
+        const res = await axios.get("/api/focus/leaderboard?type=xp", { withCredentials: true });
+        setData(res.data.leaderboard || []);
+      } catch (e) {
+        console.error("Leaderboard fetch error", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLead();
+  }, []);
+
+  const leaderboard = data.length > 0 ? data : [];
 
   // Strict Color Mapping
   const topThreeColors = ['#1E4D3B', '#000000', '#1E4D3B'];

@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import User from "../models/User.js";
 import Calendar from "../models/Calendar.js";
+import Assignment from "../models/Assignment.js";
 import generateToken from "../utils/generateToken.js";
 
 //
@@ -333,22 +334,38 @@ export const getStudentDashboard = asyncHandler(async (req, res) => {
 
     const weeklyXP = xpHistory.reduce((sum, entry) => sum + entry.xp, 0);
 
-    const upcomingTasks = tasks
+    const courseIds = user.enrolledCourses?.map(c => c.courseId) || [];
+    const realAssignments = await Assignment.find({ 
+      course: { $in: courseIds },
+      published: true 
+    });
+
+    const assignmentTasks = realAssignments.map(asgn => ({
+      taskId: asgn._id.toString(),
+      title: `[ASGN] ${asgn.title}`,
+      type: "assignment",
+      status: asgn.submissions?.some(s => s.studentId.toString() === user._id.toString()) ? "completed" : "pending",
+      dueDate: asgn.dueDate,
+      estimatedDuration: 60,
+    }));
+
+    const allMergeTasks = [...tasks.map(t => ({
+      taskId: t.taskId,
+      title: t.title,
+      type: t.type,
+      status: t.status,
+      dueDate: t.date,
+      estimatedDuration: t.estimatedDuration || 30
+    })), ...assignmentTasks];
+
+    const upcomingTasks = allMergeTasks
       .filter((task) => {
-        const date = new Date(task.date);
+        const date = new Date(task.dueDate);
         date.setHours(0, 0, 0, 0);
         return date.getTime() >= today.getTime() && task.status !== "completed";
       })
-      .sort((a, b) => new Date(a.date) - new Date(b.date))
-      .slice(0, 5)
-      .map((task) => ({
-        taskId: task.taskId,
-        title: task.title,
-        type: task.type,
-        status: task.status,
-        dueDate: task.date,
-        estimatedDuration: task.estimatedDuration || 30,
-      }));
+      .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+      .slice(0, 5);
 
     const calendarStats = calendar.statistics?.toObject
       ? calendar.statistics.toObject()

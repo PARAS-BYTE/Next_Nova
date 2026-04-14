@@ -144,7 +144,7 @@ const DailyTask = () => {
     if (!task) return;
 
     const allAnswered = task.content.questions.every(
-      q => answers[q.questionNumber] && answers[q.questionNumber].trim() !== ''
+      q => String(answers[q.questionNumber] || "").trim() !== ""
     );
 
     if (!allAnswered) {
@@ -157,8 +157,8 @@ const DailyTask = () => {
     // Check answers
     const newResults: { [key: number]: boolean } = {};
     task.content.questions.forEach(q => {
-      const userAnswer = answers[q.questionNumber]?.trim().toLowerCase();
-      const correctAnswer = q.correctAnswer?.trim().toLowerCase();
+      const userAnswer = String(answers[q.questionNumber] || "").trim().toLowerCase();
+      const correctAnswer = String(q.correctAnswer || "").trim().toLowerCase();
       
       if (q.type === 'mcq') {
         // For MCQ, check if answer matches option or index

@@ -70,16 +70,16 @@ const Summary = () => {
     { metric: "Accuracy", value: userPerformance.accuracy ?? 0 },
     { metric: "Clearance", value: userPerformance.completedQuestions > 0 ? (userPerformance.completedQuestions / (analytics.totalQuestions || userPerformance.completedQuestions)) * 100 : 0 },
     { metric: "Potency", value: analytics.highestScore > 0 ? (userPerformance.totalScore / analytics.highestScore) * 100 : 0 },
-    { metric: "Resilience", value: 85 }, // Placeholder for consistency in radar visual
-    { metric: "Speed", value: 70 },
+    { metric: "Resilience", value: userPerformance.completedQuestions > 0 ? Math.min(100, (userPerformance.correctCount / (userPerformance.incorrectCount + 1)) * 25 + 40) : 0 },
+    { metric: "Speed", value: userPerformance.avgTime ? Math.max(20, 100 - (userPerformance.avgTime / 2)) : 50 },
   ];
 
-  const timelineData = (userPerformance.timeline || []).map((t) => ({
+  const timelineData = (userPerformance.timeline || []).map((t: any) => ({
     name: `Q${t.questionNumber}`,
     correct: t.correct ? 1 : 0,
   }));
 
-  const tagData = (analytics.tagWisePerformance || []).map((t) => ({
+  const tagData = (userPerformance.tagWisePerformance || analytics.tagWisePerformance || []).map((t: any) => ({
     tag: t.tag,
     accuracy: t.accuracy,
   }));

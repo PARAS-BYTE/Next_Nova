@@ -66,34 +66,7 @@ interface GameState {
 const initialLeaderboard: LeaderboardEntry[] = [];
 
 /* ── Initial Quests ── */
-const initialQuests: Quest[] = [
-  {
-    id: 'quest_daily_study',
-    title: 'Daily Scholar',
-    description: 'Study for 30 minutes today',
-    type: 'daily',
-    status: 'available',
-    xpReward: 35,
-    coinReward: 10,
-    progress: 0,
-    totalSteps: 1,
-    currentStep: 0,
-    difficulty: 'easy',
-  },
-  {
-    id: 'quest_weekly_quiz',
-    title: 'Quiz Champion',
-    description: 'Complete 3 quizzes this week',
-    type: 'weekly',
-    status: 'in_progress',
-    xpReward: 150,
-    coinReward: 75,
-    progress: 0,
-    totalSteps: 3,
-    currentStep: 0,
-    difficulty: 'medium',
-  },
-];
+const initialQuests: Quest[] = [];
 
 /* ── Initial State ── */
 const initialStats: PlayerStats = {

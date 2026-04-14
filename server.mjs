@@ -6,8 +6,14 @@ import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load env from project directory even when command is run elsewhere.
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 // Ensure the Express backend uses the routes copied to src/routes
 import authRoutes from './src/routes/authRoutes.js';

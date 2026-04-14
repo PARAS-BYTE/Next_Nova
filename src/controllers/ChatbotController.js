@@ -2,6 +2,16 @@ import { Mistral } from "@mistralai/mistralai";
 import ChatMessage from "../models/ChatMessage.js";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
+import asyncHandler from "express-async-handler";
+
+const authenticateUser = async (req) => {
+  const token = req.cookies.jwt || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
+  if (!token) throw new Error("Auth token missing");
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  const user = await User.findById(decoded.userId);
+  if (!user) throw new Error("User not found");
+  return user;
+};
 
 export const chatWithAI = async (req, res) => {
   // Version: 1.5 - Optimized for Mistral AI
@@ -100,7 +110,7 @@ export const chatWithAI = async (req, res) => {
 
 export const smartChat = async (req, res) => {
   try {
-    const { message, topic = "general" } = req.body;
+    const { message, topic = "general", mode = "standard", language = "english" } = req.body;
     const token = req.cookies.jwt || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
 
     if (!token) {
@@ -130,7 +140,25 @@ export const smartChat = async (req, res) => {
       .sort({ timestamp: -1 })
       .limit(6);
 
-    const systemPrompt = "You are NovaAI, a world-class AI tutor. You are encouraging, precise, and use markdown for formatting. You help students master complex subjects.";
+    let systemPrompt = "You are NovaAI, a world-class AI tutor. You are encouraging, precise, and use markdown for formatting.\n";
+    
+    // Mode-specific instructions
+    if (mode === "socratic") {
+      systemPrompt += "TEACHING STYLE: SOCRATIC METHOD. Do NOT give direct answers. Instead, ask leading questions to help the student reach the conclusion themselves. Guide them step-by-step.\n";
+    } else if (mode === "analogy") {
+      systemPrompt += "TEACHING STYLE: ANALOGY-BASED. Explain every complex concept using a creative and easy-to-understand real-world analogy.\n";
+    } else if (mode === "simple") {
+      systemPrompt += "TEACHING STYLE: ELI5. Explain concept as if to a 5-year old. Use very simple language and avoid all jargon.\n";
+    } else if (mode === "coding") {
+      systemPrompt += "TEACHING STYLE: CODE-FIRST. Focus on practical implementation, syntax, and best practices. Provide plenty of code examples.\n";
+    }
+
+    // Language settings
+    if (language === "hindi") {
+      systemPrompt += "Reply completely in Hindi. You may use Devanagari script.\n";
+    } else if (language === "hinglish") {
+      systemPrompt += "Reply in a mix of Hindi and English (Hinglish). Example: 'Yeh loop samajhna easy hai, bas is condition ka dhyan rakho...'\n";
+    }
 
     const messages = [
       { role: "system", content: systemPrompt },
@@ -184,4 +212,65 @@ export const smartChat = async (req, res) => {
     });
   }
 };
+
+// ─── DAILY CHALLENGE ───────────────────────────────────────────
+export const getDailyChallenge = asyncHandler(async (req, res) => {
+  const user = await authenticateUser(req);
+  const weakAreas = user.learningPreferences?.weakAreas || ["General Knowledge", "Problem Solving"];
+  
+  // Choose a random weak area
+  const topic = weakAreas[Math.floor(Math.random() * weakAreas.length)];
+  
+  try {
+    const apiKey = process.env.MISTRAL_API_KEY;
+    const client = new Mistral({ apiKey });
+
+    const prompt = `
+      You are NovaAI. Generate a CHALLENGING multiple-choice question for a student focused on their weak area: "${topic}".
+      The question should be academic and testing deep understanding.
+      
+      Return strictly as JSON:
+      {
+        "question": "The question text",
+        "options": ["Option A", "Option B", "Option C", "Option D"],
+        "correctAnswer": "The exact string of the correct option",
+        "explanation": "A detailed explanation of WHY this is correct and tips for the student.",
+        "difficulty": "medium"
+      }
+    `;
+
+    const response = await client.chat.complete({
+      model: "mistral-large-latest",
+      messages: [{ role: "user", content: prompt }],
+      responseFormat: { type: "json_object" }
+    });
+
+    const challenge = JSON.parse(response.choices[0].message.content);
+    res.status(200).json({ success: true, challenge });
+  } catch (error) {
+    console.error("Daily Challenge Error:", error);
+    res.status(500).json({ message: "Failed to generate challenge" });
+  }
+});
+
+export const completeDailyChallenge = asyncHandler(async (req, res) => {
+  const user = await authenticateUser(req);
+  const { answer, correctAnswer, difficulty } = req.body;
+
+  const isCorrect = answer === correctAnswer;
+  const xpGained = isCorrect ? 35 : 5;
+
+  if (isCorrect) {
+    user.addXP(xpGained, "Daily Challenge Mastery");
+    user.coins += 10;
+    await user.save();
+  }
+
+  res.status(200).json({
+    success: true,
+    isCorrect,
+    xpGained,
+    message: isCorrect ? "Excellent mastery demonstrated." : "Incorrect. Review the explanation provided."
+  });
+});
 

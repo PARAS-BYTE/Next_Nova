@@ -142,7 +142,7 @@ const Dashboard = () => {
       {/* ORIGINAL TWO-COLUMN LAYOUT RESTORED */}
       <div className="grid lg:grid-cols-3 gap-8 px-4 md:px-0">
         <div className="lg:col-span-2 space-y-6">
-           <Card className="rounded-3xl border border-slate-200 shadow-sm bg-white overflow-hidden">
+            <Card className="rounded-3xl border border-slate-200 shadow-sm bg-white overflow-hidden">
              <CardHeader className="p-6 border-b border-slate-50">
                <CardTitle className="flex items-center justify-between text-lg font-black uppercase tracking-widest">
                  <div className="flex items-center gap-3">
@@ -152,14 +152,30 @@ const Dashboard = () => {
                </CardTitle>
              </CardHeader>
              <CardContent className="p-6 space-y-4">
-               {quests.filter(q => q.status !== 'locked' && q.status !== 'completed').slice(0, 3).map((quest, i) => (
-                   <QuestCard key={quest.id} quest={quest} index={i} onStart={() => router.push('/student/courses')} />
+               {courses.filter((c: any) => !c.completed).slice(0, 3).map((course: any, i: number) => (
+                   <div key={course._id || i} className="p-4 rounded-2xl border-2 border-slate-50 hover:border-[#1E4D3B]/20 transition-all group flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                         <div className="w-10 h-10 rounded-xl bg-[#F0FDF4] flex items-center justify-center text-[#1E4D3B]">
+                            <BookOpen size={20} />
+                         </div>
+                         <div>
+                            <h4 className="text-sm font-black text-black group-hover:text-[#1E4D3B] transition-colors">{course.title}</h4>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{course.progress || 0}% SYNCED</p>
+                         </div>
+                      </div>
+                      <Button size="sm" variant="ghost" className="rounded-xl hover:bg-[#F0FDF4]" onClick={() => router.push('/student/courses')}>
+                         <ChevronRight size={16} />
+                      </Button>
+                   </div>
                ))}
+               {courses.length === 0 && (
+                 <div className="py-8 text-center text-slate-300 italic text-[10px] font-black uppercase tracking-widest">No active modules. Enlist in a course to begin.</div>
+               )}
                <Button className="w-full h-12 bg-black text-white hover:bg-[#1E4D3B] rounded-2xl font-black uppercase tracking-widest text-xs transition-colors" onClick={() => router.push('/student/courses')}>
-                  Browse Store Board
+                  Explore All Missions
                </Button>
              </CardContent>
-           </Card>
+            </Card>
 
            <div className="grid md:grid-cols-2 gap-6">
               <ChartCard title="Study Metrics" icon={Target} data={studyTimeData.map((d: any) => ({ ...d, target: goalHours }))} type="area" xKey="day" yKeys={["hours", "target"]} colors={["#1E4D3B", "#000000"]} />

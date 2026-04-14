@@ -252,6 +252,8 @@ export default function ChatBot() {
   const [showHints, setShowHints] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
   const [progress, setProgress] = useState<any>(null);
+  const [teachingStyle, setTeachingStyle] = useState("standard");
+  const [chatLanguage, setChatLanguage] = useState("english");
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -315,7 +317,12 @@ export default function ChatBot() {
     try {
       const response = await axios.post(
         "/api/chatbot/smart-chat",
-        { message: msgText, topic: currentTopic },
+        { 
+          message: msgText, 
+          topic: currentTopic,
+          mode: teachingStyle,
+          language: chatLanguage
+        },
         { withCredentials: true }
       );
 
@@ -479,7 +486,12 @@ export default function ChatBot() {
             </button>
             
             <div className="h-6 w-px bg-zinc-200 mx-1" />
-            <TutorSettings />
+            <TutorSettings 
+              mode={teachingStyle} 
+              setMode={setTeachingStyle} 
+              language={chatLanguage} 
+              setLanguage={setChatLanguage} 
+            />
           </div>
         </header>
 

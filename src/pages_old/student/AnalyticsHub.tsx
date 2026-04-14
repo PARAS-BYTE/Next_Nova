@@ -61,16 +61,19 @@ export default function AnalyticsHub() {
   const [learningStyle, setLearningStyle] = useState<any>(null);
   const [recommendations, setRecommendations] = useState<any>(null);
   const [focusData, setFocusData] = useState<any>(null);
+  const [userStats, setUserStats] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<"overview" | "predict" | "style" | "focus" | "report">("overview");
 
   const fetchAll = async () => {
     setLoading(true);
     try {
       const opts = { withCredentials: true };
-      const [focusRes] = await Promise.allSettled([
+      const [focusRes, dashRes] = await Promise.allSettled([
         axios.get("/api/focus/score", opts),
+        axios.get("/api/auth/dashboard", opts),
       ]);
       if (focusRes.status === "fulfilled") setFocusData(focusRes.value.data);
+      if (dashRes.status === "fulfilled") setUserStats(dashRes.status === "fulfilled" ? (dashRes as any).value.data : null);
     } catch (e) {}
     setLoading(false);
   };
@@ -125,7 +128,30 @@ export default function AnalyticsHub() {
   const gradeColor = (grade: string) =>
     ["A+", "A"].includes(grade) ? C.primary : ["B+", "B"].includes(grade) ? C.black : ["C+", "C"].includes(grade) ? C.primary : C.black;
 
-  return (
+      {/* Derived Real Data */}
+      const skillMasteryData = (() => {
+        if (!userStats?.battleHistory?.length) return [];
+        const map: Record<string, number> = {};
+        userStats.battleHistory.forEach((b: any) => {
+          (b.tagWisePerformance || []).forEach((t: any) => {
+            map[t.tag] = (map[t.tag] || 0) + t.accuracy;
+            map[t.tag + "_count"] = (map[t.tag + "_count"] || 0) + 1;
+          });
+        });
+        return Object.keys(map).filter(k => !k.endsWith("_count")).map(k => ({
+          subject: k.toUpperCase(),
+          A: Math.round(map[k] / map[k + "_count"]),
+          fullMark: 100
+        })).slice(0, 6);
+      })();
+
+      const victoryHistory = (userStats?.battleHistory || []).map((b: any, idx: number) => ({
+         name: `B${userStats.battleHistory.length - idx}`,
+         accuracy: b.performance?.accuracy || b.accuracy || 0,
+         score: b.performance?.totalScore || b.totalScore || 0,
+      })).reverse();
+
+      return (
     <div className="min-h-screen p-4 sm:p-6 lg:p-8 space-y-6" style={{ background: C.bg, color: "#000" }}>
 
       {/* Header */}
@@ -163,30 +189,60 @@ export default function AnalyticsHub() {
         {activeTab === "overview" && (
           <motion.div key="overview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
             {/* Focus Chart */}
-            {focusData && (
-              <Section title="Focus Chronology" icon={<Activity size={16} />}>
-                <ResponsiveContainer width="100%" height={240}>
-                  <AreaChart data={focusData.last7Days || []}>
-                    <defs>
-                      <linearGradient id="focusGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={C.primary} stopOpacity={0.1} />
-                        <stop offset="95%" stopColor={C.primary} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" vertical={false} />
-                    <XAxis dataKey="day" stroke="rgba(0,0,0,0.2)" fontSize={10} axisLine={false} tickLine={false} />
-                    <YAxis stroke="rgba(0,0,0,0.2)" fontSize={10} axisLine={false} tickLine={false} domain={[0, 100]} />
-                    <Tooltip contentStyle={{ background: "#FFF", border: "1px solid rgba(0,0,0,0.05)", borderRadius: 16 }} />
-                    <Area type="monotone" dataKey="focusScore" stroke={C.primary} fill="url(#focusGrad)" strokeWidth={3} dot={{ fill: C.primary, r: 4 }} />
-                    <Area type="monotone" dataKey="minutes" stroke="#000000" fill="transparent" strokeWidth={1.5} strokeDasharray="4 2" dot={false} />
-                  </AreaChart>
-                </ResponsiveContainer>
-                <div className="flex gap-6 mt-4 justify-center">
-                  <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full" style={{ background: C.primary }} /><span className="text-[10px] text-black/40 uppercase font-black">Focus Coefficient</span></div>
-                  <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full" style={{ background: '#000' }} /><span className="text-[10px] text-black/40 uppercase font-black">Temporal Minutes</span></div>
-                </div>
+            <Section title="Focus Chronology" icon={<Activity size={16} />}>
+               {focusData?.last7Days?.length ? (
+                 <ResponsiveContainer width="100%" height={240}>
+                   <AreaChart data={focusData.last7Days}>
+                     <defs>
+                       <linearGradient id="focusGrad" x1="0" y1="0" x2="0" y2="1">
+                         <stop offset="5%" stopColor={C.primary} stopOpacity={0.1} />
+                         <stop offset="95%" stopColor={C.primary} stopOpacity={0} />
+                       </linearGradient>
+                     </defs>
+                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.03)" vertical={false} />
+                     <XAxis dataKey="day" stroke="rgba(0,0,0,0.2)" fontSize={10} axisLine={false} tickLine={false} />
+                     <YAxis stroke="rgba(0,0,0,0.2)" fontSize={10} axisLine={false} tickLine={false} domain={[0, 100]} />
+                     <Tooltip contentStyle={{ background: "#FFF", border: "1px solid rgba(0,0,0,0.05)", borderRadius: 16 }} />
+                     <Area type="monotone" dataKey="focusScore" stroke={C.primary} fill="url(#focusGrad)" strokeWidth={3} dot={{ fill: C.primary, r: 4 }} />
+                     <Area type="monotone" dataKey="minutes" stroke="#000000" fill="transparent" strokeWidth={1.5} strokeDasharray="4 2" dot={false} />
+                   </AreaChart>
+                 </ResponsiveContainer>
+               ) : (
+                 <div className="h-[240px] flex items-center justify-center text-[10px] font-black uppercase tracking-widest text-black/20 italic">No telemetry detected. Initialize focus sessions to track chronology.</div>
+               )}
+            </Section>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Section title="Weapon Mastery (Skill Distribution)" icon={<Shield size={14} />}>
+                 {skillMasteryData.length ? (
+                   <ResponsiveContainer width="100%" height={240}>
+                     <RadarChart cx="50%" cy="50%" outerRadius="80%" data={skillMasteryData}>
+                       <PolarGrid stroke="#f0f0f0" />
+                       <PolarAngleAxis dataKey="subject" tick={{ fontSize: 8, fontWeight: "bold", fill: "#000" }} />
+                       <Radar name="Mastery" dataKey="A" stroke={C.primary} fill={C.primary} fillOpacity={0.4} />
+                     </RadarChart>
+                   </ResponsiveContainer>
+                 ) : (
+                   <div className="h-[240px] flex items-center justify-center text-[10px] font-black uppercase tracking-widest text-black/20 italic">Combat logs insufficient. Engage in battles to map skill mastery.</div>
+                 )}
               </Section>
-            )}
+
+              <Section title="Victory Timeline (Accuracy Trend)" icon={<TrendingUp size={14} />}>
+                 {victoryHistory.length ? (
+                   <ResponsiveContainer width="100%" height={240}>
+                     <LineChart data={victoryHistory}>
+                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                       <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: "bold" }} />
+                       <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+                       <Tooltip />
+                       <Line type="stepAfter" dataKey="accuracy" stroke={C.black} strokeWidth={3} dot={{ fill: C.black, r: 6 }} />
+                     </LineChart>
+                   </ResponsiveContainer>
+                 ) : (
+                   <div className="h-[240px] flex items-center justify-center text-[10px] font-black uppercase tracking-widest text-black/20 italic">Deployment history empty. Complete missions to visualize performance trends.</div>
+                 )}
+              </Section>
+            </div>
 
             {/* Action Buttons */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

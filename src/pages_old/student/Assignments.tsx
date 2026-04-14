@@ -141,7 +141,7 @@ const Assignments = () => {
     // Validate required questions
     const requiredQuestions = selectedAssignment.questions.filter((q) => q.required);
     const missingAnswers = requiredQuestions.filter(
-      (q) => !answers[q._id] || !answers[q._id].trim()
+      (q) => !answers[q._id] || !String(answers[q._id]).trim()
     );
 
     if (missingAnswers.length > 0) {
