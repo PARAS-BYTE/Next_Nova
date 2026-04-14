@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, Bot, User, Loader2, X, Copy, Check, Sparkles, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import MarkdownPreview from "@uiw/react-markdown-preview";
 import { palette as themePalette } from "@/theme/palette";
 import { toast } from "sonner";
 
@@ -20,9 +20,7 @@ export default function ChatBot() {
   const [voiceStyle, setVoiceStyle] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
-  // Note: Using a public key on the frontend enables "Ultra-Fast" mode 
-  // by removing the backend overhead. Ensure NEXT_PUBLIC_GEMINI_API_KEY is set in .env.
-  const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -45,75 +43,37 @@ export default function ChatBot() {
     setLoading(true);
 
     try {
-      const genAI = new GoogleGenerativeAI(API_KEY);
-      
-      const modelNames = [
-        "gemini-flash-latest",
-        "gemini-1.5-flash-latest",
-        "gemini-1.5-flash",
-        "gemini-1.5-flash-8b-latest",
-        "gemini-1.5-pro-latest",
-        "gemini-1.5-pro",
-        "gemini-pro"
-      ];
+      const response = await fetch("/api/chatbot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: currentInput,
+          mode,
+          language,
+          voiceStyle,
+          history: messages.slice(-10).map(m => ({
+            role: m.role,
+            content: m.content
+          }))
+        })
+      });
 
-      let lastError: any = null;
-      let reply = "";
-
-      for (const modelName of modelNames) {
-        try {
-          const model = genAI.getGenerativeModel({ model: modelName });
-
-          let systemPrompt = `You are NovaAI, a legendary study companion in the LearnNova realm. 
-          Mode: ${mode}. Language: ${language}. Voice Style: ${voiceStyle ? "Conversational/Filler words" : "Concise"}.
-          Help the student with their quests and explain concepts clearly. Use gaming metaphors when appropriate.`;
-
-          const chat = model.startChat({
-            history: messages.slice(-10).map(m => ({
-              role: m.role === 'user' ? 'user' : 'model',
-              parts: [{ text: m.content }],
-            })),
-            generationConfig: {
-              maxOutputTokens: 1000,
-            },
-          });
-
-          const result = await chat.sendMessage(`System Context: ${systemPrompt}\nStudent: ${currentInput}`);
-          const response = await result.response;
-          reply = response.text();
-          
-          if (reply) break; // Found a working model!
-        } catch (err: any) {
-          console.warn(`Model ${modelName} failed:`, err.message);
-          lastError = err;
-          
-          // If it's a Quota error (429), stop trying other models and show quota message
-          if (err.message?.includes("429") || err.message?.includes("quota")) {
-            throw err; 
-          }
-          // If it's a 404, continue to next model
-          continue;
-        }
+      if (!response.ok) {
+        throw new Error("Mistral winds are still.");
       }
 
-      if (!reply && lastError) throw lastError;
-
+      const data = await response.json();
+      
       setMessages((p) => [...p, {
         role: "model",
-        content: reply,
+        content: data.reply || data.message,
         id: Date.now(),
         time: new Date()
       }]);
     } catch (err: any) {
-      console.error("Client-side Chat error:", err);
-      let errorMsg = "⚠️ Mana flow interrupted. Please ensure your API Key is valid or network is stable.";
+      console.error("Chat error:", err);
+      let errorMsg = "⚠️ Mana flow interrupted. Mistral is unresponsive.";
       
-      if (err.message?.includes("429") || err.message?.includes("quota")) {
-        errorMsg = "🔴 [QUOTA EXHAUSTED] Your AI Mana has been depleted for today (Gemini Free Tier limit reached). Please try again later or use a different API key.";
-      } else if (err.message?.includes("404")) {
-        errorMsg = "⚠️ [MODEL NOT FOUND] The selected AI model is currently unavailable in your region. Check your API dashboard.";
-      }
-
       setMessages((p) => [...p, {
         role: "model",
         content: errorMsg,
@@ -233,13 +193,24 @@ export default function ChatBot() {
                   </div>
                 )}
 
-                <div
+                 <div
                   className={`p-4 rounded-2xl border-2 transition-all ${m.role === "user"
-                      ? "bg-[#7C6AFA] border-[#7C6AFA] text-white rounded-br-none shadow-[0_4px_15px_rgba(124,106,250,0.3)]"
+                      ? "bg-[#7C6AFA] border-[#7C6AFA] text-white rounded-br-none shadow-[0_4px_15_px_rgba(124,106,250,0.3)]"
                       : "bg-[#0A0A0C] border-white/5 text-white/80 rounded-bl-none"
                     }`}
                 >
-                  <div className="text-sm leading-relaxed whitespace-pre-wrap">{m.content}</div>
+                  <div className="text-sm leading-relaxed">
+                    <MarkdownPreview 
+                      source={m.content} 
+                      data-color-mode="dark"
+                      style={{ 
+                        background: 'transparent', 
+                        color: m.role === 'user' ? '#FFFFFF' : 'rgba(255,255,255,0.8)',
+                        fontSize: '0.875rem'
+                      }}
+                      className="markdown-override"
+                    />
+                  </div>
                 </div>
 
                 {m.role === "model" && (

@@ -1,12 +1,12 @@
 import asyncHandler from 'express-async-handler';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { Mistral } from '@mistralai/mistralai';
 import User from '../Models/User.js';
 
-// Setup Gemini
-const getGenAI = () => {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY1;
-  const genAI = new GoogleGenerativeAI(apiKey);
-  return genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+// Setup Mistral
+const getMistralClient = () => {
+  const apiKey = process.env.MISTRAL_API_KEY;
+  if (!apiKey) throw new Error("MISTRAL_API_KEY is missing");
+  return new Mistral({ apiKey });
 };
 
 // Robust JSON Extraction
@@ -20,10 +20,15 @@ const extractJSON = (text) => {
 export const getMotivation = asyncHandler(async (req, res) => {
   try {
     const { message, context } = req.body;
-    const model = getGenAI();
+    const client = getMistralClient();
     const prompt = `You are an AI Study Therapist. A student says: "${message}". Their context: ${JSON.stringify(context || req.user)}. Provide a short, motivating, and empathetic response. Keep it under 50 words.`;
-    const result = await model.generateContent(prompt);
-    res.status(200).json({ reply: result.response.text() });
+    
+    const response = await client.chat.complete({
+      model: "mistral-large-latest",
+      messages: [{ role: "user", content: prompt }]
+    });
+    
+    res.status(200).json({ reply: response.choices[0].message.content });
   } catch (error) {
     res.status(500).json({ message: "Failed to get motivation", error: error.message });
   }
@@ -43,7 +48,7 @@ export const predictPerformance = asyncHandler(async (req, res) => {
       accuracy: user.accuracyScore
     };
 
-    const model = getGenAI();
+    const client = getMistralClient();
     const prompt = `Based on this student's learning data: ${JSON.stringify(stats)}, predict their performance.
     Return strictly as JSON:
     {
@@ -58,8 +63,14 @@ export const predictPerformance = asyncHandler(async (req, res) => {
       "improvementTips": [string]
     }`;
     
-    const result = await model.generateContent(prompt);
-    const prediction = extractJSON(result.response.text());
+    const response = await client.chat.complete({
+      model: "mistral-large-latest",
+      messages: [{ role: "user", content: prompt }],
+      safePrompt: true,
+      responseFormat: { type: "json_object" }
+    });
+    
+    const prediction = extractJSON(response.choices[0].message.content);
     res.status(200).json(prediction);
   } catch (error) {
     console.error("Prediction Error:", error);
@@ -79,7 +90,7 @@ export const detectLearningStyle = asyncHandler(async (req, res) => {
       enrolledCourses: user.enrolledCourses?.length
     };
 
-    const model = getGenAI();
+    const client = getMistralClient();
     const prompt = `Analyze this student's behavior: ${JSON.stringify(behaviorData)}.
     Detect their dominant learning style (Visual, Auditory, Kinesthetic, Reading/Writing).
     Return strictly as JSON:
@@ -96,8 +107,14 @@ export const detectLearningStyle = asyncHandler(async (req, res) => {
       }
     }`;
     
-    const result = await model.generateContent(prompt);
-    const styleData = extractJSON(result.response.text());
+    const response = await client.chat.complete({
+      model: "mistral-large-latest",
+      messages: [{ role: "user", content: prompt }],
+      safePrompt: true,
+      responseFormat: { type: "json_object" }
+    });
+    
+    const styleData = extractJSON(response.choices[0].message.content);
     res.status(200).json(styleData);
   } catch (error) {
     res.status(500).json({ message: "Failed to detect learning style" });
@@ -116,7 +133,7 @@ export const getRecommendations = asyncHandler(async (req, res) => {
       learningStyle: user.learningPreferences?.pace
     };
 
-    const model = getGenAI();
+    const client = getMistralClient();
     const prompt = `Based on student profile: ${JSON.stringify(context)}, suggest study topics and a plan.
     Return strictly as JSON:
     {
@@ -126,8 +143,14 @@ export const getRecommendations = asyncHandler(async (req, res) => {
       ]
     }`;
     
-    const result = await model.generateContent(prompt);
-    const recs = extractJSON(result.response.text());
+    const response = await client.chat.complete({
+      model: "mistral-large-latest",
+      messages: [{ role: "user", content: prompt }],
+      safePrompt: true,
+      responseFormat: { type: "json_object" }
+    });
+    
+    const recs = extractJSON(response.choices[0].message.content);
     res.status(200).json(recs);
   } catch (error) {
     res.status(500).json({ message: "Failed to get recommendations" });
@@ -148,7 +171,7 @@ export const generateReportCard = asyncHandler(async (req, res) => {
       weeklyXP: user.weeklyXP
     };
 
-    const model = getGenAI();
+    const client = getMistralClient();
     const prompt = `Generate a comprehensive AI Report Card for this student metric: ${JSON.stringify(metrics)}.
     Return strictly as JSON:
     {
@@ -163,8 +186,14 @@ export const generateReportCard = asyncHandler(async (req, res) => {
       "nextMilestone": string
     }`;
     
-    const result = await model.generateContent(prompt);
-    const report = extractJSON(result.response.text());
+    const response = await client.chat.complete({
+      model: "mistral-large-latest",
+      messages: [{ role: "user", content: prompt }],
+      safePrompt: true,
+      responseFormat: { type: "json_object" }
+    });
+    
+    const report = extractJSON(response.choices[0].message.content);
     res.status(200).json(report);
   } catch (error) {
     res.status(500).json({ message: "Failed to generate report card" });
@@ -174,21 +203,45 @@ export const generateReportCard = asyncHandler(async (req, res) => {
 // POST /api/ai/flashcards
 export const generateFlashcards = asyncHandler(async (req, res) => {
   try {
-    const { topic } = req.body;
-    const model = getGenAI();
-    const prompt = `Generate 5 spaced-repetition flashcards for topic: "${topic}". Return strictly as JSON array of objects with "question" and "answer" keys.`;
-    const result = await model.generateContent(prompt);
-    const generated = extractJSON(result.response.text());
+    const { topic, count } = req.body;
+    const client = getMistralClient();
+    const prompt = `Generate ${count || 5} spaced-repetition flashcards for topic: "${topic}". Return strictly as JSON array of objects with "question" and "answer" keys. Or a JSON object with a "flashcards" key containing the array.`;
     
-    if (req.user) {
-       generated.forEach(card => {
-         req.user.flashcards.push({ topic, front: card.question, back: card.answer });
+    const response = await client.chat.complete({
+      model: "mistral-large-latest",
+      messages: [{ role: "user", content: prompt }],
+      safePrompt: true,
+      responseFormat: { type: "json_object" }
+    });
+    
+    let generated = extractJSON(response.choices[0].message.content);
+    
+    // Handle both array and object responses
+    let flashcards = Array.isArray(generated) ? generated : generated.flashcards || [];
+    
+    if (req.user && flashcards.length > 0) {
+       flashcards.forEach(card => {
+         // Map different possible key names from AI
+         const q = card.question || card.front || card.q;
+         const a = card.answer || card.back || card.a;
+         if (q && a) {
+            req.user.flashcards.push({ 
+              topic, 
+              front: q, 
+              back: a,
+              repetitions: 0,
+              interval: 1,
+              eFactor: 2.5,
+              nextReview: new Date()
+            });
+         }
        });
        await req.user.save();
     }
     
-    res.status(200).json({ flashcards: generated, count: generated.length, topic });
+    res.status(200).json({ flashcards, count: flashcards.length, topic });
   } catch (error) {
+    console.error("Flashcard Gen Error:", error);
     res.status(500).json({ message: "Failed to generate flashcards" });
   }
 });
@@ -213,15 +266,20 @@ export const reviewFlashcard = asyncHandler(async (req, res) => {
     const card = user.flashcards.id(flashcardId);
     if (!card) return res.status(404).json({ message: "Flashcard not found" });
     
+    // Ensure SM-2 variables are initialized
+    const repetitions = card.repetitions || 0;
+    const interval = card.interval || 1;
+    const eFactor = card.eFactor || 2.5;
+
     let newInterval = 1;
-    let newEFactor = card.eFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
+    let newEFactor = eFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
     if (newEFactor < 1.3) newEFactor = 1.3;
     
     if (quality >= 3) {
-       if (card.repetitions === 0) newInterval = 1;
-       else if (card.repetitions === 1) newInterval = 6;
-       else newInterval = Math.round(card.interval * newEFactor);
-       card.repetitions += 1;
+       if (repetitions === 0) newInterval = 1;
+       else if (repetitions === 1) newInterval = 6;
+       else newInterval = Math.round(interval * newEFactor);
+       card.repetitions = repetitions + 1;
     } else {
        card.repetitions = 0;
        newInterval = 1;
@@ -234,6 +292,7 @@ export const reviewFlashcard = asyncHandler(async (req, res) => {
     await user.save();
     res.status(200).json({ message: "Flashcard updated", card });
   } catch (error) {
+    console.error("Review Error:", error);
     res.status(500).json({ message: "Failed to review flashcard" });
   }
 });

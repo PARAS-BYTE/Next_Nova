@@ -167,20 +167,21 @@ export default function Flashcards() {
                 {/* Card */}
                 <motion.div className="w-full max-w-xl cursor-pointer" onClick={() => setFlipped(!flipped)} style={{ perspective: "1200px" }}>
                   <motion.div animate={{ rotateY: flipped ? 180 : 0 }} transition={{ duration: 0.5, type: "spring" }}
-                    style={{ transformStyle: "preserve-3d", position: "relative", minHeight: "220px" }}>
+                    style={{ transformStyle: "preserve-3d", position: "relative", minHeight: "280px" }}>
                     {/* Front */}
-                    <div className="absolute inset-0 rounded-3xl border-2 flex flex-col items-center justify-center p-8 text-center"
+                    <div className="absolute inset-0 rounded-3xl border-2 flex flex-col items-center justify-center p-8 text-center overflow-y-auto"
                       style={{ background: C.card, borderColor: `${C.purple}30`, backfaceVisibility: "hidden" }}>
                       <div className="px-3 py-1 rounded-xl mb-4 text-[9px] font-black uppercase tracking-widest" style={{ background: `${C.purple}20`, color: C.purple }}>
                         {currentCard?.topic || "General"}
                       </div>
                       <p className="text-lg font-bold text-white leading-relaxed">{currentCard?.front}</p>
-                      <p className="text-[10px] text-white/20 mt-4 font-black uppercase tracking-widest">Tap to Reveal</p>
+                      <p className="text-[10px] text-white/20 mt-4 font-black uppercase tracking-widest shrink-0">Tap to Reveal</p>
                     </div>
                     {/* Back */}
-                    <div className="absolute inset-0 rounded-3xl border-2 flex flex-col items-center justify-center p-8 text-center"
+                    <div className="absolute inset-0 rounded-3xl border-2 flex flex-col items-center justify-center p-8 text-center overflow-y-auto"
                       style={{ background: `${C.card}`, borderColor: `${C.green}30`, backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
-                      <p className="text-sm text-white/70 leading-relaxed">{currentCard?.back}</p>
+                      <p className="text-sm font-medium text-white/80 leading-relaxed italic mb-4">The Answer Is:</p>
+                      <p className="text-base font-bold text-white leading-relaxed">{currentCard?.back}</p>
                     </div>
                   </motion.div>
                 </motion.div>

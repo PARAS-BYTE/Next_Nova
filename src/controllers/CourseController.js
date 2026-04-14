@@ -1206,40 +1206,79 @@ export const getPlaylistVideos = async (req, res) => {
             return res.status(500).json({ error: "Missing YOUTUBE_API_KEY in .env" });
 
         // ─── Extract playlist ID ───────────────────────────────
-        const idMatch = playlistUrl.match(/[?&]list=([a-zA-Z0-9_-]+)/);
-        const playlistId = idMatch ? idMatch[1] : playlistUrl;
+        let playlistId = playlistUrl;
+        if (playlistUrl.includes("list=")) {
+            try {
+                // Try standard URL parsing
+                const urlObj = new URL(playlistUrl.includes("://") ? playlistUrl : `https://${playlistUrl}`);
+                playlistId = urlObj.searchParams.get("list") || playlistId;
+            } catch (urlErr) {
+                // Fallback to manual string splitting if URL parsing fails
+                const parts = playlistUrl.split("list=");
+                if (parts.length > 1) {
+                    playlistId = parts[1].split("&")[0];
+                }
+            }
+        }
+        
+        // Clean up ID - remove potential query params if it's just an ID
+        if (playlistId && playlistId.includes("?")) {
+            playlistId = playlistId.split("?")[0];
+        }
+        
+        if (!playlistId || playlistId.length < 5) {
+            return res.status(400).json({ error: "Invalid Playlist URL or ID format." });
+        }
 
         let nextPageToken = "";
         const videos = [];
 
         // ─── Fetch playlist videos (with snippet for title & thumbnails) ───
-        do {
-            const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=50&playlistId=${playlistId}&key=${apiKey}${nextPageToken ? `&pageToken=${nextPageToken}` : ""
-                }`;
+        try {
+            do {
+                const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=50&playlistId=${playlistId}&key=${apiKey}${nextPageToken ? `&pageToken=${nextPageToken}` : ""
+                    }`;
 
-            const response = await axios.get(url);
-            const items = response.data.items || [];
+                const response = await axios.get(url, {
+                    timeout: 10000, // 10s timeout
+                    headers: {
+                        'Accept': 'application/json',
+                        'User-Agent': 'Mozilla/5.0'
+                    }
+                });
+                const items = response.data.items || [];
 
-            for (const item of items) {
-                const videoId = item.contentDetails?.videoId;
-                if (videoId) {
-                    videos.push({
-                        videoUrl: `https://www.youtube.com/watch?v=${videoId}`,
-                        title: item.snippet?.title || `Lesson ${videos.length + 1}`,
-                        thumbnail:
-                            item.snippet?.thumbnails?.high?.url ||
-                            item.snippet?.thumbnails?.default?.url ||
-                            "",
-                        description: item.snippet?.description || "",
-                    });
+                for (const item of items) {
+                    const videoId = item.contentDetails?.videoId;
+                    if (videoId) {
+                        videos.push({
+                            videoUrl: `https://www.youtube.com/watch?v=${videoId}`,
+                            title: item.snippet?.title || `Lesson ${videos.length + 1}`,
+                            thumbnail:
+                                item.snippet?.thumbnails?.high?.url ||
+                                item.snippet?.thumbnails?.default?.url ||
+                                "",
+                            description: item.snippet?.description || "",
+                        });
+                    }
                 }
-            }
 
-            nextPageToken = response.data.nextPageToken;
-        } while (nextPageToken);
+                nextPageToken = response.data.nextPageToken;
+            } while (nextPageToken);
+        } catch (ytError) {
+            console.error("YouTube API Fetch Error Detail:", {
+                message: ytError.message,
+                status: ytError.response?.status,
+                data: ytError.response?.data,
+                code: ytError.code
+            });
+            const status = ytError.response?.status || 400;
+            const errMsg = ytError.response?.data?.error?.message || ytError.message || "Connection to YouTube failed.";
+            return res.status(status).json({ error: errMsg });
+        }
 
         if (videos.length === 0)
-            return res.status(404).json({ error: "No videos found in this playlist" });
+            return res.status(404).json({ error: "No public videos found in this playlist" });
 
         // ─── Group videos: 3 per module ─────────────────────────
         const modules = [];
@@ -1253,7 +1292,7 @@ export const getPlaylistVideos = async (req, res) => {
                 title: v.title,
                 videoUrl: v.videoUrl,
                 content: v.description || "No description available.",
-                duration: 10, // placeholder (can use YouTube videos.list API for real durations)
+                duration: 10, // placeholder
                 order: index + 1,
             }));
 
@@ -1313,8 +1352,10 @@ export const getPlaylistVideos = async (req, res) => {
             course: newCourse,
         });
     } catch (error) {
-        console.error("❌ Error creating course from playlist:", error.message);
-        res.status(500).json({ error: "Failed to create course from playlist"         });
+        console.error("❌ Final Course Creation Error:", error.message);
+        res.status(500).json({ 
+            error: error.message || "Failed to finalize course creation from playlist" 
+        });
     }
 };
 //

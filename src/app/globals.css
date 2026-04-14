@@ -374,4 +374,37 @@
       0 20px 60px rgba(0, 0, 0, 0.3),
       0 0 30px rgba(124, 106, 250, 0.1);
   }
+
+  /* ── Markdown Content Overrides (Nova Style) ── */
+  .markdown-override {
+    font-family: inherit !important;
+    background: transparent !important;
+  }
+  .markdown-override pre {
+    background: rgba(12, 14, 28, 0.8) !important;
+    border: 1px solid rgba(124, 106, 250, 0.2) !important;
+    border-radius: 12px !important;
+    padding: 1.25rem !important;
+    margin: 1rem 0 !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
+    overflow-x: auto !important;
+  }
+  .markdown-override code {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Roboto Mono', monospace !important;
+    font-size: 0.85em !important;
+  }
+  .markdown-override :not(pre) > code {
+    background: rgba(124, 106, 250, 0.15) !important;
+    color: #c4b5fd !important;
+    padding: 0.2em 0.4em !important;
+    border-radius: 4px !important;
+  }
+  .markdown-override p {
+    margin-bottom: 0.75rem !important;
+    line-height: 1.6 !important;
+  }
+  .markdown-override ul, .markdown-override ol {
+    margin-left: 1.5rem !important;
+    margin-bottom: 0.75rem !important;
+  }
 }
