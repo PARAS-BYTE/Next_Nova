@@ -11,9 +11,16 @@ const getMistralClient = () => {
 
 // Robust JSON Extraction
 const extractJSON = (text) => {
-  const jsonMatch = text.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
-  if (!jsonMatch) throw new Error("Could not find valid JSON in AI response");
-  return JSON.parse(jsonMatch[0]);
+  try {
+    // Strip markdown indicators
+    const clean = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    const jsonMatch = clean.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+    if (!jsonMatch) return null;
+    return JSON.parse(jsonMatch[0]);
+  } catch (err) {
+    console.error("JSON Extraction failed:", text);
+    return null;
+  }
 };
 
 export const getMotivation = asyncHandler(async (req, res) => {
@@ -60,16 +67,22 @@ export const getMotivation = asyncHandler(async (req, res) => {
     });
     
     const therapyData = extractJSON(response.choices[0].message.content);
+    
+    if (!therapyData) throw new Error("AI returned unparseable advice");
+    
     res.status(200).json(therapyData);
   } catch (error) {
     console.error("❌ AI Therapist Error:", error.message);
-    res.status(500).json({ 
-      message: "Failed to connect with AI Therapist", 
-      error: error.message,
+    res.status(200).json({ 
       burnoutLevel: "none",
-      motivationalMessage: "I'm currently meditating on the scrolls. Keep pushing, hero!",
-      actionSuggestions: ["Review your recent notes", "Take a short walk", "Hydrate for clarity"],
-      dailyGoal: "Complete one small task"
+      motivationalMessage: "The celestial archives are slightly blurred today. Stay focused, your potential is limitless!",
+      actionSuggestions: ["Review your current progress summary", "Take a 5-minute deep breathing break", "Hydrate and continue the quest"],
+      breakRecommendation: {
+        shouldTakeBreak: false,
+        breakDuration: 0,
+        activity: "None"
+      },
+      dailyGoal: "Complete the next module in your current journey"
     });
   }
 });

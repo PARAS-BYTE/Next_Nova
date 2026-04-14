@@ -71,7 +71,7 @@ export const chatWithAI = async (req, res) => {
     });
 
     const text = chatResponse.choices[0].message.content;
-    const cleanText = text.replace(/```markdown/g, '').replace(/```/g, '').trim();
+    const cleanText = text.trim();
 
     console.log(`✅ [Server] SUCCESS: Mistral responded.`);
 

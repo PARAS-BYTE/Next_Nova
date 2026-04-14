@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "routes": [
+    {
+      "src": "/api/chatbot",
+      "dest": "/api/chatbot"
+    },
+    {
+      "src": "/api/ai/motivation",
+      "dest": "/api/ai/motivation"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/server.mjs"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}
