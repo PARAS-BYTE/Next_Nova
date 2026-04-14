@@ -3,7 +3,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Brain, Sparkles, Trophy, Target, Zap, Users, ArrowRight, Star, Layers, Rocket } from 'lucide-react';
+import { Brain, Sparkles, Trophy, Target, Zap, Users, ArrowRight, Star, Layers, Rocket, Heart } from 'lucide-react';
 import { palette } from '@/theme/palette';
 
 /* ── Animation variants ────────────────────────── */
@@ -304,7 +304,7 @@ const Landing = () => {
       {/* ═══ Footer ═══ */}
       <footer className="relative py-8 px-6 text-center" style={{ borderTop: `1px solid ${palette.border}` }}>
         <p className="text-sm" style={{ color: palette.textMuted }}>
-          © {new Date().getFullYear()} LearnNova by <span className="font-medium" style={{ color: palette.text2 }}>Hex Visionaries</span>. Made with <span className="text-red-400">❤️</span> by Paras & Harshit
+          © {new Date().getFullYear()} LearnNova by <span className="font-medium" style={{ color: palette.text2 }}>Hex Visionaries</span>. Made with <Heart className="inline-block w-4 h-4 text-red-500 fill-red-500" /> by Paras & Harshit
         </p>
       </footer>
     </div>

@@ -34,7 +34,7 @@ const Signup = () => {
 
       if (response.data) {
         localStorage.setItem('userInfo', JSON.stringify(response.data));
-        router.push('/student');
+        router.push('/onboarding');
       }
     } catch (err: any) {
       console.error('Signup error:', err);

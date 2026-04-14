@@ -247,22 +247,31 @@ const Reports = () => {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="p-4 rounded-xl bg-background/50 border border-border">
-              <p className="text-sm">
-                <strong className="text-primary">📈 Improvement Area:</strong> Your performance in Neural Networks has
-                room for growth. Consider spending 2-3 more hours this week on related topics.
-              </p>
+              <div className="flex items-start gap-2">
+                <TrendingUp className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                <p className="text-sm">
+                  <strong className="text-primary">Improvement Area:</strong> Your performance in Neural Networks has
+                  room for growth. Consider spending 2-3 more hours this week on related topics.
+                </p>
+              </div>
             </div>
             <div className="p-4 rounded-xl bg-background/50 border border-border">
-              <p className="text-sm">
-                <strong className="text-success">🎯 Strength:</strong> You're excelling in React and Web Development!
-                Your mastery is in the top 10% of learners.
-              </p>
+              <div className="flex items-start gap-2">
+                <Target className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                <p className="text-sm">
+                  <strong className="text-success">Strength:</strong> You're excelling in React and Web Development!
+                  Your mastery is in the top 10% of learners.
+                </p>
+              </div>
             </div>
             <div className="p-4 rounded-xl bg-background/50 border border-border">
-              <p className="text-sm">
-                <strong className="text-secondary">⚡ Forecast:</strong> At your current pace, you'll complete the ML
-                course in approximately 3 weeks.
-              </p>
+              <div className="flex items-start gap-2">
+                <Zap className="w-4 h-4 text-secondary shrink-0 mt-0.5" />
+                <p className="text-sm">
+                  <strong className="text-secondary">Forecast:</strong> At your current pace, you'll complete the ML
+                  course in approximately 3 weeks.
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>

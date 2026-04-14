@@ -33,7 +33,13 @@ const Login = () => {
       
       // Store user info in localStorage
       localStorage.setItem('userInfo', JSON.stringify(response.data));
-      router.push('/student');
+      
+      if (response.data.onboardingCompleted === false) {
+        router.push('/onboarding');
+      } else {
+        router.push('/student');
+      }
+      
       console.log('Login success:', response.data);
     } catch (err: any) {
       console.error('Login error:', err);

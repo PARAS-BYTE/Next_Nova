@@ -25,7 +25,7 @@ import {
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Trophy, BarChart3, Target, Percent } from "lucide-react";
+import { ArrowLeft, Trophy, BarChart3, Target, Percent, AlertTriangle } from "lucide-react";
 
 const COLORS = ["#4f46e5", "#10b981", "#f59e0b", "#ef4444"];
 
@@ -39,8 +39,8 @@ const Summary = () => {
   if (!state || !state.userPerformance || !state.analytics)
     return (
       <div className="flex flex-col items-center justify-center h-screen">
-        <p className="text-lg mb-4 text-muted-foreground">
-          ⚠️ No analytics data found.
+        <p className="text-lg mb-4 text-muted-foreground flex items-center gap-2">
+          <AlertTriangle className="text-yellow-500" /> No analytics data found.
         </p>
         <Button onClick={() => router.push("/student/battleground")}>
           Go Back

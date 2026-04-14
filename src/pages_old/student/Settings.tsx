@@ -24,7 +24,12 @@ import {
   ChevronRight,
   Sparkles,
   Lock,
-  Globe
+  Globe,
+  Clock,
+  Layout,
+  BarChart3,
+  CheckCircle2,
+  AlertCircle
 } from "lucide-react";
 
 import { palette } from "@/theme/palette";
@@ -48,6 +53,13 @@ const UserProfile = () => {
         name: data.name,
         avatarUrl: data.avatarUrl,
         learningPreferences: data.learningPreferences || {},
+        onboardingData: data.onboardingData || {
+          dailyGoalMinutes: 30,
+          primaryGoal: "General Learning",
+          skillLevel: "beginner",
+          studyTimePreference: "morning",
+          targetStreak: 7
+        },
         email: data.email,
       });
     } catch (err) {
@@ -71,15 +83,25 @@ const UserProfile = () => {
     });
   };
 
+  const handleOnboardingChange = (key: string, value: any) => {
+    setEditData({
+      ...editData,
+      onboardingData: {
+        ...editData.onboardingData,
+        [key]: value,
+      },
+    });
+  };
+
   const handleSave = async () => {
     try {
       setSaving(true);
       const { data } = await axios.post("/api/auth/update", editData, { withCredentials: true });
-      setMessage("✅ Data persistence synchronized!");
+      setMessage("Data persistence synchronized!");
       setUser(data.user);
       setTimeout(() => setMessage(""), 3000);
     } catch (err) {
-      setMessage("❌ Sync failed!");
+      setMessage("Sync failed!");
     } finally {
       setSaving(false);
     }
@@ -175,6 +197,7 @@ const UserProfile = () => {
         <div className="lg:col-span-3 space-y-2">
           {[
             { id: "profile", label: "Identity", icon: User },
+            { id: "directives", label: "Directives", icon: Target },
             { id: "preferences", label: "Learning DNA", icon: Brain },
             { id: "security", label: "Protocol", icon: Lock },
             { id: "social", label: "Network", icon: Globe },
@@ -283,6 +306,94 @@ const UserProfile = () => {
                   </motion.div>
                 )}
 
+                {activeTab === "directives" && (
+                  <motion.div 
+                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                    className="space-y-8"
+                  >
+                    <div className="p-6 rounded-3xl bg-gradient-to-br from-purple-500/5 to-transparent border border-white/5">
+                      <h3 className="text-xs font-black uppercase tracking-widest text-purple-400 mb-6 flex items-center gap-2">
+                        <Target size={14} /> Mission Objectives
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black uppercase tracking-widest text-white/30 ml-1">Primary Learning Goal</label>
+                          <Input
+                            value={editData.onboardingData?.primaryGoal || ""}
+                            onChange={(e) => handleOnboardingChange("primaryGoal", e.target.value)}
+                            className="h-14 rounded-2xl border-white/10 bg-[#050507]/50 font-bold"
+                            placeholder="e.g. Master React, Data Science..."
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-black uppercase tracking-widest text-white/30 ml-1">Daily Commitment (Mins)</label>
+                          <Input
+                            type="number"
+                            value={editData.onboardingData?.dailyGoalMinutes || 30}
+                            onChange={(e) => handleOnboardingChange("dailyGoalMinutes", parseInt(e.target.value))}
+                            className="h-14 rounded-2xl border-white/10 bg-[#050507]/50 font-bold"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-white/30 ml-1">Current Mastery Rank</label>
+                        <select
+                          value={editData.onboardingData?.skillLevel || "beginner"}
+                          onChange={(e) => handleOnboardingChange("skillLevel", e.target.value)}
+                          className="w-full h-14 rounded-2xl border-2 border-white/10 bg-[#050507]/50 px-4 font-black uppercase text-[10px] tracking-widest text-white"
+                        >
+                          <option value="beginner">Beginner (Level 1)</option>
+                          <option value="intermediate">Intermediate (Level 2)</option>
+                          <option value="advanced">Advanced (Level 3)</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-white/30 ml-1">Optimal Sync Time (Preference)</label>
+                        <select
+                          value={editData.onboardingData?.studyTimePreference || "morning"}
+                          onChange={(e) => handleOnboardingChange("studyTimePreference", e.target.value)}
+                          className="w-full h-14 rounded-2xl border-2 border-white/10 bg-[#050507]/50 px-4 font-black uppercase text-[10px] tracking-widest text-white"
+                        >
+                          <option value="morning">Morning (06:00 - 12:00)</option>
+                          <option value="afternoon">Afternoon (12:00 - 17:00)</option>
+                          <option value="evening">Evening (17:00 - 22:00)</option>
+                          <option value="night">Night Owl (22:00 - 04:00)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="p-6 rounded-3xl bg-white/5 border border-white/5 flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/20">
+                          <BarChart3 className="text-yellow-500" size={20} />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-white/60">Target Persistence Streak</p>
+                          <p className="text-[9px] text-white/20 uppercase tracking-widest">Recommended: 14 Days</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                         <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleOnboardingChange("targetStreak", Math.max(1, (editData.onboardingData?.targetStreak || 7) - 1))}
+                          className="w-8 h-8 p-0 rounded-lg bg-white/5 hover:bg-white/10"
+                         >-</Button>
+                         <span className="text-xl font-black w-8 text-center">{editData.onboardingData?.targetStreak || 7}</span>
+                         <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleOnboardingChange("targetStreak", (editData.onboardingData?.targetStreak || 7) + 1)}
+                          className="w-8 h-8 p-0 rounded-lg bg-white/5 hover:bg-white/10"
+                         >+</Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
                 {activeTab === "security" && (
                    <motion.div 
                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
@@ -320,7 +431,19 @@ const UserProfile = () => {
 
               {/* ACTION FOOTER */}
               <div className="mt-12 flex items-center justify-between pt-8 border-t border-white/5">
-                <p className="text-[10px] font-bold text-[#10B981]">{message}</p>
+                <div className="flex items-center gap-2">
+                  {message && (
+                    <>
+                      {message.includes("failed") ? 
+                        <AlertCircle size={14} className="text-[#EF4444]" /> : 
+                        <CheckCircle2 size={14} className="text-[#10B981]" />
+                      }
+                      <p className={`text-[10px] font-bold ${message.includes("failed") ? "text-[#EF4444]" : "text-[#10B981]"}`}>
+                        {message}
+                      </p>
+                    </>
+                  )}
+                </div>
                 <Button
                   onClick={handleSave}
                   disabled={saving}

@@ -4,7 +4,8 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Heart, Brain, Zap, Coffee, RefreshCw, ChevronRight,
-  Flame, ChevronDown, ChevronUp, Sparkles, AlertTriangle
+  Flame, ChevronDown, ChevronUp, Sparkles, AlertTriangle,
+  Smile, Meh, Frown, Skull, CheckCircle
 } from "lucide-react";
 
 const burnoutColors: Record<string, string> = {
@@ -15,12 +16,12 @@ const burnoutColors: Record<string, string> = {
   critical: "#EF4444",
 };
 
-const burnoutEmoji: Record<string, string> = {
-  none: "🔥",
-  low: "😌",
-  moderate: "😐",
-  high: "😓",
-  critical: "💀",
+const burnoutIcon: Record<string, any> = {
+  none: <CheckCircle className="w-4 h-4 text-green-500" />,
+  low: <Smile className="w-4 h-4 text-cyan-400" />,
+  moderate: <Meh className="w-4 h-4 text-yellow-400" />,
+  high: <Frown className="w-4 h-4 text-orange-400" />,
+  critical: <Skull className="w-4 h-4 text-red-500" />,
 };
 
 interface TherapistData {
@@ -96,8 +97,8 @@ export default function AITherapistWidget() {
               AI Study Therapist
             </p>
             {data ? (
-              <p className="text-[11px] text-white/40 mt-0.5">
-                {burnoutEmoji[burnoutLevel]}&nbsp;
+              <p className="flex items-center gap-1.5 text-[11px] text-white/40 mt-0.5">
+                {burnoutIcon[burnoutLevel]}&nbsp;
                 {burnoutLevel === "none"
                   ? "You're on fire!"
                   : burnoutLevel === "low"

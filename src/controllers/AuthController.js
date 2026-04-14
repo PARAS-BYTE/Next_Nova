@@ -1,5 +1,6 @@
 import asyncHandler from "express-async-handler";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import User from "../models/User.js";
 import Calendar from "../models/Calendar.js";
 import generateToken from "../utils/generateToken.js";
@@ -11,6 +12,14 @@ import generateToken from "../utils/generateToken.js";
 //
 export const registerUser = asyncHandler(async (req, res) => {
   try {
+    // [SEARCH] Check if DB is connected
+    if (mongoose.connection.readyState !== 1) {
+      console.error("[ERROR] Signup Attempt Failed: Database not connected");
+      return res.status(503).json({ 
+        message: "Database is currently offline. Please ensure MongoDB is started." 
+      });
+    }
+
     const { username, email, password } = req.body;
 
     // Validate required fields
@@ -41,7 +50,7 @@ export const registerUser = asyncHandler(async (req, res) => {
       return res.status(400).json({ message: "Invalid user data" });
     }
 
-    // ✅ Create token
+    // [SUCCESS] Create token
     try {
       generateToken(res, user._id);
     } catch (tokenError) {
@@ -98,7 +107,7 @@ export const loginUser = asyncHandler(async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // ✅ Create and send JWT
+    // [SUCCESS] Create and send JWT
     generateToken(res, user._id);
 
     // Update lastLogin for analytics
@@ -110,6 +119,7 @@ export const loginUser = asyncHandler(async (req, res) => {
       username: user.username,
       email: user.email,
       role: user.role,
+      onboardingCompleted: user.onboardingCompleted,
     });
   } catch (error) {
     console.error("Login Error:", error);
@@ -142,7 +152,7 @@ export const logoutUser = asyncHandler(async (req, res) => {
 //
 export const getUserProfile = asyncHandler(async (req, res) => {
   try {
-    // 🔹 Extract JWT from either cookie or header
+    // [INFO] Extract JWT from either cookie or header
     let token;
 
     if (req.cookies && req.cookies.jwt) {
@@ -166,7 +176,7 @@ export const getUserProfile = asyncHandler(async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // ✅ Return summarized dashboard data from schema method
+    // [SUCCESS] Return summarized dashboard data from schema method
     res.status(200).json(user.getDashboardSummary());
   } catch (error) {
     console.error("Profile Fetch Error:", error.message);
@@ -412,11 +422,13 @@ export const getUserProfilesetting = asyncHandler(async (req, res) => {
       coins: user.coins,
       badges: user.badges.length,
       learningPreferences: user.learningPreferences,
+      onboardingData: user.onboardingData,
+      onboardingCompleted: user.onboardingCompleted,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     });
   } catch (error) {
-    console.error("❌ Get Profile Error:", error.message);
+    console.error("[ERROR] Get Profile Error:", error.message);
     res.status(401).json({ message: error.message || "Unauthorized request" });
   }
 });
@@ -426,39 +438,55 @@ export const getUserProfilesetting = asyncHandler(async (req, res) => {
 //
 export const updateUserProfile = asyncHandler(async (req, res) => {
   try {
-    const user = await authenticateUser(req);
+    const userAuth = await authenticateUser(req);
 
-    // Only allow safe fields to update
+    // Only allow specific fields to be updated for security
+    const update = {};
     const allowedFields = [
       "username",
       "name",
       "avatarUrl",
       "learningPreferences",
+      "onboardingData",
+      "onboardingCompleted"
     ];
 
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) {
-        user[field] = req.body[field];
+        update[field] = req.body[field];
       }
     });
 
-    const updatedUser = await user.save();
+    console.log("[SYNC] Syncing Directives for User:", userAuth._id);
+    
+    // Direct update to avoid Mongoose change-detection issues with nested objects
+    const updatedUser = await User.findByIdAndUpdate(
+      userAuth._id,
+      { $set: update },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     res.status(200).json({
-      message: "✅ Profile updated successfully",
+      message: "System Parameters Synchronized",
       user: {
         _id: updatedUser._id,
         username: updatedUser.username,
         name: updatedUser.name,
         avatarUrl: updatedUser.avatarUrl,
         learningPreferences: updatedUser.learningPreferences,
+        onboardingData: updatedUser.onboardingData,
+        onboardingCompleted: updatedUser.onboardingCompleted,
         xp: updatedUser.xp,
         level: updatedUser.level,
         coins: updatedUser.coins,
       },
     });
   } catch (error) {
-    console.error("❌ Update Profile Error:", error.message);
-    res.status(401).json({ message: error.message || "Unauthorized request"     });
+    console.error("[ERROR] Profile Sync Error:", error.message);
+    res.status(500).json({ message: "Internal sync error occurred" });
   }
 });

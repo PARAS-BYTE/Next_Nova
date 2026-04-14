@@ -295,17 +295,17 @@ const TaskItem = ({
 
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             <h4
               className={`text-base font-bold truncate`}
               style={{ color: isCompleted ? '#34D399' : isLocked ? '#6B7280' : '#FFFFFF' }}
             >
               {task.title}
             </h4>
-            {isCompleted && <Sparkles className="w-4 h-4 text-yellow-400" />}
+            {isCompleted && <Sparkles className="w-4 h-4 text-yellow-400 shrink-0" />}
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <Badge 
               variant="outline" 
               className="px-2 py-0 text-[10px] uppercase font-black" 
@@ -417,9 +417,9 @@ const HeroStatsCard = ({ preferences }: { preferences: StudyPreferences }) => {
           <span className="text-[10px] uppercase font-black opacity-40 block mb-2">Grand Ambitions</span>
           <div className="space-y-2">
             {preferences.learningGoals.slice(0, 2).map((goal, index) => (
-              <div key={index} className="flex items-center gap-2 text-[10px] font-bold" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                <CircleDashed className="w-3 h-3 text-[#7C6AFA]" />
-                {goal}
+              <div key={index} className="flex items-start gap-2 text-[10px] font-bold" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                <CircleDashed className="w-3 h-3 text-[#7C6AFA] mt-0.5 shrink-0" />
+                <span className="break-words line-clamp-2">{goal}</span>
               </div>
             ))}
           </div>
@@ -642,7 +642,7 @@ const Calendar = () => {
   };
 
   // Calendar navigation functions
-  const routerMonth = (direction: 'prev' | 'next') => {
+  const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentMonth(prev => {
       const newMonth = new Date(prev);
       if (direction === 'prev') {
@@ -853,13 +853,15 @@ const Calendar = () => {
         {/* Calendar Section */}
         <div className="lg:col-span-2 space-y-6">
           <Card className="shadow-sm" style={{ backgroundColor: palette.card, border: `1px solid ${palette.border}` }}>
-            <CardHeader className="flex flex-row items-center justify-between pb-4">
-              <CardTitle className="text-lg flex items-center gap-2" style={{ color: palette.text }}>
-                <CalendarDays className="w-5 h-5" />{" "}
-                {currentMonth.toLocaleString("default", {
-                  month: "long",
-                  year: "numeric",
-                })}
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 gap-4">
+              <CardTitle className="text-lg flex items-center gap-2 min-w-0" style={{ color: palette.text }}>
+                <CalendarDays className="w-5 h-5 shrink-0" />
+                <span className="truncate">
+                  {currentMonth.toLocaleString("default", {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </span>
               </CardTitle>
               <div className="flex gap-2">
                 <Button
@@ -890,9 +892,9 @@ const Calendar = () => {
             </CardHeader>
             <CardContent>
               {/* Week Headers */}
-              <div className="grid grid-cols-7 text-center mb-4 text-sm font-medium" style={{ color: palette.text2 }}>
+              <div className="grid grid-cols-7 text-center mb-4 text-[10px] sm:text-sm font-medium" style={{ color: palette.text2 }}>
                 {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                  <div key={day} className="py-2">{day}</div>
+                  <div key={day} className="py-2 truncate">{day}</div>
                 ))}
               </div>
 

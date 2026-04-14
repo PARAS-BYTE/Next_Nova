@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Clock, CheckCircle2, RefreshCw, XCircle, ArrowLeft } from "lucide-react";
+import { Clock, CheckCircle2, RefreshCw, XCircle, ArrowLeft, BellRing, AlertTriangle } from "lucide-react";
 import { palette } from "@/theme/palette";
 
 const TakeQuiz = () => {
@@ -39,7 +39,7 @@ const TakeQuiz = () => {
       setTimeLeft(data.timeLimit * 60);
       setStartTime(Date.now());
     } catch (err) {
-      console.error("❌ Fetch Quiz Error:", err);
+      console.error("[ERROR] Fetch Quiz Error:", err);
     } finally {
       setLoading(false);
     }
@@ -74,10 +74,10 @@ const TakeQuiz = () => {
         setTabSwitches(prev => {
           const newCount = prev + 1;
           if (newCount >= 3) {
-            alert("🚨 Quiz automatically submitted due to multiple tab switches!");
+            alert("Quiz automatically submitted due to multiple tab switches!");
             handleSubmit(true);
           } else {
-            alert(`⚠️ Warning ${newCount}/3: Tab switching is not allowed during the quiz!`);
+            alert(`Warning ${newCount}/3: Tab switching is not allowed during the quiz!`);
           }
           return newCount;
         });
@@ -108,7 +108,7 @@ const TakeQuiz = () => {
     const answeredCount = Object.keys(answers).length;
 
     if (answeredCount < totalQuestions && !auto) {
-      setError(`⚠️ Please answer all ${totalQuestions} questions before submitting.`);
+      setError(`Please answer all ${totalQuestions} questions before submitting.`);
       return;
     }
 
@@ -128,7 +128,7 @@ const TakeQuiz = () => {
       quizId :quizId,
     };
 
-    console.log("🧾 Final Submission Object:", submission);
+    console.log("[DATA] Final Submission Object:", submission);
 
     setSubmitted(true); // Safely lock the UI into Loading state
     try {
@@ -255,7 +255,7 @@ const TakeQuiz = () => {
       {/* Tab Switch Warning */}
       {tabSwitches > 0 && (
         <div className="flex items-center gap-2 text-sm mt-2 p-3 rounded-lg" style={{ background: '#F59E0B1A', color: '#F59E0B', border: `1px solid #F59E0B80` }}>
-          ⚠️ Cheating Detected: Tab Switch ({tabSwitches}/3 warnings)
+          <AlertTriangle className="w-4 h-4" /> Cheating Detected: Tab Switch ({tabSwitches}/3 warnings)
         </div>
       )}
 

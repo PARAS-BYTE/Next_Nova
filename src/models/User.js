@@ -102,6 +102,15 @@ const userSchema = new Schema(
       preferredTopics: [String],
       weakAreas: [String],
     },
+    onboardingCompleted: { type: Boolean, default: false },
+    onboardingData: {
+      dailyGoalMinutes: { type: Number, default: 30 },
+      primaryGoal: String,
+      availableTimePerDay: String,
+      skillLevel: { type: String, enum: ["beginner", "intermediate", "advanced"], default: "beginner" },
+      studyTimePreference: { type: String, enum: ["morning", "afternoon", "evening", "night"], default: "morning" },
+      targetStreak: { type: Number, default: 7 }
+    },
     flashcards: [{
       topic: String,
       front: String,

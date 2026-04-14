@@ -106,7 +106,7 @@ const StorePage = () => {
       setXp(data.remainingXP);
 
       toast({
-        title: "🎉 Redeemed Successfully!",
+        title: "Redeemed Successfully!",
         description: `You redeemed ${selectedItem?.name}`,
       });
 
@@ -345,8 +345,8 @@ const StorePage = () => {
 
               <CheckCircle className="w-14 h-14 text-green-600 mx-auto mb-4" />
 
-              <h3 className="text-xl font-bold mb-2">
-                🎉 Redemption Successful!
+              <h3 className="text-xl font-bold mb-2 flex items-center justify-center gap-2">
+                <Gift className="w-5 h-5 text-green-600" /> Redemption Successful!
               </h3>
 
               {trackingInfo && (

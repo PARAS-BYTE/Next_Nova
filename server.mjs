@@ -56,10 +56,30 @@ app.prepare().then(() => {
     console.error("❌ CRITICAL: MONGO_URI missing from environment variables.");
     process.exit(1);
   }
-  mongoose.connect(mongoURI).catch(console.error);
+
+  console.log('⏳ Connecting to MongoDB...');
+  mongoose.connect(mongoURI, {
+    serverSelectionTimeoutMS: 5000, 
+  }).then(() => {
+    console.log('✅ MongoDB connected successfully');
+  }).catch((err) => {
+    console.error('❌ MongoDB connection error:', err.message);
+    
+    if (err.message.includes('querySrv ETIMEOUT') || err.message.includes('ECONNREFUSED')) {
+      if (mongoURI.includes('mongodb+srv')) {
+        console.log('💡 Tip: This looks like a DNS issue with MongoDB Atlas.');
+        console.log('   - Try switching your DNS to 8.8.8.8 or 1.1.1.1');
+        console.log('   - Or use a local MongoDB URI in .env: MONGO_URI=mongodb://127.0.0.1:27017/nova_learn');
+      } else {
+        console.log('💡 Tip: Searching for a local MongoDB instance failed.');
+        console.log('   - Make sure MongoDB is installed and running locally.');
+        console.log('   - Run "mongod" in a separate terminal to start it manually.');
+      }
+    }
+  });
+
   const db = mongoose.connection;
-  db.on('error', (err) => console.error('MongoDB connection error:', err));
-  db.once('open', () => console.log('MongoDB connected successfully'));
+  db.on('error', (err) => console.error('MDB Error:', err));
 
   // Attach all original backend routes
   server.use("/api/battle", BattleRouter);

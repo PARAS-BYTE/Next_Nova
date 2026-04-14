@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Swords, AlertTriangle, Flame, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import gsap from "gsap";
 import { palette } from "@/theme/palette";
@@ -159,7 +159,7 @@ const BattleSetup = () => {
   // CREATE BATTLE
   const handleCreateBattle = async () => {
     if (!battleName || !tags) {
-      toast({ description: "⚠️ Please fill all fields" });
+      toast({ description: "Please fill all fields" });
       return;
     }
 
@@ -172,7 +172,7 @@ const BattleSetup = () => {
 
       setCreatedBattle(data);
       setBattleCode(data.battleCode);
-      toast({ description: "🔥 Battle created successfully!" });
+      toast({ description: "Battle created successfully!" });
 
       // refresh recent battles quickly
       try {
@@ -183,7 +183,7 @@ const BattleSetup = () => {
       }
     } catch (err) {
       toast({
-        description: err.response?.data?.message || "❌ Failed to create battle",
+        description: err.response?.data?.message || "Failed to create battle",
       });
     } finally {
       setLoading(false);
@@ -193,7 +193,7 @@ const BattleSetup = () => {
   // JOIN BATTLE
   const handleJoinBattle = async () => {
     if (!battleCode || !username) {
-      toast({ description: "⚠️ Enter username and battle code" });
+      toast({ description: "Enter username and battle code" });
       return;
     }
 
@@ -207,7 +207,7 @@ const BattleSetup = () => {
       (useNavStore.getState().setNavState({ battleData: data, username },), router.push("/student/battleground"));
     } catch (err) {
       toast({
-        description: err.response?.data?.message || "❌ Failed to join battle",
+        description: err.response?.data?.message || "Failed to join battle",
       });
     } finally {
       setLoading(false);
@@ -269,8 +269,8 @@ const BattleSetup = () => {
           transition={{ duration: 0.35 }}
           className="text-center mb-10"
         >
-          <h1 className="text-5xl font-extrabold tracking-wide" style={{ color: palette.text }}>
-            ⚔️ Battle Arena
+          <h1 className="text-5xl font-extrabold tracking-wide flex items-center justify-center gap-3" style={{ color: palette.text }}>
+            <Swords className="w-10 h-10" /> Battle Arena
           </h1>
           <p className="mt-3 text-lg" style={{ color: palette.text2 }}>
             Create or Join a Battle — Let the clash begin.
@@ -446,7 +446,7 @@ const BattleSetup = () => {
           style={{ backgroundColor: palette.card, border: `1px solid ${palette.border}` }}
         >
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-2xl font-bold" style={{ color: palette.text }}>🔥 Recent Battles</h2>
+            <h2 className="text-2xl font-bold flex items-center gap-2" style={{ color: palette.text }}><Flame className="text-orange-500" /> Recent Battles</h2>
             <p className="text-sm" style={{ color: palette.text2 }}>{recentLoading ? "Loading..." : `${recentBattles.length} available`}</p>
           </div>
 
