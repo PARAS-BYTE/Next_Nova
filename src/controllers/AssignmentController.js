@@ -4,7 +4,13 @@ import Course from "../models/Course.js";
 import User from "../models/User.js";
 import Admin from "../models/Admin.js";
 import jwt from "jsonwebtoken";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Mistral } from "@mistralai/mistralai";
+
+const getMistralClient = () => {
+  const apiKey = process.env.MISTRAL_API_KEY;
+  if (!apiKey) throw new Error("MISTRAL_API_KEY is missing");
+  return new Mistral({ apiKey });
+};
 
 //
 // ─── CREATE ASSIGNMENT (ADMIN) ─────────────────────────────────────────
@@ -308,82 +314,107 @@ export const getAdminAssignments = asyncHandler(async (req, res) => {
 });
 
 //
+// ─── AI GRADE ASSIGNMENT SUBMISSION (MISTRAL) ────────────────────────────
+// @route   POST /api/assignments/:assignmentId/ai-grade/:submissionId
+// @access  Private (Admin)
+//
+export const aiGradeAssignment = asyncHandler(async (req, res) => {
+  try {
+    if (!req.admin) {
+      return res.status(401).json({ message: "Not authorized as admin" });
+    }
+
+    const { assignmentId, submissionId } = req.params;
+    const assignment = await Assignment.findById(assignmentId).populate("course", "title");
+    if (!assignment) return res.status(404).json({ message: "Assignment not found" });
+
+    // Verify admin is the instructor
+    const course = await Course.findById(assignment.course);
+    if (course.instructor.toString() !== req.admin._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to grade this assignment" });
+    }
+
+    // Find the submission
+    const submission = assignment.submissions.find((s) => s._id.toString() === submissionId);
+    if (!submission) return res.status(404).json({ message: "Submission not found" });
+
+    // Prepare questions and answers for AI grading
+    const questionsWithAnswers = assignment.questions.map((question) => {
+      const answer = submission.answers.find((a) => a.questionId && a.questionId.toString() === question._id.toString());
+      return { questionText: question.questionText, questionType: question.questionType, maxMarks: question.marks, studentAnswer: answer ? answer.answer : "No answer provided" };
+    });
+
+    const prompt = `You are an expert educator grading a student's assignment.
+    Evaluate the following JSON data representing an assignment:
+    ${JSON.stringify({ title: assignment.title, questions: questionsWithAnswers, totalMarks: assignment.totalMarks })}
+    
+    Return strictly as JSON:
+    {
+      "totalGrade": number,
+      "questionGrades": [{ "questionNumber": number, "marksAwarded": number, "feedback": "string" }],
+      "overallFeedback": "string"
+    }`;
+
+    try {
+      const client = getMistralClient();
+      const response = await client.chat.complete({
+        model: "mistral-large-latest",
+        messages: [{ role: "user", content: prompt }],
+        responseFormat: { type: "json_object" }
+      });
+
+      const gradingResult = JSON.parse(response.choices[0].message.content);
+
+      // Combine feedback
+      const questionFeedbacks = gradingResult.questionGrades
+        ?.map((qg) => `Question ${qg.questionNumber}: ${qg.marksAwarded}/${questionsWithAnswers[qg.questionNumber - 1]?.maxMarks || 0} marks\n${qg.feedback || ""}`)
+        .join("\n\n") || "";
+
+      const combinedFeedback = `${gradingResult.overallFeedback || ""}\n\n${questionFeedbacks}`.trim();
+
+      // Update submission
+      submission.grade = Math.round(gradingResult.totalGrade);
+      submission.feedback = combinedFeedback;
+      submission.gradedBy = req.admin._id;
+      submission.gradedAt = new Date();
+      submission.status = "graded";
+      await assignment.save();
+
+      // Update user's assignment record
+      const user = await User.findById(submission.studentId);
+      if (user) {
+        const idx = user.assignments.findIndex((a) => a.assignmentId && a.assignmentId.toString() === assignmentId);
+        if (idx >= 0) {
+          user.assignments[idx].grade = submission.grade;
+          user.assignments[idx].feedback = submission.feedback;
+        } else {
+          user.assignments.push({ assignmentId: assignment._id, grade: submission.grade, feedback: submission.feedback });
+        }
+        const maxGrade = assignment.totalMarks || 100;
+        const xpGained = Math.round((submission.grade / maxGrade) * 50);
+        if (xpGained > 0) {
+          user.addXP(xpGained);
+          if (!user.xpHistory) user.xpHistory = [];
+          user.xpHistory.push({ date: new Date(), reason: `Assignment: ${assignment.title}`, amount: xpGained });
+        }
+        await user.save();
+      }
+
+      res.status(200).json({ success: true, message: "Assignment graded successfully by Nova AI (Mistral)", submission });
+    } catch (err) {
+      console.error("Mistral Grading Error:", err.message);
+      res.status(500).json({ message: "AI grading failed. Please try manual grading.", error: err.message });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Server error while AI grading assignment" });
+  }
+});
+
+//
 // ─── GET ASSIGNMENTS FOR STUDENT ───────────────────────────────────
 // @route   GET /api/assignments/student
 // @access  Private (Student)
 //
-// export const getStudentAssignments = asyncHandler(async (req, res) => {
-//   try {
-//     // Extract JWT
-//     let token;
-//     if (req.cookies && req.cookies.jwt) {
-//       token = req.cookies.jwt;
-//     } else if (
-//       req.headers.authorization &&
-//       req.headers.authorization.startsWith("Bearer ")
-//     ) {
-//       token = req.headers.authorization.split(" ")[1];
-//     }
-
-//     if (!token) {
-//       return res.status(401).json({ message: "Not authorized, no token" });
-//     }
-
-//     // Verify token
-//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-//     const user = await User.findById(decoded.userId);
-
-//     if (!user) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
-
-//     // Get enrolled course IDs
-//     const enrolledCourseIds = user.enrolledCourses
-//       .map((ec) => ec.courseId)
-//       .filter((id) => id != null); // Filter out null/undefined values
-
-//     console.log(`📚 User ${user._id} enrolled in ${enrolledCourseIds.length} courses`);
-
-//     if (enrolledCourseIds.length === 0) {
-//       return res.status(200).json({
-//         success: true,
-//         assignments: [],
-//         message: "No enrolled courses found",
-//       });
-//     }
-
-//     // Get assignments for enrolled courses
-//     const assignments = await Assignment.find({
-//       course: { $in: enrolledCourseIds },
-//       published: true,
-//     })
-//       .populate("course", "title")
-//       .select(
-//         "title description course dueDate totalMarks questions allowLateSubmission latePenalty submissions createdAt videoUrl"
-//       )
-//       .sort({ dueDate: 1 });
-
-//     console.log(`📝 Found ${assignments.length} published assignments for user ${user._id}`);
-
-//     // Format assignments with student submission status
-//     const formattedAssignments = assignments.map((assignment) => {
-//       const submission = assignment.submissions.find(
-//         (s) => s.studentId.toString() === user._id.toString()
-//       );
-
-//       const isOverdue = new Date(assignment.dueDate) < new Date();
-//       const isSubmitted = !!submission;
-//       const isGraded = submission?.status === "graded";
-
-//       return {
-//         _id: assignment._id,
-//         title: assignment.title,
-//         description: assignment.description,
-//         course: assignment.course?.title || "Unknown Course",
-//         courseId: assignment.course?._id,
-//         dueDate: assignment.dueDate,
-//         totalMarks: assignment.totalMarks,
-//         questionsCount: assignment.questions.length,
 //         questions: assignment.questions.map((q) => ({
 //           _id: q._id,
 //           questionText: q.questionText,
@@ -800,220 +831,5 @@ export const gradeAssignment = asyncHandler(async (req, res) => {
   }
 });
 
-//
-// ─── AI GRADE ASSIGNMENT SUBMISSION (GEMINI) ────────────────────────────
-// @route   POST /api/assignments/:assignmentId/ai-grade/:submissionId
-// @access  Private (Admin)
-//
-export const aiGradeAssignment = asyncHandler(async (req, res) => {
-  try {
-    if (!req.admin) {
-      return res.status(401).json({ message: "Not authorized as admin" });
-    }
 
-    const { assignmentId, submissionId } = req.params;
-
-    const assignment = await Assignment.findById(assignmentId)
-      .populate("course", "title");
-
-    if (!assignment) {
-      return res.status(404).json({ message: "Assignment not found" });
-    }
-
-    // Verify admin is the instructor
-    const course = await Course.findById(assignment.course);
-    if (course.instructor.toString() !== req.admin._id.toString()) {
-      return res.status(403).json({
-        message: "Not authorized to grade this assignment",
-      });
-    }
-
-    // Find the submission
-    const submission = assignment.submissions.find(
-      (s) => s._id.toString() === submissionId
-    );
-
-    if (!submission) {
-      return res.status(404).json({ message: "Submission not found" });
-    }
-
-    // Check if Gemini API key is available
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({
-        message: "Gemini API key not configured. Please contact administrator.",
-      });
-    }
-
-    // Prepare questions and answers for AI grading
-    const questionsWithAnswers = assignment.questions.map((question) => {
-      const answer = submission.answers.find(
-        (a) => a.questionId && a.questionId.toString() === question._id.toString()
-      );
-      return {
-        questionText: question.questionText,
-        questionType: question.questionType,
-        maxMarks: question.marks,
-        studentAnswer: answer ? answer.answer : "No answer provided",
-      };
-    });
-
-    // Build prompt for Gemini
-    const prompt = `You are an expert educator grading a student's assignment. Please evaluate each question and answer carefully.
-
-ASSIGNMENT: ${assignment.title}
-${assignment.description ? `DESCRIPTION: ${assignment.description}` : ''}
-
-QUESTIONS AND ANSWERS:
-${questionsWithAnswers
-  .map(
-    (qa, index) => `
-Question ${index + 1} (${qa.maxMarks} marks):
-Type: ${qa.questionType}
-Question: ${qa.questionText}
-Student Answer: ${qa.studentAnswer}
-`
-  )
-  .join("\n")}
-
-TOTAL MARKS: ${assignment.totalMarks}
-
-Please provide a detailed evaluation in the following JSON format:
-{
-  "totalGrade": <number between 0 and ${assignment.totalMarks}>,
-  "questionGrades": [
-    {
-      "questionNumber": 1,
-      "marksAwarded": <number between 0 and maxMarks>,
-      "feedback": "<detailed feedback explaining what was correct, incorrect, or could be improved>"
-    },
-    ...
-  ],
-  "overallFeedback": "<comprehensive feedback on the entire submission, highlighting strengths and areas for improvement>"
-}
-
-Be fair but thorough. Award partial marks when appropriate. Provide constructive feedback that helps the student learn.`;
-
-    try {
-      // Initialize Gemini
-      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-
-      console.log("🤖 Sending assignment to Gemini for grading...");
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const textResponse = response.text();
-
-      // Parse JSON from response
-      let gradingResult;
-      try {
-        // Extract JSON from response (handle markdown code blocks)
-        const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          gradingResult = JSON.parse(jsonMatch[0]);
-        } else {
-          throw new Error("No JSON found in response");
-        }
-      } catch (parseError) {
-        console.error("Failed to parse Gemini response:", textResponse);
-        return res.status(500).json({
-          message: "Failed to parse AI grading response. Please try manual grading.",
-          rawResponse: textResponse.substring(0, 500), // First 500 chars for debugging
-        });
-      }
-
-      // Validate grading result
-      if (
-        !gradingResult.totalGrade ||
-        typeof gradingResult.totalGrade !== "number" ||
-        gradingResult.totalGrade < 0 ||
-        gradingResult.totalGrade > assignment.totalMarks
-      ) {
-        return res.status(500).json({
-          message: "Invalid grade returned by AI. Please try manual grading.",
-        });
-      }
-
-      // Combine feedback from all questions
-      const questionFeedbacks = gradingResult.questionGrades
-        ? gradingResult.questionGrades
-            .map(
-              (qg) =>
-                `Question ${qg.questionNumber}: ${qg.marksAwarded}/${questionsWithAnswers[qg.questionNumber - 1]?.maxMarks || 0} marks\n${qg.feedback || ""}`
-            )
-            .join("\n\n")
-        : "";
-
-      const combinedFeedback = `${gradingResult.overallFeedback || ""}\n\n${questionFeedbacks}`.trim();
-
-      // Update submission with AI grade
-      submission.grade = Math.round(gradingResult.totalGrade);
-      submission.feedback = combinedFeedback;
-      submission.gradedBy = req.admin._id;
-      submission.gradedAt = new Date();
-      submission.status = "graded";
-
-      await assignment.save();
-
-      // Update user's assignment record
-      const user = await User.findById(submission.studentId);
-      if (user) {
-        const assignmentIndex = user.assignments.findIndex(
-          (a) => a.assignmentId && a.assignmentId.toString() === assignmentId
-        );
-
-        if (assignmentIndex >= 0) {
-          user.assignments[assignmentIndex].grade = submission.grade;
-          user.assignments[assignmentIndex].feedback = submission.feedback;
-        } else {
-          user.assignments.push({
-            assignmentId: assignment._id,
-            grade: submission.grade,
-            feedback: submission.feedback,
-          });
-        }
-        
-        // Award XP based on grade (percentage of max grade)
-        const maxGrade = assignment.totalMarks || 100;
-        const gradePercentage = (submission.grade / maxGrade) * 100;
-        const xpGained = Math.round(gradePercentage * 0.5); // 0.5 XP per percentage point
-        
-        if (xpGained > 0) {
-          user.addXP(xpGained);
-          
-          // Add to XP history for dashboard charts
-          if (!user.xpHistory) user.xpHistory = [];
-          user.xpHistory.push({
-            date: new Date(),
-            reason: `Assignment: ${assignment.title}`,
-            amount: xpGained,
-          });
-        }
-        
-        await user.save();
-      }
-
-      res.status(200).json({
-        success: true,
-        message: "Assignment graded successfully by AI",
-        submission: submission,
-        aiGrading: {
-          totalGrade: gradingResult.totalGrade,
-          questionGrades: gradingResult.questionGrades,
-          overallFeedback: gradingResult.overallFeedback,
-        },
-      });
-    } catch (geminiError) {
-      console.error("Gemini AI Grading Error:", geminiError.message);
-      res.status(500).json({
-        message: "AI grading failed. Please try manual grading.",
-        error: geminiError.message,
-      });
-    }
-  } catch (error) {
-    console.error("AI Grade Assignment Error:", error.message);
-    res.status(500).json({
-      message: "Server error while AI grading assignment",
-    });
-  }
-});
 

@@ -1,8 +1,13 @@
 import mongoose from "mongoose";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Mistral } from "@mistralai/mistralai";
 
 const { Schema } = mongoose;
 
+const getMistralClient = () => {
+  const apiKey = process.env.MISTRAL_API_KEY;
+  if (!apiKey) throw new Error("MISTRAL_API_KEY is missing");
+  return new Mistral({ apiKey });
+};
 const taskSchema = new Schema({
   taskId: {
     type: String,
@@ -131,30 +136,20 @@ const calendarSchema = new Schema({
   timestamps: true
 });
 
-// Initialize Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
+// Class methods
 class CalendarClass {
   // Check if we need to generate new tasks
   needsTaskGeneration() {
     const lastGen = this.lastTaskGeneration;
     const now = new Date();
-    
     if (!lastGen) return true;
-    
     const lastGenDate = new Date(lastGen);
-    const lastGenDay = lastGenDate.getDate();
-    const lastGenMonth = lastGenDate.getMonth();
-    const lastGenYear = lastGenDate.getFullYear();
-    
-    const nowDay = now.getDate();
-    const nowMonth = now.getMonth();
-    const nowYear = now.getFullYear();
-    
-    return lastGenDay !== nowDay || lastGenMonth !== nowMonth || lastGenYear !== nowYear;
+    const nowDay = now.getDate(), nowMonth = now.getMonth(), nowYear = now.getFullYear();
+    const lastDay = lastGenDate.getDate(), lastMonth = lastGenDate.getMonth(), lastYear = lastGenDate.getFullYear();
+    return lastDay !== nowDay || lastMonth !== nowMonth || lastYear !== nowYear;
   }
 
-  // Generate daily task using Gemini AI
+  // Generate daily task using Mistral AI
   async generateDailyTask(user) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -173,49 +168,39 @@ class CalendarClass {
         aiGenerated: isAi,
         content: taskData.content || {},
       };
-
       this.tasks = this.tasks.filter((t) => {
-        const taskDate = new Date(t.date);
-        taskDate.setHours(0, 0, 0, 0);
-        return taskDate.getTime() !== today.getTime();
+        const d = new Date(t.date);
+        d.setHours(0, 0, 0, 0);
+        return d.getTime() !== today.getTime();
       });
-
       this.tasks.push(task);
       this.lastTaskGeneration = new Date();
-
       return task;
     };
 
     try {
-      if (!process.env.GEMINI_API_KEY) {
-        console.warn("⚠️ GEMINI_API_KEY not set, using fallback task generation");
-        const fallbackTask = this.generateFallbackTask(user);
-        return applyTask(fallbackTask, false);
+      if (!process.env.MISTRAL_API_KEY) {
+        console.warn("⚠️ MISTRAL_API_KEY not set, using fallback");
+        return applyTask(this.generateFallbackTask(user), false);
       }
 
-      const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+      console.log("🤖 Generating daily task with Nova AI (Mistral)...");
+      const client = getMistralClient();
       const prompt = this.buildTaskPrompt(user);
-      console.log("🤖 Generating daily task with Gemini AI...");
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const textResponse = response.text();
-      console.log("✅ Gemini response received, parsing...");
-      const taskData = this.parseAIResponse(textResponse);
+      
+      const response = await client.chat.complete({
+        model: "mistral-large-latest",
+        messages: [{ role: "user", content: prompt }],
+        responseFormat: { type: "json_object" }
+      });
 
+      const taskData = JSON.parse(response.choices[0].message.content);
       const task = applyTask(taskData, true);
-
       console.log("✅ Daily task generated successfully:", task.title);
-      console.log("📅 Task date:", task.date);
-      console.log("📅 Task date ISO:", new Date(task.date).toISOString());
-      console.log("📅 Total tasks after adding:", this.tasks.length);
-
       return task;
     } catch (error) {
-      console.error("❌ Error generating AI task:", error.message);
-      console.error("Full error:", error);
-      console.log("🔄 Using fallback task generation...");
-      const fallbackTask = this.generateFallbackTask(user);
-      return applyTask(fallbackTask, false);
+      console.error("❌ AI Task Generation Error:", error.message);
+      return applyTask(this.generateFallbackTask(user), false);
     }
   }
 

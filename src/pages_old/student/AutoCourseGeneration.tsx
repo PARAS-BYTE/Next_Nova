@@ -143,8 +143,7 @@ const NovaCourseGenerator = () => {
           >
             Create immersive, structured courses on{" "}
             <span style={{ color: palette.text, fontWeight: '600' }}>any topic</span> —
-            art, finance, cooking, science, or anything else — powered by Gemini
-            AI.
+            art, finance, cooking, science, or anything else — powered by Nova AI (Mistral).
           </p>
         </div>
       </div>

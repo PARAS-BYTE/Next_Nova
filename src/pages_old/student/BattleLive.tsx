@@ -102,8 +102,8 @@ const BattleGround = () => {
     // Kill any remaining animation/timeout to prevent double submission
     // This is crucial since we are manually handling auto-next logic
     // The useEffect cleanup handles the interval/timeout reset for the *next* question
-    setQuestionLocked(true); 
-    
+    setQuestionLocked(true);
+
     // Calculate time taken *before* state update
     const timeTaken = getTimeLimit(question.questionType) - timeLeft;
 
@@ -192,15 +192,15 @@ const BattleGround = () => {
               onMouseOver={(e) => e.currentTarget.style.backgroundColor = palette.cardHover}
               onMouseOut={(e) => e.currentTarget.style.backgroundColor = palette.card}
             >
-              <RadioGroupItem 
-                value={opt} 
-                id={`opt-${i}`} 
+              <RadioGroupItem
+                value={opt}
+                id={`opt-${i}`}
                 disabled={questionLocked}
                 style={{ borderColor: palette.text2 }}
               />
-              <Label 
-                htmlFor={`opt-${i}`} 
-                className="text-base" 
+              <Label
+                htmlFor={`opt-${i}`}
+                className="text-base"
                 style={{ color: palette.text }}
               >
                 {opt}
@@ -220,9 +220,9 @@ const BattleGround = () => {
           value={selectedAnswer}
           onChange={(e) => setSelectedAnswer(e.target.value)}
           disabled={questionLocked}
-          style={{ 
-            backgroundColor: palette.card, 
-            borderColor: palette.border, 
+          style={{
+            backgroundColor: palette.card,
+            borderColor: palette.border,
             color: palette.text,
             boxShadow: `0 2px 4px -1px ${palette.border}`,
             outlineColor: palette.accentDeep
@@ -301,10 +301,10 @@ const BattleGround = () => {
           transition={{ duration: 0.3 }}
           className="w-full max-w-3xl"
         >
-          <Card 
-            className="shadow-xl" 
-            style={{ 
-              borderColor: palette.accentSoft, 
+          <Card
+            className="shadow-xl"
+            style={{
+              borderColor: palette.accentSoft,
               backgroundColor: palette.card,
               boxShadow: `0 10px 15px -3px ${palette.text}10, 0 4px 6px -2px ${palette.text}05`
             }}

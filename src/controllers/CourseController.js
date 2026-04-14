@@ -2,12 +2,18 @@ import asyncHandler from "express-async-handler";
 import Course from "../models/Course.js";
 import User from "../models/User.js";
 import jwt from 'jsonwebtoken'
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Mistral } from "@mistralai/mistralai";
 import Groq from "groq-sdk";
 import axios from 'axios';
 import JSON5 from 'json5';
 import blockchainService from "../utils/blockchainService.js";
 import Certificate from "../Models/Certificate.js";
+
+const getMistralClient = () => {
+  const apiKey = process.env.MISTRAL_API_KEY;
+  if (!apiKey) throw new Error("MISTRAL_API_KEY is missing");
+  return new Mistral({ apiKey });
+};
 
 
 const DEFAULT_THUMBNAIL =
@@ -1035,10 +1041,8 @@ export const autoCreateCourse = async (req, res) => {
             }
         }
 
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-
-        // Prompt (kept small to avoid overload)
+        const client = getMistralClient();
+        
         const prompt = `
 You are an expert e-learning content creator.
 Generate a small sample online course (for demo) using the topic below.
@@ -1051,7 +1055,6 @@ Level: "${level}"
 - Only 1–2 modules total.
 - Each module has 1–2 lessons.
 - Use real YouTube video links related to each lesson topic.
-- Keep content concise and realistic for an online course.
 - Return ONLY valid JSON, no markdown or explanations.
 
 JSON structure:
@@ -1081,15 +1084,13 @@ JSON structure:
 Output only JSON, nothing else.
 `;
 
-        // Ask Gemini to generate
-        const result = await model.generateContent(prompt);
-        let rawText = "";
-        console.log("Result", result)
-        try {
-            rawText = (await result.response.text()).trim();
-        } catch {
-            rawText = result.response?.text?.trim?.() || "";
-        }
+        const response = await client.chat.complete({
+          model: "mistral-large-latest",
+          messages: [{ role: "user", content: prompt }],
+          responseFormat: { type: "json_object" }
+        });
+
+        let rawText = response.choices[0].message.content;
 
         // Helper: extract JSON safely
         const extractJson = (text) => {
@@ -1166,7 +1167,7 @@ Output only JSON, nothing else.
         }
 
         res.status(201).json({
-            message: "✅ Course generated successfully using Gemini 2.5 Flash",
+            message: "✅ Course generated successfully using Nova AI",
             course: newCourse,
         });
     } catch (error) {
@@ -1368,12 +1369,8 @@ export const buildYoutubeCourse = asyncHandler(async (req, res) => {
     const { url, title } = req.body;
     if (!url) return res.status(400).json({ message: "YouTube URL is required" });
 
-    // AI API setup
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY1;
-    if (!apiKey) throw new Error("AI service not configured");
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-
+    const client = getMistralClient();
+    
     let prompt = `You are an expert AI Course Architect. I am providing you with a topic/title: "${title || url}" and a YouTube video URL: "${url}".
 Based on this information (using your internal knowledge about this likely topic or video), generate a comprehensive educational course in strictly valid JSON format.
 The output MUST include:
@@ -1413,8 +1410,13 @@ The output MUST include:
 }
 Return ONLY the raw JSON format, no markdown tags.`;
 
-    const result = await model.generateContent(prompt);
-    let text = result.response.text();
+    const response = await client.chat.complete({
+      model: "mistral-large-latest",
+      messages: [{ role: "user", content: prompt }],
+      responseFormat: { type: "json_object" }
+    });
+    
+    let text = response.choices[0].message.content;
     text = text.replace(/```json/g, "").replace(/```/g, "").trim();
     
     let courseData;
