@@ -29,7 +29,7 @@ export default function GameAvatar({
   showRing = true,
   className = '',
 }: AvatarProps) {
-  const cfg = AVATAR_SKINS[skin];
+  const cfg = AVATAR_SKINS[skin as keyof typeof AVATAR_SKINS] || AVATAR_SKINS.default;
   const rankCfg = getRankForLevel(level);
 
   /* Animation variants per mood */

@@ -38,6 +38,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import VideoPlayer from '@/components/VideoPlayer';
 import LessonNotes from '@/components/LessonNotes';
+import { cn } from "@/lib/utils";
 
 // ─── AI Chatbot Component ────────────────────────────────
 interface ChatMessage {
@@ -70,7 +71,7 @@ const AIChatbot = ({ courseTitle, lessonTitle }: { courseTitle: string; lessonTi
     try {
       const res = await axios.post('/api/chatbot', {
         message: userMessage,
-        context: `The student is currently studying the course "${courseTitle}", lesson: "${lessonTitle}". Help them understand the material. Be concise and helpful. Use gaming terminology where appropriate (e.g., "quest", "level up", "power-up knowledge").`,
+        context: `The student is currently studying the course "${courseTitle}", lesson: "${lessonTitle}". Help them understand the material. Be concise and helpful. Use academic terminology.`,
         history: messages.slice(-6),
       }, { withCredentials: true });
 
@@ -88,11 +89,11 @@ const AIChatbot = ({ courseTitle, lessonTitle }: { courseTitle: string; lessonTi
       {/* Floating Chat Button */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-2xl flex items-center justify-center border-2 transition-all"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-2xl flex items-center justify-center border-2 transition-all shadow-xl"
         style={{
-          background: 'linear-gradient(135deg, #7C6AFA, #5D4AD4)',
-          borderColor: '#7C6AFA',
-          boxShadow: '0 0 25px rgba(124, 106, 250, 0.4)',
+          background: '#1E4D3B',
+          borderColor: '#1E4D3B',
+          boxShadow: '0 0 25px rgba(30, 77, 59, 0.3)',
         }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
@@ -109,22 +110,22 @@ const AIChatbot = ({ courseTitle, lessonTitle }: { courseTitle: string; lessonTi
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             className="fixed bottom-24 right-6 z-50 w-[380px] max-h-[520px] rounded-2xl border-2 overflow-hidden flex flex-col"
             style={{
-              background: '#0A0A0C',
-              borderColor: 'rgba(124, 106, 250, 0.3)',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.5), 0 0 30px rgba(124, 106, 250, 0.1)',
+              background: '#FFFFFF',
+              borderColor: 'rgba(30, 77, 59, 0.1)',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.1), 0 0 30px rgba(30, 77, 59, 0.05)',
             }}
           >
             {/* Chat Header */}
-            <div className="p-4 border-b border-white/5 bg-gradient-to-r from-[rgba(124,106,250,0.1)] to-transparent">
+            <div className="p-4 border-b border-slate-50 bg-[#1E4D3B]">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#7C6AFA]/20 border border-[#7C6AFA]/30">
-                  <Bot className="w-5 h-5 text-[#7C6AFA]" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/10 border border-white/20">
+                  <Bot className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <h3 className="text-sm font-black text-white uppercase tracking-wider">Nova AI Companion</h3>
-                  <p className="text-[10px] text-white/40 uppercase tracking-widest">Study Assistant • Online</p>
+                  <p className="text-[10px] text-white/60 uppercase tracking-widest font-bold">Study Assistant • Online</p>
                 </div>
-                <div className="ml-auto w-2 h-2 rounded-full bg-green-400 shadow-[0_0_8px_#34D399]" />
+                <div className="ml-auto w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34D399]" />
               </div>
             </div>
 
@@ -132,18 +133,18 @@ const AIChatbot = ({ courseTitle, lessonTitle }: { courseTitle: string; lessonTi
             <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[340px]" style={{ scrollbarWidth: 'thin' }}>
               {messages.length === 0 && (
                 <div className="text-center py-8">
-                  <Sparkles className="w-8 h-8 text-[#7C6AFA] mx-auto mb-3 opacity-50" />
-                  <p className="text-xs text-white/30 uppercase tracking-widest font-bold">Ask me anything about your quest</p>
-                  <p className="text-[10px] text-white/20 mt-1">I know everything about "{lessonTitle}"</p>
+                  <Sparkles className="w-8 h-8 text-[#1E4D3B] mx-auto mb-3 opacity-50" />
+                  <p className="text-xs text-slate-400 uppercase tracking-widest font-black">Ask me anything about your quest</p>
+                  <p className="text-[10px] text-slate-300 mt-1 uppercase font-bold">I know everything about "{lessonTitle}"</p>
                 </div>
               )}
               {messages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div
-                    className={`max-w-[80%] p-3 rounded-xl text-xs leading-relaxed ${
+                    className={`max-w-[80%] p-3 rounded-xl text-xs leading-relaxed font-bold ${
                       msg.role === 'user'
-                        ? 'bg-[#7C6AFA] text-white rounded-br-sm'
-                        : 'bg-white/5 text-white/80 border border-white/5 rounded-bl-sm'
+                        ? 'bg-[#1E4D3B] text-white rounded-br-sm'
+                        : 'bg-slate-50 text-black border border-slate-100 rounded-bl-sm'
                     }`}
                   >
                     {msg.content}
@@ -152,8 +153,8 @@ const AIChatbot = ({ courseTitle, lessonTitle }: { courseTitle: string; lessonTi
               ))}
               {loading && (
                 <div className="flex justify-start">
-                  <div className="bg-white/5 border border-white/5 p-3 rounded-xl rounded-bl-sm">
-                    <Loader2 className="w-4 h-4 text-[#7C6AFA] animate-spin" />
+                  <div className="bg-slate-50 border border-slate-100 p-3 rounded-xl rounded-bl-sm">
+                    <Loader2 className="w-4 h-4 text-[#1E4D3B] animate-spin" />
                   </div>
                 </div>
               )}
@@ -161,20 +162,19 @@ const AIChatbot = ({ courseTitle, lessonTitle }: { courseTitle: string; lessonTi
             </div>
 
             {/* Input */}
-            <div className="p-3 border-t border-white/5 bg-black/40">
+            <div className="p-3 border-t border-slate-50 bg-white">
               <div className="flex gap-2">
                 <Input
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleSend()}
                   placeholder="Ask your companion..."
-                  className="flex-1 h-10 bg-white/5 border-white/10 rounded-xl text-xs text-white placeholder:text-white/20 focus:border-[#7C6AFA]"
+                  className="flex-1 h-10 bg-slate-50 border-slate-100 rounded-xl text-xs text-black placeholder:text-slate-300 focus:border-[#1E4D3B]"
                 />
                 <Button
                   onClick={handleSend}
                   disabled={loading || !input.trim()}
-                  className="h-10 w-10 rounded-xl p-0"
-                  style={{ background: 'linear-gradient(135deg, #7C6AFA, #5D4AD4)' }}
+                  className="h-10 w-10 rounded-xl p-0 bg-black hover:bg-[#1E4D3B]"
                 >
                   <Send className="w-4 h-4 text-white" />
                 </Button>
@@ -300,7 +300,7 @@ const StudyGround = () => {
   };
 
   const isLessonCompleted = (lesson: any) => {
-    if (!lesson._id) return false;
+    if (!lesson?._id) return false;
     return completedLessons.has(lesson._id.toString());
   };
 
@@ -330,36 +330,36 @@ const StudyGround = () => {
   };
 
   if (loading) return (
-    <div className="flex justify-center items-center h-[80vh]" style={{ background: '#050507' }}>
+    <div className="flex justify-center items-center h-[80vh] bg-white">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
-        <Loader2 className="w-10 h-10 text-[#7C6AFA] animate-spin mx-auto mb-4" />
-        <p className="text-xs text-white/40 uppercase tracking-[0.3em] font-black">Loading Dungeon...</p>
+        <Loader2 className="w-10 h-10 text-[#1E4D3B] animate-spin mx-auto mb-4" />
+        <p className="text-xs text-slate-300 uppercase tracking-[0.3em] font-black">Loading Experience...</p>
       </motion.div>
     </div>
   );
 
   if (!course) return (
-    <div className="flex justify-center items-center h-[80vh]" style={{ background: '#050507' }}>
-      <p className="text-red-400 font-black uppercase tracking-widest text-sm">Course not found in the realm.</p>
+    <div className="flex justify-center items-center h-[80vh] bg-white">
+      <p className="text-black font-black uppercase tracking-widest text-sm">Course data unavailable.</p>
     </div>
   );
 
   const level = getCurrentLevel();
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 lg:p-8" style={{ background: '#050507', color: '#FFFFFF' }}>
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8 bg-white" style={{ background: '#FFFFFF', color: '#000000' }}>
       {/* ─── Hero Banner ───────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="mb-8 p-6 rounded-2xl border-2 relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, rgba(124,106,250,0.08), rgba(34,211,238,0.05), rgba(0,0,0,0.9))',
-          borderColor: 'rgba(124, 106, 250, 0.15)',
+          background: '#FFFFFF',
+          borderColor: 'rgba(30, 77, 59, 0.1)',
         }}
       >
         {/* Background pattern */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, #7C6AFA 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, #1E4D3B 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-4">
@@ -367,59 +367,56 @@ const StudyGround = () => {
               variant="ghost"
               size="sm"
               onClick={() => router.push('/student/learning')}
-              className="text-white/50 hover:text-white font-black text-[10px] uppercase tracking-widest"
+              className="text-slate-400 hover:text-black font-black text-[10px] uppercase tracking-widest"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Retreat
             </Button>
-            <Badge className="text-[9px] font-black uppercase px-2 py-0" style={{ background: '#7C6AFA', color: '#fff' }}>
+            <Badge className="text-[9px] font-black uppercase px-2 py-0" style={{ background: '#1E4D3B', color: '#fff' }}>
               LVL {level.module}.{level.lesson}
             </Badge>
             {course.userProgress?.completed && (
-              <Badge className="text-[9px] font-black uppercase px-2 py-0" style={{ background: '#34D399', color: '#000' }}>
+              <Badge className="text-[9px] font-black uppercase px-2 py-0" style={{ background: '#000000', color: '#fff' }}>
                 <Crown className="w-3 h-3 mr-1" /> Conquered
               </Badge>
             )}
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight mb-2" style={{ background: 'linear-gradient(135deg, #FFFFFF, #7C6AFA)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight mb-2 text-black leading-none italic">
             {course.title}
           </h1>
-          <p className="text-xs text-white/40 mb-4 max-w-2xl">{course.description}</p>
+          <p className="text-xs text-slate-400 mb-4 max-w-2xl font-bold">{course.description}</p>
 
           {/* Stats Row */}
           <div className="flex flex-wrap gap-6 text-[10px] uppercase tracking-widest font-black mb-4">
-            <span className="flex items-center gap-2 text-white/50">
-              <MapIcon className="w-3.5 h-3.5 text-[#7C6AFA]" /> {course.category}
+            <span className="flex items-center gap-2 text-slate-300">
+              <MapIcon className="w-3.5 h-3.5 text-[#1E4D3B]" /> {course.category}
             </span>
-            <span className="flex items-center gap-2 text-white/50">
-              <Clock className="w-3.5 h-3.5 text-[#22D3EE]" /> {course.duration}H Quest
+            <span className="flex items-center gap-2 text-slate-300">
+              <Clock className="w-3.5 h-3.5 text-black" /> {course.duration}H Quest
             </span>
-            <span className="flex items-center gap-2 text-white/50">
-              <Sword className="w-3.5 h-3.5 text-[#FBBF24]" /> {course.level}
+            <span className="flex items-center gap-2 text-slate-300">
+              <Sword className="w-3.5 h-3.5 text-[#1E4D3B]" /> {course.level}
             </span>
-            <span className="flex items-center gap-2 text-white/50">
-              <Target className="w-3.5 h-3.5 text-[#34D399]" /> {completedCount}/{totalLessons} Missions
+            <span className="flex items-center gap-2 text-slate-300">
+              <Target className="w-3.5 h-3.5 text-[#1E4D3B]" /> {completedCount}/{totalLessons} Missions
             </span>
           </div>
 
           {/* XP Progress Bar */}
           <div>
             <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-2">
-              <span className="text-white/40">Dungeon Mastery</span>
-              <span style={{ color: '#7C6AFA' }}>{progressPercent}%</span>
+              <span className="text-slate-300">Dungeon Mastery</span>
+              <span style={{ color: '#1E4D3B' }}>{progressPercent}%</span>
             </div>
-            <div className="h-3 w-full bg-black/60 rounded-full overflow-hidden border border-white/5 p-0.5">
+            <div className="h-3 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100 p-0.5">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPercent}%` }}
                 transition={{ duration: 1, ease: 'easeOut' }}
                 className="h-full rounded-full"
                 style={{
-                  background: progressPercent === 100
-                    ? 'linear-gradient(90deg, #34D399, #22D3EE)'
-                    : 'linear-gradient(90deg, #7C6AFA, #22D3EE)',
-                  boxShadow: `0 0 15px ${progressPercent === 100 ? 'rgba(52,211,153,0.5)' : 'rgba(124,106,250,0.5)'}`,
+                  background: progressPercent === 100 ? '#000000' : '#1E4D3B',
                 }}
               />
             </div>
@@ -432,29 +429,32 @@ const StudyGround = () => {
         {/* Video + Transcript + Notes Section */}
         <div className="space-y-6">
           {/* Video Player */}
-          <Card className="rounded-2xl border-2 overflow-hidden" style={{ background: '#0A0A0C', borderColor: 'rgba(124, 106, 250, 0.15)' }}>
+          <Card className="rounded-2xl border-2 overflow-hidden bg-white" style={{ borderColor: 'rgba(30, 77, 59, 0.1)' }}>
             <CardContent className="p-0">
               {activeVideo ? (
                 <div>
-                  <div className="rounded-t-2xl overflow-hidden">
+                  <div className="rounded-t-2xl overflow-hidden shadow-2xl">
                     <VideoPlayer url={activeVideo.videoUrl} title={activeVideo.title} onEnded={handleVideoEnd} />
                   </div>
 
                   <div className="p-5">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl flex items-center justify-center border-2" style={{ background: isLessonCompleted(activeVideo) ? 'rgba(52,211,153,0.1)' : 'rgba(124,106,250,0.1)', borderColor: isLessonCompleted(activeVideo) ? 'rgba(52,211,153,0.3)' : 'rgba(124,106,250,0.3)' }}>
-                          {isLessonCompleted(activeVideo) ? <CheckCircle2 className="w-5 h-5 text-[#34D399]" /> : <Play className="w-5 h-5 text-[#7C6AFA]" />}
+                        <div className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center border-2",
+                          isLessonCompleted(activeVideo) ? 'bg-[#1E4D3B] border-[#1E4D3B] text-white' : 'bg-slate-50 border-slate-100 text-[#1E4D3B]'
+                        )}>
+                          {isLessonCompleted(activeVideo) ? <CheckCircle2 className="w-5 h-5" /> : <Play className="w-5 h-5 px-0.5" />}
                         </div>
                         <div>
-                          <h3 className="text-base font-black text-white">{activeVideo.title}</h3>
-                          <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">
+                          <h3 className="text-base font-black text-black leading-none">{activeVideo.title}</h3>
+                          <p className="text-[10px] text-slate-300 uppercase tracking-widest font-black mt-1">
                             {activeVideo.duration || 0} MIN • Mission {level.lesson}
                           </p>
                         </div>
                       </div>
                       {isLessonCompleted(activeVideo) && (
-                        <Badge className="text-[9px] font-black uppercase" style={{ background: 'rgba(52,211,153,0.1)', color: '#34D399', border: '1px solid rgba(52,211,153,0.2)' }}>
+                        <Badge className="text-[9px] font-black uppercase bg-[#1E4D3B] text-white border-0 px-2 py-1">
                           <Sparkles className="w-3 h-3 mr-1" /> Cleared
                         </Badge>
                       )}
@@ -464,8 +464,7 @@ const StudyGround = () => {
                       <div className="flex gap-3 mt-4">
                         <Button
                           onClick={() => markLessonComplete(activeVideo)}
-                          className="flex-1 h-11 rounded-xl font-black text-xs uppercase tracking-widest"
-                          style={{ background: 'linear-gradient(135deg, #7C6AFA, #5D4AD4)', color: '#fff', boxShadow: '0 4px 15px rgba(124,106,250,0.3)' }}
+                          className="flex-1 h-11 rounded-xl font-black text-xs uppercase tracking-widest bg-black text-white hover:bg-[#1E4D3B]"
                         >
                           <Trophy className="w-4 h-4 mr-2" />
                           Claim Victory
@@ -473,8 +472,7 @@ const StudyGround = () => {
                         <Button
                           onClick={handleNextLesson}
                           variant="outline"
-                          className="h-11 rounded-xl font-black text-xs uppercase tracking-widest border-2"
-                          style={{ borderColor: 'rgba(124,106,250,0.2)', color: '#7C6AFA', background: 'transparent' }}
+                          className="h-11 rounded-xl font-black text-xs uppercase tracking-widest border-2 border-slate-100 hover:bg-slate-50 text-black"
                         >
                           Skip <ChevronRight className="w-4 h-4 ml-1" />
                         </Button>
@@ -484,8 +482,7 @@ const StudyGround = () => {
                     {isLessonCompleted(activeVideo) && (
                       <Button
                         onClick={handleNextLesson}
-                        className="w-full mt-4 h-11 rounded-xl font-black text-xs uppercase tracking-widest"
-                        style={{ background: 'rgba(34,211,238,0.1)', color: '#22D3EE', border: '1px solid rgba(34,211,238,0.2)' }}
+                        className="w-full mt-4 h-11 rounded-xl font-black text-xs uppercase tracking-widest bg-slate-50 text-black border-2 border-slate-100"
                       >
                         Next Mission <ChevronRight className="w-4 h-4 ml-2" />
                       </Button>
@@ -494,8 +491,8 @@ const StudyGround = () => {
                 </div>
               ) : (
                 <div className="h-[450px] flex flex-col justify-center items-center">
-                  <Shield className="w-12 h-12 text-white/10 mb-4" />
-                  <p className="text-xs text-white/30 uppercase tracking-widest font-black">Select a mission to begin</p>
+                  <Shield className="w-12 h-12 text-slate-100 mb-4" />
+                  <p className="text-xs text-slate-300 uppercase tracking-widest font-black">Select a mission to begin</p>
                 </div>
               )}
             </CardContent>
@@ -504,15 +501,15 @@ const StudyGround = () => {
           {/* Transcript - Intel Scroll */}
           {activeVideo && (
             <>
-              <Card className="rounded-2xl border-2 overflow-hidden" style={{ background: '#0A0A0C', borderColor: 'rgba(255,255,255,0.05)' }}>
-                <CardHeader className="bg-gradient-to-r from-[rgba(255,255,255,0.03)] to-transparent">
-                  <CardTitle className="flex items-center gap-2 text-[10px] uppercase font-black tracking-widest text-white/50">
-                    <Scroll className="w-4 h-4 text-[#FBBF24]" /> Intel Scroll
+              <Card className="rounded-2xl border-2 overflow-hidden bg-white" style={{ borderColor: 'rgba(0,0,0,0.05)' }}>
+                <CardHeader className="bg-slate-50 p-4">
+                  <CardTitle className="flex items-center gap-2 text-[10px] uppercase font-black tracking-[0.3em] text-black">
+                    <Scroll className="w-4 h-4 text-[#1E4D3B]" /> Intel Scroll
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-xs leading-relaxed max-h-[250px] overflow-y-auto whitespace-pre-line text-white/50 scrollbar-thin p-1">
-                    {transcript}
+                <CardContent className="p-6">
+                  <div className="text-xs font-bold leading-relaxed max-h-[250px] overflow-y-auto whitespace-pre-line text-slate-400 scrollbar-thin">
+                    {transcript || "Telemetry offline."}
                   </div>
                 </CardContent>
               </Card>
@@ -531,8 +528,8 @@ const StudyGround = () => {
 
         {/* ─── Sidebar - Dungeon Map ───────────────────────────── */}
         <div className="lg:h-[calc(100vh-180px)] overflow-y-auto pr-1 space-y-4 scrollbar-thin">
-          <div className="sticky top-0 z-10 pb-3 pt-1" style={{ background: '#050507' }}>
-            <h2 className="text-[10px] uppercase font-black tracking-[0.3em] text-white/30 flex items-center gap-2">
+          <div className="sticky top-0 z-10 pb-3 pt-1 bg-white">
+            <h2 className="text-[10px] uppercase font-black tracking-[0.3em] text-slate-300 flex items-center gap-2">
               <MapIcon className="w-3.5 h-3.5" /> Dungeon Map
             </h2>
           </div>
@@ -553,50 +550,49 @@ const StudyGround = () => {
                 transition={{ duration: 0.3, delay: modIndex * 0.05 }}
               >
                 <Card
-                  className="rounded-2xl border-2 transition-all overflow-hidden"
+                  className="rounded-2xl border-2 transition-all overflow-hidden bg-white"
                   style={{
-                    background: isModuleComplete ? 'rgba(52,211,153,0.03)' : '#0A0A0C',
-                    borderColor: isModuleComplete ? 'rgba(52,211,153,0.15)' : isExpanded ? 'rgba(124,106,250,0.2)' : 'rgba(255,255,255,0.05)',
+                    borderColor: isModuleComplete ? 'rgba(30, 77, 59, 0.2)' : isExpanded ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.03)',
                   }}
                 >
                   <CardHeader
-                    className="cursor-pointer p-4"
+                    className="cursor-pointer p-4 group"
                     onClick={() => setExpandedModule(isExpanded ? null : modIndex)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div
-                          className="w-9 h-9 rounded-xl flex items-center justify-center border-2 text-xs font-black"
+                          className="w-9 h-9 rounded-xl flex items-center justify-center border-2 text-xs font-black transition-colors"
                           style={{
-                            background: isModuleComplete ? 'rgba(52,211,153,0.1)' : 'rgba(124,106,250,0.1)',
-                            borderColor: isModuleComplete ? 'rgba(52,211,153,0.2)' : 'rgba(124,106,250,0.2)',
-                            color: isModuleComplete ? '#34D399' : '#7C6AFA',
+                            background: isModuleComplete ? '#1E4D3B' : 'transparent',
+                            borderColor: isModuleComplete ? '#1E4D3B' : '#slate-100',
+                            color: isModuleComplete ? '#fff' : '#000',
                           }}
                         >
                           {isModuleComplete ? <Crown className="w-4 h-4" /> : `${modIndex + 1}`}
                         </div>
                         <div>
-                          <CardTitle className="text-sm font-black text-white">{mod.title || `Level ${modIndex + 1}`}</CardTitle>
-                          <p className="text-[9px] uppercase tracking-widest font-bold text-white/30 mt-0.5">
+                          <CardTitle className="text-sm font-black text-black leading-none group-hover:text-[#1E4D3B] transition-colors">{mod.title || `Level ${modIndex + 1}`}</CardTitle>
+                          <p className="text-[9px] uppercase tracking-widest font-black text-slate-300 mt-1">
                             {modCompleted}/{modTotal} Missions
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black" style={{ color: isModuleComplete ? '#34D399' : '#7C6AFA' }}>
+                        <span className="text-[10px] font-black text-black">
                           {modProgress}%
                         </span>
-                        {isExpanded ? <ChevronDown className="w-4 h-4 text-white/30" /> : <ChevronRight className="w-4 h-4 text-white/30" />}
+                        {isExpanded ? <ChevronDown className="w-4 h-4 text-slate-200" /> : <ChevronRight className="w-4 h-4 text-slate-200" />}
                       </div>
                     </div>
 
                     {/* Module XP bar */}
-                    <div className="mt-3 h-1 w-full bg-black/40 rounded-full overflow-hidden">
+                    <div className="mt-3 h-1 w-full bg-slate-50 rounded-full overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${modProgress}%` }}
                         className="h-full rounded-full"
-                        style={{ background: isModuleComplete ? '#34D399' : '#7C6AFA' }}
+                        style={{ background: isModuleComplete ? '#000000' : '#1E4D3B' }}
                       />
                     </div>
                   </CardHeader>
@@ -619,41 +615,39 @@ const StudyGround = () => {
                                 key={index}
                                 whileHover={{ x: 4 }}
                                 onClick={() => handleLessonSelect(lesson)}
-                                className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all border-2 ${isActive ? '' : 'hover:bg-white/[0.02]'}`}
-                                style={{
-                                  background: isActive ? 'rgba(124,106,250,0.1)' : 'transparent',
-                                  borderColor: isActive ? 'rgba(124,106,250,0.3)' : completed ? 'rgba(52,211,153,0.1)' : 'transparent',
-                                }}
+                                className={cn(
+                                  "w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all border-2",
+                                  isActive ? 'bg-black text-white border-black shadow-lg' : 'bg-white border-transparent hover:bg-slate-50'
+                                )}
                               >
                                 {/* Mission Icon */}
                                 <div
-                                  className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border"
-                                  style={{
-                                    background: completed ? 'rgba(52,211,153,0.1)' : isActive ? 'rgba(124,106,250,0.15)' : 'rgba(255,255,255,0.03)',
-                                    borderColor: completed ? 'rgba(52,211,153,0.2)' : isActive ? 'rgba(124,106,250,0.3)' : 'rgba(255,255,255,0.05)',
-                                  }}
+                                  className={cn(
+                                    "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-all",
+                                    completed ? 'bg-[#1E4D3B] text-white border-[#1E4D3B]' : isActive ? 'bg-white/10 text-white' : 'bg-slate-50 border-slate-100 text-slate-400'
+                                  )}
                                 >
                                   {completed ? (
-                                    <CheckCircle2 className="w-4 h-4 text-[#34D399]" />
+                                    <CheckCircle2 className="w-4 h-4" />
                                   ) : isActive ? (
-                                    <Play className="w-4 h-4 text-[#7C6AFA]" />
+                                    <Play className="w-4 h-4 px-0.5" />
                                   ) : (
-                                    <span className="text-[10px] font-black text-white/20">{index + 1}</span>
+                                    <span className="text-[10px] font-black">{index + 1}</span>
                                   )}
                                 </div>
 
                                 <div className="flex-1 min-w-0">
-                                  <p className={`text-xs font-bold truncate ${completed ? 'text-[#34D399]' : isActive ? 'text-white' : 'text-white/60'}`}>
+                                  <p className={cn("text-xs font-black truncate leading-none", completed ? 'text-[#1E4D3B]' : isActive ? 'text-white' : 'text-black')}>
                                     {lesson.title}
                                   </p>
-                                  <p className="text-[9px] text-white/20 font-bold uppercase tracking-wider">
+                                  <p className="text-[9px] text-slate-300 font-black uppercase tracking-wider mt-1">
                                     {lesson.duration || 0} min
                                   </p>
                                 </div>
 
                                 {/* Reward indicator */}
                                 {!completed && (
-                                  <div className="text-[9px] font-black text-yellow-400/50 flex items-center gap-1">
+                                  <div className="text-[9px] font-black text-[#1E4D3B] flex items-center gap-1">
                                     <Zap className="w-3 h-3" />
                                     +{10}
                                   </div>
@@ -677,16 +671,16 @@ const StudyGround = () => {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center mt-10 p-8 rounded-2xl border-2 relative overflow-hidden"
-          style={{ background: 'rgba(52,211,153,0.05)', borderColor: 'rgba(52,211,153,0.2)' }}
+          className="text-center mt-10 p-8 rounded-2xl border-2 relative overflow-hidden bg-white shadow-2xl"
+          style={{ borderColor: 'rgba(30, 77, 59, 0.2)' }}
         >
-          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, #34D399 1px, transparent 1px)', backgroundSize: '15px 15px' }} />
-          <Crown className="w-12 h-12 text-[#34D399] mx-auto mb-3" />
-          <p className="text-xl font-black uppercase tracking-wider text-[#34D399]">
+          <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, #1E4D3B 1px, transparent 1px)', backgroundSize: '15px 15px' }} />
+          <Crown className="w-12 h-12 text-[#1E4D3B] mx-auto mb-3" />
+          <p className="text-xl font-black uppercase tracking-tighter text-black italic">
             Dungeon Conquered!
           </p>
-          <p className="text-xs text-white/40 mt-2 uppercase tracking-widest font-bold">
-            You have mastered "{course.title}"
+          <p className="text-xs text-slate-300 mt-2 uppercase tracking-[0.4em] font-black">
+            Mastery achieved: "{course.title}"
           </p>
         </motion.div>
       )}

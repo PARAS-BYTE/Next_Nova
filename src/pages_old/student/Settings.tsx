@@ -1,10 +1,10 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import {
   User,
   Mail,
@@ -29,11 +29,11 @@ import {
   Layout,
   BarChart3,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from "lucide-react";
 
-import { palette } from "@/theme/palette";
-import { getXPProgress, getRankForLevel } from "@/game/gameConfig";
+import { getXPProgress, getRankForLevel, getLevelFromXP } from "@/game/gameConfig";
 import GameAvatar from "@/components/game/AvatarSystem";
 
 const UserProfile = () => {
@@ -110,55 +110,49 @@ const UserProfile = () => {
   useEffect(() => { fetchProfile(); }, []);
 
   if (loading) return (
-    <div className="h-screen flex flex-col justify-center items-center gap-4 bg-[#050507]">
-      <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}>
-        <Zap className="text-[#7C6AFA] w-12 h-12" />
-      </motion.div>
-      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30">Syncing Profile...</p>
+    <div className="h-screen flex flex-col justify-center items-center gap-4 bg-white">
+      <RefreshCw className="text-[#1E4D3B] w-12 h-12 animate-spin" />
+      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-black/30">Syncing Profile...</p>
     </div>
   );
 
-  if (!user) return <div className="h-screen flex justify-center items-center text-red-500 font-black">SYSTEM OFFLINE.</div>;
+  if (!user) return <div className="h-screen flex justify-center items-center text-black font-black">SYSTEM OFFLINE.</div>;
 
+  const currentLevel = getLevelFromXP(user.xp || 0);
   const xpProgress = getXPProgress(user.xp || 0);
-  const rankCfg = getRankForLevel(user.level || 1);
+  const rankCfg = getRankForLevel(currentLevel);
 
   return (
-    <div className="min-h-screen bg-[#050507] text-white p-4 sm:p-8 lg:p-12 overflow-x-hidden">
+    <div className="min-h-screen bg-white text-black p-4 sm:p-8 lg:p-12 overflow-x-hidden">
       
       {/* ─── GAMIFIED HUD HEADER ─────────────────────── */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-6xl mx-auto mb-12 grid grid-cols-1 lg:grid-cols-3 gap-6 items-center"
-      >
+      <div className="max-w-6xl mx-auto mb-12 grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
         {/* Avatar Section */}
-        <div className="flex items-center gap-6 p-6 rounded-3xl border-2 border-white/5 bg-[#0A0A0C] relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-tr from-[#7C6AFA]/10 to-transparent opacity-0 group-hover:opacity-100 transition-all" />
+        <div className="flex items-center gap-6 p-6 rounded-3xl border-2 border-slate-50 bg-white shadow-sm relative overflow-hidden group">
+          <div className="absolute inset-0 bg-[#F0FDF4] opacity-0 group-hover:opacity-100 transition-all" />
           <div className="relative z-10">
-            <GameAvatar skin={user.avatarUrl || "default"} level={user.level} size={80} showRing={true} mood="happy" />
+            <GameAvatar skin={user.avatarUrl || "default"} level={currentLevel} size={80} showRing={true} mood="happy" />
           </div>
           <div className="relative z-10 flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#7C6AFA] bg-[#7C6AFA]/10 px-2 py-0.5 rounded-lg border border-[#7C6AFA]/20">
-                Lvl {user.level}
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#1E4D3B] bg-[#F0FDF4] px-2 py-0.5 rounded-lg border border-[#1E4D3B]/10">
+                Lvl {currentLevel}
               </span>
-              <span className="text-[9px] font-black uppercase tracking-widest text-white/30">Student</span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-black/30">Student</span>
             </div>
             <h2 className="text-2xl font-black tracking-tighter truncate">{user.name || user.username}</h2>
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-3">{rankCfg.title} · {rankCfg.rank}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-black/40 mb-3">{rankCfg.title} · {rankCfg.rank}</p>
             
             {/* XP PROGRESS BAR */}
             <div className="space-y-1">
               <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
-                <span className="text-white/30">Experience Points</span>
-                <span className="text-[#7C6AFA]">{xpProgress.current} / {xpProgress.required}</span>
+                <span className="text-black/30">Experience Points</span>
+                <span className="text-[#1E4D3B] font-black">{xpProgress.current.toLocaleString()} / {xpProgress.required.toLocaleString()} XP</span>
               </div>
-              <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${xpProgress.percent}%` }}
-                  className="h-full bg-gradient-to-r from-[#7C6AFA] to-[#22D3EE] rounded-full"
+              <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden border border-slate-100">
+                <div 
+                  className="h-full bg-[#1E4D3B] rounded-full"
+                  style={{ width: `${xpProgress.percent}%` }}
                 />
               </div>
             </div>
@@ -168,27 +162,26 @@ const UserProfile = () => {
         {/* Core Stats */}
         <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-4 h-full">
           {[
-            { label: "Day Streak", value: user.streakDays, icon: Flame, color: "#FBBF24" },
-            { label: "Nova Coins", value: user.coins, icon: Coins, color: "#34D399" },
-            { label: "Accuracy", value: `${user.accuracyScore}%`, icon: Target, color: "#22D3EE" },
-            { label: "Focus Rank", value: `${user.focusScore}%`, icon: Activity, color: "#EF4444" },
+            { label: "Day Streak", value: user.streakDays, icon: Flame, color: "#1E4D3B", bg: "#F0FDF4" },
+            { label: "Nova Coins", value: user.coins, icon: Coins, color: "#000000", bg: "#F8FAFC" },
+            { label: "Accuracy", value: `${user.accuracyScore}%`, icon: Target, color: "#1E4D3B", bg: "#F0FDF4" },
+            { label: "Focus Rank", value: `${user.focusScore}%`, icon: Activity, color: "#000000", bg: "#F8FAFC" },
           ].map((stat, i) => (
-            <motion.div 
+            <div 
               key={i}
-              whileHover={{ y: -5 }}
-              className="p-5 rounded-3xl border-2 border-white/5 bg-[#0A0A0C] flex flex-col justify-center items-center text-center gap-2"
+              className="p-5 rounded-3xl border-2 border-slate-50 bg-white shadow-sm flex flex-col justify-center items-center text-center gap-2"
             >
-              <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: `${stat.color}15`, border: `1px solid ${stat.color}30` }}>
-                <stat.icon size={20} style={{ color: stat.color }} />
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: stat.bg, color: stat.color }}>
+                <stat.icon size={20} />
               </div>
               <div>
-                <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-0.5">{stat.label}</p>
-                <p className="text-xl font-black text-white">{stat.value}</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-black/30 mb-0.5">{stat.label}</p>
+                <p className="text-xl font-black text-black">{stat.value}</p>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
-      </motion.div>
+      </div>
 
       {/* ─── MAIN CONTENT ─────────────────────── */}
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -205,9 +198,10 @@ const UserProfile = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest border-2 transition-all ${
-                activeTab === tab.id ? "bg-[#7C6AFA]/10 border-[#7C6AFA]/40 text-[#7C6AFA]" : "bg-transparent border-transparent text-white/30 hover:bg-white/5 hover:text-white/60"
-              }`}
+              className={cn(
+                "w-full flex items-center gap-4 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest border-2 transition-all",
+                activeTab === tab.id ? "bg-[#F0FDF4] border-[#1E4D3B]/20 text-[#1E4D3B]" : "bg-transparent border-transparent text-black/30 hover:bg-slate-50"
+              )}
             >
               <tab.icon size={16} /> {tab.label}
               {activeTab === tab.id && <ChevronRight size={14} className="ml-auto" />}
@@ -217,25 +211,17 @@ const UserProfile = () => {
 
         {/* Right Form Card */}
         <div className="lg:col-span-9">
-          <Card className="rounded-[40px] border-2 bg-[#0A0A0C] border-white/5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-12 opacity-[0.02] pointer-events-none">
-              <Sparkles size={300} />
-            </div>
-            
-            <CardHeader className="px-8 pt-8 border-b border-white/5 mb-6">
-              <CardTitle className="text-2xl font-black tracking-tighter flex items-center gap-3">
-                <Settings className="text-[#7C6AFA]" /> 
+          <Card className="rounded-3xl border-2 bg-white border-slate-50 shadow-xl overflow-hidden">
+            <CardHeader className="px-8 pt-8 border-b border-slate-50 mb-6">
+              <CardTitle className="text-2xl font-black tracking-tighter flex items-center gap-3 italic">
+                <Settings className="text-[#1E4D3B]" /> 
                 System Parameters
               </CardTitle>
             </CardHeader>
 
             <CardContent className="px-8 pb-8">
-              <AnimatePresence mode="wait">
                 {activeTab === "profile" && (
-                  <motion.div 
-                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                    className="grid grid-cols-1 md:grid-cols-2 gap-8"
-                  >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {[
                       { label: "Nom de Guerre (Username)", name: "username", icon: User },
                       { label: "Real Name", name: "name", icon: Target },
@@ -243,32 +229,29 @@ const UserProfile = () => {
                       { label: "Avatar Data Matrix (URL)", name: "avatarUrl", icon: Image },
                     ].map((field) => (
                       <div key={field.name} className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-white/30 ml-1 flex items-center gap-2">
+                        <label className="text-[9px] font-black uppercase tracking-widest text-black/40 ml-1 flex items-center gap-2">
                           <field.icon size={10} /> {field.label}
                         </label>
                         <Input
                           name={field.name}
                           value={editData[field.name] || ""}
                           onChange={handleChange}
-                          className="h-14 rounded-2xl border-white/10 bg-[#050507]/50 focus:border-[#7C6AFA] font-bold text-sm tracking-tight"
+                          className="h-14 rounded-2xl border-slate-100 bg-slate-50 focus:border-[#1E4D3B] font-black text-[10px] uppercase tracking-widest"
                         />
                       </div>
                     ))}
-                  </motion.div>
+                  </div>
                 )}
 
                 {activeTab === "preferences" && (
-                  <motion.div 
-                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                    className="space-y-8"
-                  >
+                  <div className="space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-white/30 ml-1">Computation Speed (Pace)</label>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-black/40 ml-1">Computation Speed (Pace)</label>
                         <select
                           value={editData.learningPreferences?.pace || "moderate"}
                           onChange={(e) => handlePreferenceChange("pace", e.target.value)}
-                          className="w-full h-14 rounded-2xl border-2 border-white/10 bg-[#050507]/50 px-4 font-black uppercase text-[10px] tracking-widest"
+                          className="w-full h-14 rounded-2xl border-2 border-slate-100 bg-slate-50 px-4 font-black uppercase text-[10px] tracking-widest"
                         >
                           <option value="slow">Slow & Deep</option>
                           <option value="moderate">Balanced</option>
@@ -276,62 +259,59 @@ const UserProfile = () => {
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-white/30 ml-1">Primary Skillsets</label>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-black/40 ml-1">Primary Skillsets</label>
                         <Input
                           value={(editData.learningPreferences?.preferredTopics || []).join(", ")}
                           onChange={(e) => handlePreferenceChange("preferredTopics", e.target.value.split(",").map(v => v.trim()))}
-                          className="h-14 rounded-2xl border-white/10 bg-[#050507]/50 font-bold"
+                          className="h-14 rounded-2xl border-slate-100 bg-slate-50 font-black text-[10px] uppercase tracking-widest"
                           placeholder="React, CSS, AI..."
                         />
                       </div>
                     </div>
                     
-                    <div className="p-6 rounded-3xl bg-[#7C6AFA]/5 border border-[#7C6AFA]/20">
+                    <div className="p-6 rounded-3xl bg-[#F0FDF4] border border-[#1E4D3B]/10">
                       <div className="flex items-center gap-3 mb-4">
-                         <div className="w-8 h-8 rounded-xl bg-[#7C6AFA]/20 flex items-center justify-center">
-                           <Brain size={16} className="text-[#7C6AFA]" />
+                         <div className="w-8 h-8 rounded-xl bg-[#1E4D3B] flex items-center justify-center">
+                           <Brain size={16} className="text-white" />
                          </div>
-                         <h3 className="text-[10px] font-black uppercase tracking-[0.2em]">Neural Weaknesses</h3>
+                         <h3 className="text-[10px] font-black uppercase tracking-widest text-[#1E4D3B]">Neural Weaknesses</h3>
                       </div>
-                      <p className="text-[10px] text-white/30 uppercase mb-4 leading-relaxed">
-                        Specify topics you struggle with. Our AI will prioritize these in your personal dungeon crawls and quizzes.
+                      <p className="text-[10px] text-black/40 font-bold uppercase mb-4 leading-relaxed tracking-tight">
+                        Specify topics you struggle with. Our AI will prioritize these in your curriculum.
                       </p>
                       <Input
                         value={(editData.learningPreferences?.weakAreas || []).join(", ")}
                         onChange={(e) => handlePreferenceChange("weakAreas", e.target.value.split(",").map(v => v.trim()))}
-                        className="h-14 rounded-2xl border-white/10 bg-[#050507]/50 font-bold"
+                        className="h-14 rounded-2xl border-slate-100 bg-white font-black text-[10px] uppercase tracking-widest"
                         placeholder="Algorithms, State Management..."
                       />
                     </div>
-                  </motion.div>
+                  </div>
                 )}
 
                 {activeTab === "directives" && (
-                  <motion.div 
-                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                    className="space-y-8"
-                  >
-                    <div className="p-6 rounded-3xl bg-gradient-to-br from-purple-500/5 to-transparent border border-white/5">
-                      <h3 className="text-xs font-black uppercase tracking-widest text-purple-400 mb-6 flex items-center gap-2">
-                        <Target size={14} /> Mission Objectives
+                  <div className="space-y-8">
+                    <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100">
+                      <h3 className="text-[10px] font-black uppercase tracking-widest text-black mb-6 flex items-center gap-2">
+                        <Target size={14} className="text-[#1E4D3B]" /> Mission Objectives
                       </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-2">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-white/30 ml-1">Primary Learning Goal</label>
+                          <label className="text-[9px] font-black uppercase tracking-widest text-black/40 ml-1">Primary Learning Goal</label>
                           <Input
                             value={editData.onboardingData?.primaryGoal || ""}
                             onChange={(e) => handleOnboardingChange("primaryGoal", e.target.value)}
-                            className="h-14 rounded-2xl border-white/10 bg-[#050507]/50 font-bold"
+                            className="h-14 rounded-2xl border-slate-200 bg-white font-black text-[10px] uppercase tracking-widest"
                             placeholder="e.g. Master React, Data Science..."
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[9px] font-black uppercase tracking-widest text-white/30 ml-1">Daily Commitment (Mins)</label>
+                          <label className="text-[9px] font-black uppercase tracking-widest text-black/40 ml-1">Daily Commitment (Mins)</label>
                           <Input
                             type="number"
                             value={editData.onboardingData?.dailyGoalMinutes || 30}
                             onChange={(e) => handleOnboardingChange("dailyGoalMinutes", parseInt(e.target.value))}
-                            className="h-14 rounded-2xl border-white/10 bg-[#050507]/50 font-bold"
+                            className="h-14 rounded-2xl border-slate-200 bg-white font-black text-[10px] uppercase tracking-widest"
                           />
                         </div>
                       </div>
@@ -339,11 +319,11 @@ const UserProfile = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-white/30 ml-1">Current Mastery Rank</label>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-black/40 ml-1">Current Mastery Rank</label>
                         <select
                           value={editData.onboardingData?.skillLevel || "beginner"}
                           onChange={(e) => handleOnboardingChange("skillLevel", e.target.value)}
-                          className="w-full h-14 rounded-2xl border-2 border-white/10 bg-[#050507]/50 px-4 font-black uppercase text-[10px] tracking-widest text-white"
+                          className="w-full h-14 rounded-2xl border-2 border-slate-100 bg-slate-50 px-4 font-black uppercase text-[10px] tracking-widest"
                         >
                           <option value="beginner">Beginner (Level 1)</option>
                           <option value="intermediate">Intermediate (Level 2)</option>
@@ -351,11 +331,11 @@ const UserProfile = () => {
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-white/30 ml-1">Optimal Sync Time (Preference)</label>
+                        <label className="text-[9px] font-black uppercase tracking-widest text-black/40 ml-1">Optimal Sync Time (Preference)</label>
                         <select
                           value={editData.onboardingData?.studyTimePreference || "morning"}
                           onChange={(e) => handleOnboardingChange("studyTimePreference", e.target.value)}
-                          className="w-full h-14 rounded-2xl border-2 border-white/10 bg-[#050507]/50 px-4 font-black uppercase text-[10px] tracking-widest text-white"
+                          className="w-full h-14 rounded-2xl border-2 border-slate-100 bg-slate-50 px-4 font-black uppercase text-[10px] tracking-widest"
                         >
                           <option value="morning">Morning (06:00 - 12:00)</option>
                           <option value="afternoon">Afternoon (12:00 - 17:00)</option>
@@ -365,14 +345,14 @@ const UserProfile = () => {
                       </div>
                     </div>
 
-                    <div className="p-6 rounded-3xl bg-white/5 border border-white/5 flex items-center justify-between">
+                    <div className="p-6 rounded-3xl bg-[#F0FDF4] border border-[#1E4D3B]/10 flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/20">
-                          <BarChart3 className="text-yellow-500" size={20} />
+                        <div className="w-12 h-12 rounded-2xl bg-[#1E4D3B] flex items-center justify-center">
+                          <BarChart3 className="text-white" size={20} />
                         </div>
                         <div>
-                          <p className="text-[10px] font-black uppercase tracking-widest text-white/60">Target Persistence Streak</p>
-                          <p className="text-[9px] text-white/20 uppercase tracking-widest">Recommended: 14 Days</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-black/60">Target Persistence Streak</p>
+                          <p className="text-[9px] text-[#1E4D3B] uppercase tracking-widest font-black">Recommended: 14 Days</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
@@ -380,65 +360,64 @@ const UserProfile = () => {
                           variant="ghost" 
                           size="sm" 
                           onClick={() => handleOnboardingChange("targetStreak", Math.max(1, (editData.onboardingData?.targetStreak || 7) - 1))}
-                          className="w-8 h-8 p-0 rounded-lg bg-white/5 hover:bg-white/10"
+                          className="w-8 h-8 p-0 rounded-lg border border-slate-200 hover:bg-white"
                          >-</Button>
                          <span className="text-xl font-black w-8 text-center">{editData.onboardingData?.targetStreak || 7}</span>
                          <Button 
                           variant="ghost" 
                           size="sm" 
                           onClick={() => handleOnboardingChange("targetStreak", (editData.onboardingData?.targetStreak || 7) + 1)}
-                          className="w-8 h-8 p-0 rounded-lg bg-white/5 hover:bg-white/10"
+                          className="w-8 h-8 p-0 rounded-lg border border-slate-200 hover:bg-white"
                          >+</Button>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 )}
 
                 {activeTab === "security" && (
-                   <motion.div 
-                   initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                   className="space-y-6"
-                 >
-                    <div className="p-8 rounded-[32px] border-2 border-[#7C6AFA]/10 bg-gradient-to-br from-[#7C6AFA]/5 to-transparent relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-6 opacity-10">
-                         <ShieldCheck size={80} className="text-[#7C6AFA]" />
+                   <div className="space-y-6">
+                    <div className="p-8 rounded-3xl border-2 border-[#1E4D3B]/10 bg-slate-50 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-6 opacity-5">
+                         <ShieldCheck size={80} className="text-[#1E4D3B]" />
                       </div>
-                      <h3 className="text-lg font-black tracking-tight mb-2">On-Chain Certification Identity</h3>
-                      <p className="text-xs text-white/40 mb-6 max-w-lg leading-relaxed">
-                        Your educational integrity is cryptographically secured. Every XP earned and course passed is logged to our decentralized proof-of-knowledge ledger.
+                      <h3 className="text-lg font-black tracking-tighter mb-2 italic">Institutional Certification</h3>
+                      <p className="text-[10px] font-bold text-black/40 mb-6 max-w-lg leading-relaxed uppercase tracking-tight">
+                        Your educational integrity is cryptographically secured. Every XP earned and course passed is logged to our proof-of-knowledge record.
                       </p>
                       
                       <div className="flex flex-col gap-3">
-                         <div className="p-4 rounded-2xl bg-black/40 border border-white/5 flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-[#7C6AFA]/20 flex items-center justify-center shrink-0">
-                               <LinkIcon size={18} className="text-[#7C6AFA]" />
+                         <div className="p-4 rounded-2xl bg-white border border-slate-100 flex items-center gap-4 shadow-sm">
+                            <div className="w-10 h-10 rounded-full bg-[#F0FDF4] flex items-center justify-center shrink-0">
+                               <LinkIcon size={18} className="text-[#1E4D3B]" />
                             </div>
                             <div className="min-w-0">
-                               <p className="text-[9px] font-black uppercase tracking-widest text-[#7C6AFA]">Permanent Soulbound Address</p>
-                               <p className="text-xs font-mono truncate text-white/60">nova_proof_{user._id.toString()}_ledger</p>
+                               <p className="text-[9px] font-black uppercase tracking-widest text-[#1E4D3B]">Soulbound Student ID</p>
+                               <p className="text-xs font-mono truncate text-black/40">{user._id.toString()}</p>
                             </div>
                          </div>
                          
-                         <Button variant="outline" className="h-12 rounded-2xl border-white/10 hover:bg-white/5 text-[10px] font-black uppercase tracking-widest"
+                         <Button className="h-12 rounded-2xl bg-black text-white hover:bg-[#1E4D3B] text-[10px] font-black uppercase tracking-widest"
                            onClick={() => window.location.href = '/student/certificates'}>
-                            View Verifiable Credentials
+                            Verify Credentials
                          </Button>
                       </div>
                     </div>
-                 </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
 
               {/* ACTION FOOTER */}
-              <div className="mt-12 flex items-center justify-between pt-8 border-t border-white/5">
+              <div className="mt-12 flex items-center justify-between pt-8 border-t border-slate-50">
                 <div className="flex items-center gap-2">
                   {message && (
                     <>
                       {message.includes("failed") ? 
-                        <AlertCircle size={14} className="text-[#EF4444]" /> : 
-                        <CheckCircle2 size={14} className="text-[#10B981]" />
+                        <AlertCircle size={14} className="text-black" /> : 
+                        <CheckCircle2 size={14} className="text-[#1E4D3B]" />
                       }
-                      <p className={`text-[10px] font-bold ${message.includes("failed") ? "text-[#EF4444]" : "text-[#10B981]"}`}>
+                      <p className={cn(
+                        "text-[10px] font-black uppercase tracking-widest",
+                        message.includes("failed") ? "text-black" : "text-[#1E4D3B]"
+                      )}>
                         {message}
                       </p>
                     </>
@@ -447,15 +426,10 @@ const UserProfile = () => {
                 <Button
                   onClick={handleSave}
                   disabled={saving}
-                  className="h-14 px-10 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl transition-all"
-                  style={{ 
-                    background: saving ? "#1A1A1E" : "linear-gradient(135deg, #7C6AFA, #5D4AD4)",
-                    color: "white",
-                    boxShadow: saving ? "none" : "0 10px 30px rgba(124,106,250,0.3)"
-                  }}
+                  className="h-14 px-10 rounded-2xl font-black text-xs uppercase tracking-widest transition-all bg-[#1E4D3B] text-white hover:bg-black"
                 >
-                  {saving ? "Syncing..." : "Commit Changes"}
-                  <Save className="ml-2" size={16} />
+                  {saving ? "Syncing..." : "Apply Transformations"}
+                  <Save className="ml-3" size={16} />
                 </Button>
               </div>
             </CardContent>

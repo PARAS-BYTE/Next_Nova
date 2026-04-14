@@ -57,13 +57,17 @@ export function getLevelFromXP(totalXP: number): number {
 
 export function getXPProgress(totalXP: number): { current: number; required: number; percent: number } {
   const level = getLevelFromXP(totalXP);
-  const xpForCurrent = totalXpForLevel(level);
-  const currentLevelXP = totalXP - xpForCurrent;
-  const requiredXP = xpForLevel(level);
+  const totalForCurrent = totalXpForLevel(level);
+  const totalForNext = totalForCurrent + xpForLevel(level);
+  
+  const currentProgress = totalXP - totalForCurrent;
+  const neededForSelf = xpForLevel(level);
+  const percent = Math.min(100, Math.round((currentProgress / neededForSelf) * 100));
+
   return {
-    current: currentLevelXP,
-    required: requiredXP,
-    percent: Math.min(100, Math.round((currentLevelXP / requiredXP) * 100)),
+    current: totalXP, // Return absolute total
+    required: totalForNext, // Return total needed for next rank
+    percent,
   };
 }
 

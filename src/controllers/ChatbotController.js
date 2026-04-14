@@ -1,4 +1,7 @@
 import { Mistral } from "@mistralai/mistralai";
+import ChatMessage from "../models/ChatMessage.js";
+import User from "../models/User.js";
+import jwt from "jsonwebtoken";
 
 export const chatWithAI = async (req, res) => {
   // Version: 1.5 - Optimized for Mistral AI
@@ -94,3 +97,91 @@ export const chatWithAI = async (req, res) => {
     });
   }
 };
+
+export const smartChat = async (req, res) => {
+  try {
+    const { message, topic = "general" } = req.body;
+    const token = req.cookies.jwt || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
+
+    if (!token) {
+      return res.status(401).json({ message: "Auth token missing" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+
+    if (!message) {
+      return res.status(400).json({ message: "Talk to me, sensei! (Message required)" });
+    }
+
+    const apiKey = process.env.MISTRAL_API_KEY;
+    const client = new Mistral({ apiKey });
+
+    // Save user message
+    await ChatMessage.create({
+      userId,
+      topic,
+      role: 'user',
+      content: message
+    });
+
+    // History for context
+    const history = await ChatMessage.find({ userId, topic })
+      .sort({ timestamp: -1 })
+      .limit(6);
+
+    const systemPrompt = "You are NovaAI, a world-class AI tutor. You are encouraging, precise, and use markdown for formatting. You help students master complex subjects.";
+
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...history.reverse().map(m => ({
+        role: m.role === 'user' ? 'user' : 'assistant',
+        content: m.content
+      })),
+      { role: "user", content: message }
+    ];
+
+    const chatResponse = await client.chat.complete({
+      model: "mistral-large-latest",
+      messages: messages,
+    });
+
+    const reply = chatResponse.choices[0].message.content;
+    const xpGained = Math.random() > 0.6 ? 15 : 0;
+
+    // Save AI reply
+    await ChatMessage.create({
+      userId,
+      topic,
+      role: 'model',
+      content: reply,
+      xpGained
+    });
+
+    // Award XP to user if gained
+    if (xpGained > 0) {
+      const user = await User.findById(userId);
+      if (user && user.addXP) {
+        user.addXP(xpGained, "Chat Participation");
+        await user.save();
+      }
+    }
+
+    return res.json({
+      success: true,
+      reply: reply,
+      xpGained: xpGained,
+      emotionDetected: "curious",
+      emotionAdjusted: false
+    });
+
+  } catch (error) {
+    console.error("❌ SmartChat Error:", error);
+    return res.status(500).json({
+      message: "Neural link failure",
+      reply: "Sorry, I lost my connection for a second. Can you repeat that?",
+      error: error.message
+    });
+  }
+};
+

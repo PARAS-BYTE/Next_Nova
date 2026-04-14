@@ -7,21 +7,23 @@ import {
   Flame, ChevronDown, ChevronUp, Sparkles, AlertTriangle,
   Smile, Meh, Frown, Skull, CheckCircle
 } from "lucide-react";
+import { palette } from "@/theme/palette";
 
+/* ── STRICT COLOR MAP ── */
 const burnoutColors: Record<string, string> = {
-  none: "#10B981",
-  low: "#22D3EE",
-  moderate: "#FBBF24",
-  high: "#F97316",
-  critical: "#EF4444",
+  none: "#1E4D3B",
+  low: "#000000",
+  moderate: "#1E4D3B",
+  high: "#000000",
+  critical: "#000000",
 };
 
 const burnoutIcon: Record<string, any> = {
-  none: <CheckCircle className="w-4 h-4 text-green-500" />,
-  low: <Smile className="w-4 h-4 text-cyan-400" />,
-  moderate: <Meh className="w-4 h-4 text-yellow-400" />,
-  high: <Frown className="w-4 h-4 text-orange-400" />,
-  critical: <Skull className="w-4 h-4 text-red-500" />,
+  none: <CheckCircle className="w-4 h-4 text-emerald-700" />,
+  low: <Smile className="w-4 h-4 text-black opacity-40" />,
+  moderate: <Meh className="w-4 h-4 text-emerald-800" />,
+  high: <Frown className="w-4 h-4 text-black opacity-60" />,
+  critical: <Skull className="w-4 h-4 text-black" />,
 };
 
 interface TherapistData {
@@ -56,82 +58,69 @@ export default function AITherapistWidget() {
     }
   };
 
-  // Auto-fetch once when mounted (with a delay to not block page load)
   useEffect(() => {
-    const timer = setTimeout(fetchMotivation, 3000);
+    const timer = setTimeout(fetchMotivation, 2000);
     return () => clearTimeout(timer);
   }, []);
 
   const burnoutLevel = data?.burnoutLevel || "none";
-  const color = burnoutColors[burnoutLevel] || "#10B981";
+  const accentColor = burnoutColors[burnoutLevel] || "#1E4D3B";
 
   return (
     <div
-      className="rounded-2xl border-2 overflow-hidden transition-all"
+      className="rounded-3xl border transition-all duration-500 overflow-hidden bg-white shadow-sm hover:shadow-md"
       style={{
-        background: "#0A0A0C",
-        borderColor: `${color}25`,
-        boxShadow: `0 0 20px ${color}08`,
+        borderColor: `${accentColor}20`,
       }}
     >
-      {/* Header — always visible */}
+      {/* Header */}
       <div
         role="button"
         tabIndex={0}
-        className="w-full flex items-center justify-between px-5 py-4 text-left cursor-pointer"
+        className="w-full flex items-center justify-between px-6 py-5 text-left cursor-pointer transition-colors hover:bg-slate-50"
         onClick={() => setExpanded(!expanded)}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setExpanded(!expanded); }}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: `${color}15` }}
+            className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border border-slate-100"
+            style={{ background: `${accentColor}08` }}
           >
-            <Heart size={16} style={{ color }} />
+            <Heart size={18} style={{ color: accentColor }} />
           </div>
           <div>
             <p
-              className="text-[10px] font-black uppercase tracking-widest"
-              style={{ color }}
+              className="text-[10px] font-black uppercase tracking-[0.2em] mb-0.5"
+              style={{ color: accentColor }}
             >
-              AI Study Therapist
+              AI Performance Lab
             </p>
             {data ? (
-              <p className="flex items-center gap-1.5 text-[11px] text-white/40 mt-0.5">
-                {burnoutIcon[burnoutLevel]}&nbsp;
-                {burnoutLevel === "none"
-                  ? "You're on fire!"
-                  : burnoutLevel === "low"
-                  ? "Slight fatigue detected"
-                  : burnoutLevel === "moderate"
-                  ? "Moderate burnout detected"
-                  : burnoutLevel === "high"
-                  ? "High burnout — rest recommended"
-                  : "Critical burnout — take a break!"}
+              <p className="flex items-center gap-2 text-xs font-bold text-black opacity-40">
+                {burnoutIcon[burnoutLevel]}
+                {burnoutLevel.toUpperCase()} LEVEL DETECTED
               </p>
             ) : (
-              <p className="text-[11px] text-white/30 mt-0.5">
-                {loading ? "Consulting therapist…" : "Click to get motivation"}
+              <p className="text-xs font-bold text-slate-300">
+                {loading ? "Analyzing biometric data…" : "Click for AI consultation"}
               </p>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
           {!fetched && !loading && (
             <button
               onClick={(e) => { e.stopPropagation(); fetchMotivation(); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest text-white"
-              style={{ background: `${color}20`, color }}
+              className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest bg-black text-white hover:bg-[#1E4D3B] transition-all"
             >
-              <Sparkles size={11} /> Energize
+              Consult
             </button>
           )}
-          {loading && <RefreshCw size={14} className="animate-spin text-white/30" />}
+          {loading && <RefreshCw size={14} className="animate-spin text-slate-300" />}
           {expanded ? (
-            <ChevronUp size={16} className="text-white/20" />
+            <ChevronUp size={16} className="text-slate-300" />
           ) : (
-            <ChevronDown size={16} className="text-white/20" />
+            <ChevronDown size={16} className="text-slate-300" />
           )}
         </div>
       </div>
@@ -143,61 +132,59 @@ export default function AITherapistWidget() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="overflow-hidden"
+            className="overflow-hidden border-t border-slate-50 bg-slate-50/10"
           >
-            <div className="px-5 pb-5 space-y-4 border-t border-white/5">
-              {/* Motivational Message */}
+            <div className="px-6 pb-6 space-y-6 pt-2">
+              {/* Message */}
               <div
-                className="mt-4 p-4 rounded-2xl border"
+                className="p-5 rounded-2xl border bg-white"
                 style={{
-                  background: `${color}08`,
-                  borderColor: `${color}20`,
+                  borderColor: `${accentColor}10`,
                 }}
               >
-                <p className="text-sm text-white/80 leading-relaxed font-medium">
+                <p className="text-sm text-black/70 leading-relaxed font-bold italic">
                   "{data.motivationalMessage}"
                 </p>
               </div>
 
-              {/* Daily Goal */}
-              <div className="flex items-center gap-3 p-3 rounded-xl border border-white/5" style={{ background: "rgba(255,255,255,0.03)" }}>
-                <Zap size={14} style={{ color: "#FBBF24" }} className="shrink-0" />
-                <div>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-0.5">Today's Mission</p>
-                  <p className="text-xs font-bold text-white/70">{data.dailyGoal}</p>
-                </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                 {/* Daily Goal */}
+                 <div className="flex items-center gap-3 p-4 rounded-3xl border border-slate-100 bg-white">
+                   <Zap size={16} className="text-[#1E4D3B] shrink-0" />
+                   <div>
+                     <p className="text-[9px] font-black uppercase tracking-widest text-[#1E4D3B] mb-0.5">Primary Target</p>
+                     <p className="text-xs font-bold text-black opacity-70">{data.dailyGoal}</p>
+                   </div>
+                 </div>
+
+                 {/* Recommendation */}
+                 {data.breakRecommendation?.shouldTakeBreak && (
+                   <div
+                     className="flex items-center gap-3 p-4 rounded-3xl border bg-black text-white"
+                   >
+                     <Coffee size={16} className="text-white shrink-0 opacity-50" />
+                     <div>
+                       <p className="text-[9px] font-black uppercase tracking-widest text-[#1E4D3B] mb-0.5">
+                         Break Required — {data.breakRecommendation.breakDuration}m
+                       </p>
+                       <p className="text-xs font-bold">{data.breakRecommendation.activity}</p>
+                     </div>
+                   </div>
+                 )}
               </div>
 
-              {/* Break Recommendation */}
-              {data.breakRecommendation?.shouldTakeBreak && (
-                <div
-                  className="flex items-center gap-3 p-3 rounded-xl border"
-                  style={{ background: "rgba(251,191,36,0.08)", borderColor: "rgba(251,191,36,0.2)" }}
-                >
-                  <Coffee size={14} style={{ color: "#FBBF24" }} className="shrink-0" />
-                  <div>
-                    <p className="text-[9px] font-black uppercase tracking-widest text-yellow-400/60 mb-0.5">
-                      Break Suggested — {data.breakRecommendation.breakDuration}m
-                    </p>
-                    <p className="text-xs text-white/50">{data.breakRecommendation.activity}</p>
-                  </div>
-                </div>
-              )}
-
               {/* Action Suggestions */}
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-2">
-                  Power Moves
+              <div className="space-y-3">
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                  Optimization Directives
                 </p>
-                <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {(data.actionSuggestions || []).map((s, i) => (
                     <div
                       key={i}
-                      className="flex items-center gap-2.5 p-2.5 rounded-xl border border-white/5 text-xs text-white/50"
-                      style={{ background: "rgba(255,255,255,0.02)" }}
+                      className="flex items-center gap-3 p-3 rounded-2xl border border-slate-100 text-xs font-bold text-black/50 bg-white hover:border-[#1E4D3B]/20 transition-all"
                     >
-                      <ChevronRight size={12} style={{ color }} className="shrink-0" />
+                      <ChevronRight size={14} className="text-[#1E4D3B]" />
                       {s}
                     </div>
                   ))}
@@ -208,11 +195,11 @@ export default function AITherapistWidget() {
               <button
                 onClick={fetchMotivation}
                 disabled={loading}
-                className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest transition-colors disabled:opacity-40"
-                style={{ color }}
+                className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest transition-colors disabled:opacity-40 hover:text-black mt-2"
+                style={{ color: accentColor }}
               >
-                <RefreshCw size={11} className={loading ? "animate-spin" : ""} />
-                Refresh Analysis
+                <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
+                Re-Analyze Biometrics
               </button>
             </div>
           </motion.div>

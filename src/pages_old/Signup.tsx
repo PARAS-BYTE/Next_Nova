@@ -5,11 +5,10 @@ import React, { useState } from 'react';
 
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, User, Mail, Lock, BookOpen, Zap, Shield, Users, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, User, Mail, Lock, ArrowLeft, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { palette } from '@/theme/palette';
 
 const Signup = () => {
   const [username, setUsername] = useState('');
@@ -32,260 +31,135 @@ const Signup = () => {
         { withCredentials: true }
       );
 
-      if (response.data) {
-        localStorage.setItem('userInfo', JSON.stringify(response.data));
-        router.push('/onboarding');
-      }
+      localStorage.setItem('userInfo', JSON.stringify(response.data));
+      router.push('/onboarding');
     } catch (err: any) {
-      console.error('Signup error:', err);
-      // Extract error message from response
-      const errorMessage = err.response?.data?.message || 
-                          err.message || 
-                          'Failed to create account. Please try again.';
-      setError(errorMessage);
+      setError(err.response?.data?.message || 'Failed to initialize profile');
     } finally {
       setLoading(false);
     }
   }
 
-  const highlights = [
-    { icon: Zap, label: 'Interactive Learning' },
-    { icon: Shield, label: 'Progress Tracking' },
-    { icon: Users, label: 'Community Support' },
-  ];
-
   return (
-    <div className="min-h-screen overflow-hidden relative flex items-center justify-center p-4" style={{ background: palette.bg }}>
-      {/* Animated Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 opacity-[0.03]"
-          style={{ backgroundImage: `linear-gradient(rgba(124,106,250,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(124,106,250,0.5) 1px, transparent 1px)`, backgroundSize: '80px 80px' }}
-        />
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 60% 60% at 50% 50%, transparent 0%, #0B0D17 70%)' }} />
-        <motion.div
-          className="absolute w-[500px] h-[500px] rounded-full blur-3xl"
-          style={{ background: 'rgba(34,211,238,0.08)', right: '-15%', top: '15%' }}
-          animate={{ y: [0, -25, 0], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute w-[400px] h-[400px] rounded-full blur-3xl"
-          style={{ background: 'rgba(124,106,250,0.08)', left: '-10%', bottom: '10%' }}
-          animate={{ y: [0, 20, 0], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 3 }}
-        />
-      </div>
+    <div className="min-h-screen flex items-center justify-center p-6 relative" style={{ background: '#FFFFFF' }}>
+      {/* Background Decor (Strict G/W/B) */}
+      <div className="absolute top-0 left-0 w-full h-[45vh] bg-[#1E4D3B] z-0" />
+      <div className="absolute top-[40vh] left-0 w-full h-[15vh] bg-gradient-to-b from-[#1E4D3B] to-transparent z-0 opacity-10" />
 
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-md relative z-10"
+        className="w-full max-w-lg relative z-10"
       >
-        {/* Back Button */}
-        <Link href="/" className="flex items-center gap-2 mb-8 group transition-colors" style={{ color: palette.text2 }}>
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          <span className="text-sm font-medium group-hover:text-white transition-colors">Back to Home</span>
-        </Link>
+        <div className="mb-8 text-center">
+            <Link href="/" className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-white text-black border border-black hover:bg-black hover:text-white transition-all text-xs font-black uppercase tracking-widest shadow-lg">
+               <ArrowLeft className="w-4 h-4" />
+               Exit to Portal
+            </Link>
+        </div>
 
-        <Card className="glass rounded-2xl shadow-2xl overflow-hidden" style={{ border: `1px solid ${palette.border}` }}>
-          {/* Gradient top line */}
-          <div className="h-1 w-full" style={{ background: palette.gradient2 }} />
-
-          <CardHeader className="text-center space-y-4 pb-6 pt-8">
-            <motion.div
-              initial={{ scale: 0, rotate: 180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ delay: 0.3, type: "spring", stiffness: 200, damping: 15 }}
-              className="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center animate-pulse-glow"
-              style={{ background: palette.accentSoft }}
-            >
-              <BookOpen className="w-8 h-8" style={{ color: palette.accent }} />
-            </motion.div>
-            <div>
-              <CardTitle className="text-3xl font-black mb-2" style={{ color: palette.text }}>
-                Join <span className="text-gradient">LearnNova</span>
-              </CardTitle>
-              <CardDescription className="text-base" style={{ color: palette.text2 }}>
-                Start your personalized learning journey
-              </CardDescription>
+        <Card className="rounded-[40px] shadow-2xl border-0 overflow-hidden bg-white">
+          <CardHeader className="text-center pt-12 pb-8 px-10">
+            <div className="mx-auto w-20 h-20 rounded-3xl bg-black flex items-center justify-center shadow-2xl shadow-black/20 mb-8 overflow-hidden relative">
+               <div className="absolute inset-0 bg-[#1E4D3B] opacity-10" />
+               <UserPlus className="w-10 h-10 text-white relative z-10" />
             </div>
+            <CardTitle className="text-4xl font-black text-black tracking-tight">Initialize Profile</CardTitle>
+            <CardDescription className="text-slate-400 mt-2 font-bold uppercase tracking-widest text-[10px]">Create your secure student credentials</CardDescription>
           </CardHeader>
 
-          <CardContent className="space-y-6 pb-8">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Username Field */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.35 }}
-              >
-                <div className="relative">
-                  <User className="absolute left-3 top-3.5 h-4 w-4" style={{ color: palette.text2 }} />
-                  <Input
-                    type="text"
-                    placeholder="Username"
-                    value={username}
-                    onChange={e => setUsername(e.target.value)}
-                    required
-                    className="pl-10 h-12 rounded-xl border transition-all duration-300 focus:ring-2 focus:ring-offset-0"
-                    style={{ 
-                      color: palette.text, 
-                      borderColor: palette.border, 
-                      backgroundColor: palette.bgSecondary,
-                      '--tw-ring-color': palette.accent + '40'
-                    } as React.CSSProperties & { '--tw-ring-color': string }}
-                  />
-                </div>
-              </motion.div>
+          <CardContent className="px-10 pb-12 space-y-8">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                 <div className="space-y-1.5">
+                   <label className="text-[10px] font-black text-black ml-1 uppercase tracking-[0.2em]">Student Name</label>
+                   <div className="relative">
+                     <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                     <Input
+                       type="text"
+                       placeholder="Full Identity Name"
+                       value={username}
+                       onChange={e => setUsername(e.target.value)}
+                       required
+                       className="pl-12 h-14 rounded-2xl bg-slate-50 border-slate-100 focus:border-black focus:ring-black/5 transition-all font-bold"
+                     />
+                   </div>
+                 </div>
 
-              {/* Email Field */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.45 }}
-              >
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3.5 h-4 w-4" style={{ color: palette.text2 }} />
-                  <Input
-                    type="email"
-                    placeholder="Email address"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    required
-                    className="pl-10 h-12 rounded-xl border transition-all duration-300 focus:ring-2 focus:ring-offset-0"
-                    style={{ 
-                      color: palette.text, 
-                      borderColor: palette.border, 
-                      backgroundColor: palette.bgSecondary,
-                      '--tw-ring-color': palette.accent + '40'
-                    } as React.CSSProperties & { '--tw-ring-color': string }}
-                  />
-                </div>
-              </motion.div>
+                 <div className="space-y-1.5">
+                   <label className="text-[10px] font-black text-black ml-1 uppercase tracking-[0.2em]">Academic Email</label>
+                   <div className="relative">
+                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+                     <Input
+                       type="email"
+                       placeholder="id@university.edu"
+                       value={email}
+                       onChange={e => setEmail(e.target.value)}
+                       required
+                       className="pl-12 h-14 rounded-2xl bg-slate-50 border-slate-100 focus:border-black focus:ring-black/5 transition-all font-bold"
+                     />
+                   </div>
+                 </div>
+              </div>
 
-              {/* Password Field */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.55 }}
-              >
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-black ml-1 uppercase tracking-[0.2em]">Secret Password</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3.5 h-4 w-4" style={{ color: palette.text2 }} />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
                   <Input
                     type={showPassword ? "text" : "password"}
-                    placeholder="Password (min 6 characters)"
-                    minLength={6}
+                    placeholder="Minimum 8 encrypted characters"
+                    minLength={8}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     required
-                    className="pl-10 pr-10 h-12 rounded-xl border transition-all duration-300 focus:ring-2 focus:ring-offset-0"
-                    style={{ 
-                      color: palette.text, 
-                      borderColor: palette.border, 
-                      backgroundColor: palette.bgSecondary,
-                      '--tw-ring-color': palette.accent + '40'
-                    } as React.CSSProperties & { '--tw-ring-color': string }}
+                    className="pl-12 pr-12 h-14 rounded-2xl bg-slate-50 border-slate-100 focus:border-black focus:ring-black/5 transition-all font-bold"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3.5 transition-colors hover:scale-110"
-                    style={{ color: palette.text2 }}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-black transition-colors"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-              </motion.div>
+              </div>
 
-              {/* Error Message */}
               <AnimatePresence>
                 {error && (
                   <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="p-3 text-sm rounded-xl overflow-hidden"
-                    style={{ background: 'rgba(248,113,113,0.1)', color: palette.error, border: `1px solid rgba(248,113,113,0.2)` }}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 rounded-2xl bg-black text-white text-xs font-bold border border-black shadow-lg"
                   >
-                    {error}
+                    Authorization Failure: {error}
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* Submit Button */}
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full h-12 font-semibold text-base rounded-xl shadow-lg transition-all duration-300 disabled:opacity-50 border-0"
-                  style={{ 
-                    background: palette.gradient1, 
-                    color: '#fff',
-                    boxShadow: `0 10px 30px -8px ${palette.accentGlow}`
-                  }}
-                >
-                  {loading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Creating account...
-                    </div>
-                  ) : (
-                    'Create Account'
-                  )}
-                </Button>
-              </motion.div>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full h-14 bg-black hover:bg-[#1E4D3B] text-white rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl shadow-black/10 transition-all text-xs mt-4"
+              >
+                {loading ? "Registering Metadata..." : "Authorize Account"}
+              </Button>
             </form>
 
-            {/* Divider */}
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t" style={{ borderColor: palette.border }} />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-3 rounded-full" style={{ background: palette.card, color: palette.text2 }}>Already have an account?</span>
-              </div>
+            <div className="relative flex items-center gap-4 py-2">
+               <div className="h-px bg-slate-100 flex-1" />
+               <span className="text-[10px] font-black text-slate-200 uppercase tracking-widest">or</span>
+               <div className="h-px bg-slate-100 flex-1" />
             </div>
 
-            {/* Login Link */}
-            <div className="text-center">
-              <Link
-                href="/login"
-                className="font-medium text-sm transition-all duration-300 inline-flex items-center gap-1 group"
-                style={{ color: palette.text2 }}
-              >
-                Sign in to your account
-                <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+            <p className="text-center text-slate-400 text-[11px] font-bold uppercase tracking-widest">
+              Previously Registered?{" "}
+              <Link href="/login" className="font-black text-black hover:text-[#1E4D3B] hover:underline px-1">
+                Establish Protocol
               </Link>
-            </div>
+            </p>
           </CardContent>
         </Card>
-
-        {/* Features List */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 0.6 }}
-          className="mt-6 grid grid-cols-3 gap-3"
-        >
-          {highlights.map((item, i) => (
-            <motion.div
-              key={item.label}
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 + i * 0.1 }}
-              className="glass rounded-xl p-3 text-center group hover:scale-105 transition-transform duration-300 cursor-default"
-              style={{ border: `1px solid ${palette.border}` }}
-            >
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-2" style={{ background: palette.accentSoft }}>
-                <item.icon className="w-4 h-4" style={{ color: palette.accent }} />
-              </div>
-              <p className="text-xs font-medium" style={{ color: palette.text2 }}>{item.label}</p>
-            </motion.div>
-          ))}
-        </motion.div>
       </motion.div>
     </div>
   );

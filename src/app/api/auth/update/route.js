@@ -27,6 +27,8 @@ export async function POST(request) {
       "name",
       "avatarUrl",
       "learningPreferences",
+      "onboardingData",
+      "onboardingCompleted"
     ];
 
     allowedFields.forEach((field) => {

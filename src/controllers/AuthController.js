@@ -277,6 +277,8 @@ export const getStudentDashboard = asyncHandler(async (req, res) => {
     // but the xpHistory is what matters for the graph.
     
     let currentTrendXP = 0; // We will build up the monthly trend
+    const last7DaysStudy = [];
+    const xpHistory = [];
 
     for (let i = 6; i >= 0; i -= 1) {
       const target = new Date();

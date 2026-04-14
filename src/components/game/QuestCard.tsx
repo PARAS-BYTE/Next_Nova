@@ -1,12 +1,11 @@
 'use client';
 /* ═══════════════════════════════════════════════════════
-   Quest Card — RPG-style mission card component
+   Quest Card — Strict G/W/B Optimized for Premium Visuals
    ═══════════════════════════════════════════════════════ */
 
 import { motion } from 'framer-motion';
-import { Swords, Clock, Zap, Coins, Lock, CheckCircle2, ChevronRight } from 'lucide-react';
+import { Swords, Zap, Coins, Lock, CheckCircle2, ChevronRight, Sparkles, Target } from 'lucide-react';
 import type { Quest } from '@/game/types';
-import { DIFFICULTY_COLORS } from '@/game/gameConfig';
 import { palette } from '@/theme/palette';
 
 interface QuestCardProps {
@@ -16,160 +15,131 @@ interface QuestCardProps {
 }
 
 export default function QuestCard({ quest, index = 0, onStart }: QuestCardProps) {
-  const diffColors = DIFFICULTY_COLORS[quest.difficulty];
   const isLocked = quest.status === 'locked';
   const isCompleted = quest.status === 'completed';
   const isActive = quest.status === 'in_progress';
 
   const typeLabels = {
-    main: '⚔️ Main Quest',
-    side: '📜 Side Quest',
-    daily: '☀️ Daily',
-    weekly: '📅 Weekly',
+    main: 'Primary Module',
+    side: 'Elective Study',
+    daily: 'Daily Sync',
+    weekly: 'Assessment',
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={!isLocked ? { scale: 1.02, y: -2 } : {}}
-      className={`relative rounded-2xl overflow-hidden transition-all duration-300 ${isLocked ? 'opacity-50' : 'cursor-pointer'}`}
-      style={{
-        background: palette.card,
-        border: `1px solid ${isCompleted ? 'rgba(52, 211, 153, 0.3)' : isActive ? `${palette.accent}30` : palette.border}`,
-        boxShadow: isActive ? `0 0 20px ${palette.accent}15` : 'none',
-      }}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: index * 0.05, duration: 0.5, ease: "easeOut" }}
+      whileHover={!isLocked ? { scale: 1.02, y: -4 } : {}}
+      className={cn(
+        "relative rounded-[28px] overflow-hidden border-2 transition-all duration-500 bg-white group",
+        isLocked ? "opacity-30 grayscale pointer-events-none" : "cursor-pointer",
+        isActive ? "border-[#1E4D3B] shadow-[0_20px_40px_-12px_rgba(30,77,59,0.15)]" : "border-slate-50 shadow-sm hover:shadow-2xl hover:shadow-emerald-900/5 hover:border-slate-100"
+      )}
     >
-      {/* Top accent line */}
-      <div
-        className="h-0.5 w-full"
-        style={{
-          background: isCompleted
-            ? 'linear-gradient(90deg, #34D399, #22D3EE)'
-            : isActive
-            ? palette.gradient1
-            : 'transparent',
-        }}
-      />
+      {/* Background Subtle Gradient */}
+      <div className={cn(
+         "absolute top-0 right-0 w-32 h-32 bg-[#1E4D3B] opacity-0 blur-[40px] pointer-events-none group-hover:opacity-[0.08] transition-opacity duration-700",
+         isActive && "opacity-[0.05]"
+      )} />
 
-      <div className="p-4">
+      <div className="p-6 md:p-8 space-y-6">
         {/* Header row */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2">
-            {/* Quest type icon */}
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-5">
+            {/* Quest icon */}
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{
-                background: isCompleted ? 'rgba(52, 211, 153, 0.15)' : palette.accentSoft,
-              }}
+              className={cn(
+                "w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-sm border",
+                isCompleted ? "bg-black text-white border-black" : "bg-white text-[#1E4D3B] border-slate-50 group-hover:bg-[#1E4D3B] group-hover:text-white group-hover:border-[#1E4D3B]"
+              )}
             >
               {isLocked ? (
-                <Lock className="w-4 h-4" style={{ color: palette.text2 }} />
+                <Lock className="w-6 h-6" />
               ) : isCompleted ? (
-                <CheckCircle2 className="w-4 h-4 text-[#34D399]" />
+                <CheckCircle2 className="w-6 h-6 animate-in zoom-in-50 duration-500" />
               ) : (
-                <Swords className="w-4 h-4" style={{ color: palette.accent }} />
+                <Swords className="w-6 h-6" />
               )}
             </div>
 
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: palette.text2 }}>
-                  {typeLabels[quest.type]}
+            <div className="space-y-1">
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1E4D3B]">
+                   {typeLabels[quest.type]}
                 </span>
-                {/* Difficulty badge */}
-                <span
-                  className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
-                  style={{
-                    background: diffColors.bg,
-                    color: diffColors.text,
-                    border: `1px solid ${diffColors.border}`,
-                  }}
-                >
-                  {quest.difficulty}
+                <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1 bg-slate-50 text-slate-400 rounded-lg border border-slate-100">
+                   {quest.difficulty.toUpperCase()}
                 </span>
               </div>
-              <h3 className="text-sm font-bold mt-0.5" style={{ color: palette.text }}>
+              <h3 className="text-lg font-black text-black tracking-tight leading-tight group-hover:text-[#1E4D3B] transition-colors duration-300">
                 {quest.title}
               </h3>
             </div>
           </div>
 
           {/* Rewards */}
-          <div className="flex flex-col items-end gap-1">
-            <div className="flex items-center gap-1">
-              <Zap className="w-3 h-3 text-[#7C6AFA]" />
-              <span className="text-[10px] font-bold text-[#7C6AFA]">+{quest.xpReward}</span>
+          <div className="flex flex-col items-end gap-2 p-3 rounded-2xl bg-slate-50/50 border border-slate-50 group-hover:bg-white group-hover:shadow-sm transition-all">
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-[#1E4D3B] animate-pulse" />
+              <span className="text-xs font-black text-black">+{quest.xpReward}</span>
             </div>
-            <div className="flex items-center gap-1">
-              <Coins className="w-3 h-3 text-[#34D399]" />
-              <span className="text-[10px] font-bold text-[#34D399]">+{quest.coinReward}</span>
+            <div className="flex items-center gap-2">
+              <Coins className="w-4 h-4 text-black opacity-20" />
+              <span className="text-[11px] font-black text-slate-300">+{quest.coinReward}</span>
             </div>
           </div>
         </div>
 
         {/* Description */}
-        <p className="text-xs mb-3" style={{ color: palette.text2 }}>
+        <p className="text-sm font-medium text-slate-400 leading-relaxed line-clamp-2">
           {quest.description}
         </p>
 
-        {/* Progress bar */}
-        <div className="mb-3">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-[10px] font-medium" style={{ color: palette.text2 }}>
-              {quest.currentStep}/{quest.totalSteps} steps
-            </span>
-            <span className="text-[10px] font-bold" style={{ color: isCompleted ? '#34D399' : palette.accent }}>
-              {quest.progress}%
-            </span>
-          </div>
-          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: palette.progressTrack }}>
-            <motion.div
-              className="h-full rounded-full"
-              style={{
-                background: isCompleted
-                  ? 'linear-gradient(90deg, #34D399, #22D3EE)'
-                  : palette.gradient1,
-              }}
-              initial={{ width: 0 }}
-              animate={{ width: `${quest.progress}%` }}
-              transition={{ duration: 1, delay: index * 0.1, ease: 'easeOut' }}
-            />
-          </div>
+        {/* Progress System */}
+        <div className="space-y-4">
+           <div className="relative h-2 w-full bg-slate-50 rounded-full overflow-hidden">
+              <motion.div
+                className="absolute top-0 left-0 h-full bg-[#1E4D3B] rounded-full shadow-[0_0_12px_rgba(30,77,59,0.3)]"
+                initial={{ width: 0 }}
+                animate={{ width: `${quest.progress}%` }}
+                transition={{ duration: 1.2, ease: "easeInOut" }}
+              />
+           </div>
+           <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em]">
+              <span className="text-slate-300">SYNC: {quest.progress}%</span>
+              <span className="text-[#1E4D3B]">{quest.currentStep} / {quest.totalSteps} PHASE</span>
+           </div>
         </div>
 
-        {/* Action */}
+        {/* Action Button */}
         {!isLocked && !isCompleted && (
-          <motion.button
-            className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold"
-            style={{
-              background: palette.accentSoft,
-              color: palette.accent,
-              border: `1px solid ${palette.accent}20`,
-            }}
-            whileHover={{
-              background: palette.accent,
-              color: '#fff',
-              boxShadow: `0 0 20px ${palette.accent}30`,
-            }}
-            whileTap={{ scale: 0.97 }}
+          <button
+            className={cn(
+               "w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] transition-all duration-500",
+               isActive 
+               ? "bg-[#1E4D3B] text-white shadow-xl shadow-emerald-900/20 hover:bg-black" 
+               : "bg-black text-white hover:bg-[#1E4D3B] shadow-lg shadow-black/10 hover:shadow-emerald-900/40"
+            )}
             onClick={onStart}
           >
-            {isActive ? 'Continue Quest' : 'Start Quest'}
-            <ChevronRight className="w-3.5 h-3.5" />
-          </motion.button>
+            {isActive ? 'Continue Protocol' : 'Initialize Mission'}
+            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </button>
         )}
 
         {isCompleted && (
-          <div className="flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold"
-            style={{ background: 'rgba(52, 211, 153, 0.1)', color: '#34D399' }}
-          >
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            Quest Complete
+          <div className="flex items-center justify-center gap-3 py-4 rounded-2xl bg-slate-50 text-slate-300 font-black uppercase tracking-[0.2em] text-[10px] border border-slate-100 italic">
+            <Sparkles className="w-4 h-4" />
+            Module Synchronized
           </div>
         )}
       </div>
     </motion.div>
   );
+}
+
+function cn(...classes: any[]) {
+  return classes.filter(Boolean).join(' ');
 }

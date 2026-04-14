@@ -4,12 +4,25 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, Coffee, Brain, Eye, EyeOff, Zap, Clock, Target, Flame, CheckCircle2, AlertTriangle, Settings2, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
+import { useGameStore } from "@/game/useGameStore";
 
-const C = { purple: "#7C6AFA", cyan: "#22D3EE", green: "#10B981", red: "#EF4444", yellow: "#FBBF24", bg: "#050507", card: "#0A0A0C" };
+// ─── Theme (Strict University Palette) ────────────────────────────────────────────────────
+const C = { 
+  primary: "#1E4D3B", 
+  black: "#000000", 
+  white: "#FFFFFF", 
+  slate: "#F8FAFC", 
+  error: "#000000", 
+  success: "#1E4D3B", 
+  bg: "#FFFFFF", 
+  card: "#FFFFFF" 
+};
 
 type Phase = "focus" | "break" | "longBreak" | "idle";
 
 export default function FocusMode() {
+  const { addXP, addCoins } = useGameStore();
+
   // Timer State
   const [phase, setPhase] = useState<Phase>("idle");
   const [running, setRunning] = useState(false);
@@ -126,6 +139,15 @@ export default function FocusMode() {
         }, { withCredentials: true });
         setFocusScore(data.focusScore);
         setCurrentGlobalFocus(data.focusScore);
+        
+        // SYNC WITH GAME STORE
+        if (data.xpReward > 0) addXP(data.xpReward, "Focus Session");
+        else if (data.xpPenalty > 0) addXP(-data.xpPenalty, "Focus Distraction");
+        
+        if (data.focusScore >= 70) {
+           addCoins(25); // Bonus loot for high focus
+        }
+
         toast.success(`🎉 Focus session complete! Score: ${data.focusScore}% | ${data.xpReward > 0 ? `+${data.xpReward} XP` : data.xpPenalty > 0 ? `-${data.xpPenalty} XP (distraction penalty)` : "No XP change"}`);
       } catch {
         toast.success("Focus session complete!");
@@ -186,26 +208,26 @@ export default function FocusMode() {
   const totalSeconds = (phase === "break" ? settings.breakDuration : phase === "longBreak" ? settings.longBreakDuration : settings.focusDuration) * 60;
   const progress = ((totalSeconds - secondsLeft) / totalSeconds) * 100;
 
-  const phaseColor = phase === "focus" ? C.purple : phase === "break" ? C.green : phase === "longBreak" ? C.cyan : C.purple;
-  const phaseLabel = phase === "focus" ? "Focus Phase" : phase === "break" ? "Short Break" : phase === "longBreak" ? "Long Break" : "Ready";
+  const phaseColor = phase === "focus" ? C.primary : phase === "break" ? C.primary : phase === "longBreak" ? C.black : C.primary;
+  const phaseLabel = phase === "focus" ? "Strategic Focus" : phase === "break" ? "Recovery Interval" : phase === "longBreak" ? "Extended Rest" : "Standby";
 
-  const focusScoreColor = (s: number) => s >= 80 ? C.green : s >= 50 ? C.yellow : C.red;
+  const focusScoreColor = (s: number) => s >= 80 ? C.primary : s >= 50 ? C.black : C.black;
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 lg:p-8" style={{ background: C.bg, color: "#fff" }}>
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8" style={{ background: C.bg, color: "#000" }}>
       <div className="max-w-3xl mx-auto space-y-8">
 
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-3xl font-black uppercase tracking-tighter" style={{ color: phaseColor }}>Focus Mode</h1>
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mt-1">AI-Powered Pomodoro + Real-Time Distraction Tracking</p>
+            <h1 className="text-3xl font-black uppercase tracking-tighter italic" style={{ color: C.black }}>Focus Vault</h1>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#1E4D3B] mt-1 italic">Scholar Precision Tracking System</p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="px-3 py-1.5 rounded-xl border border-white/10 text-[10px] font-black uppercase tracking-widest text-white/40">
-              Global Focus: <span style={{ color: focusScoreColor(currentGlobalFocus) }}>{currentGlobalFocus}%</span>
+            <div className="px-4 py-2 rounded-xl border-2 border-slate-50 text-[10px] font-black uppercase tracking-widest text-black/40 bg-white shadow-sm">
+              Global Mastery: <span style={{ color: C.primary }}>{currentGlobalFocus}%</span>
             </div>
-            <button onClick={() => setShowSettings(!showSettings)} className="p-2.5 rounded-xl border border-white/10 text-white/40 hover:text-white transition-colors">
+            <button onClick={() => setShowSettings(!showSettings)} className="p-2.5 rounded-xl border-2 border-slate-50 text-black/40 hover:text-black bg-white shadow-sm transition-colors">
               <Settings2 size={16} />
             </button>
           </div>
@@ -215,86 +237,88 @@ export default function FocusMode() {
         <AnimatePresence>
           {showSettings && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-              className="rounded-2xl border border-white/10 overflow-hidden" style={{ background: C.card }}>
+              className="rounded-2xl border-2 border-slate-50 overflow-hidden shadow-xl" style={{ background: C.card }}>
               <div className="p-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[
                   { label: "Focus (min)", key: "focusDuration" },
                   { label: "Break (min)", key: "breakDuration" },
                   { label: "Long Break (min)", key: "longBreakDuration" },
-                  { label: "Sessions before long break", key: "sessionsBeforeLongBreak" },
+                  { label: "Sessions Limit", key: "sessionsBeforeLongBreak" },
                 ].map(({ label, key }) => (
                   <div key={key}>
-                    <label className="text-[9px] font-black uppercase tracking-widest text-white/30 block mb-2">{label}</label>
+                    <label className="text-[9px] font-black uppercase tracking-widest text-black/30 block mb-2">{label}</label>
                     <input type="number" value={(settings as any)[key]}
                       onChange={(e) => setSettings((s) => ({ ...s, [key]: Number(e.target.value) }))}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white font-black focus:outline-none focus:border-[#7C6AFA]" />
+                      className="w-full bg-slate-50 border-2 border-transparent rounded-xl px-3 py-2 text-sm text-black font-black focus:outline-none focus:border-[#1E4D3B] transition-colors" />
                   </div>
                 ))}
               </div>
               <div className="px-6 pb-4 flex gap-3">
                 <button onClick={() => { setSecondsLeft(settings.focusDuration * 60); setShowSettings(false); }}
-                  className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-white" style={{ background: C.purple }}>
-                  Apply Settings
+                  className="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white shadow-lg transition-all bg-black hover:bg-[#1E4D3B]">
+                  Initialize Profile
                 </button>
-                <button onClick={() => setShowSettings(false)} className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/30 border border-white/10">Cancel</button>
+                <button onClick={() => setShowSettings(false)} className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-black/30 border border-slate-100">Cancel</button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Main Timer Circle */}
-        <motion.div className="flex flex-col items-center gap-6">
+        <div className="flex flex-col items-center gap-8">
           <div className="relative flex items-center justify-center">
             {/* SVG Ring */}
-            <svg width="260" height="260" className="absolute">
-              <circle cx="130" cy="130" r="120" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
-              <circle cx="130" cy="130" r="120" fill="none" stroke={phaseColor} strokeWidth="8"
-                strokeLinecap="round" strokeDasharray={`${2 * Math.PI * 120}`}
-                strokeDashoffset={`${2 * Math.PI * 120 * (1 - progress / 100)}`}
-                transform="rotate(-90 130 130)"
-                style={{ transition: "stroke-dashoffset 0.5s ease", filter: `drop-shadow(0 0 12px ${phaseColor}80)` }} />
+            <svg width="280" height="280" className="absolute">
+              <circle cx="140" cy="140" r="130" fill="none" stroke="rgba(0,0,0,0.02)" strokeWidth="12" />
+              <circle cx="140" cy="140" r="130" fill="none" stroke={phaseColor} strokeWidth="12"
+                strokeLinecap="round" strokeDasharray={`${2 * Math.PI * 130}`}
+                strokeDashoffset={`${2 * Math.PI * 130 * (1 - progress / 100)}`}
+                transform="rotate(-90 140 140)"
+                style={{ transition: "stroke-dashoffset 0.5s ease" }} />
             </svg>
             {/* Timer inner */}
-            <div className="w-64 h-64 rounded-full flex flex-col items-center justify-center" style={{ background: `radial-gradient(circle at center, ${phaseColor}10, transparent 70%)` }}>
-              <p className="text-[9px] font-black uppercase tracking-widest mb-2" style={{ color: phaseColor }}>{phaseLabel}</p>
-              <p className="text-6xl font-black text-white tabular-nums">{mins}:{secs}</p>
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mt-2">
-                Session {sessionsCompleted + 1} of ∞
-              </p>
+            <div className="w-72 h-72 rounded-full flex flex-col items-center justify-center bg-white shadow-2xl border-2 border-slate-50">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-3 italic" style={{ color: phaseColor }}>{phaseLabel}</p>
+              <p className="text-7xl font-black text-black tabular-nums tracking-tighter">{mins}:{secs}</p>
+              <div className="flex items-center gap-2 mt-4 px-3 py-1 bg-slate-50 rounded-full border border-slate-100">
+                <Target size={12} className="text-[#1E4D3B]" />
+                <p className="text-[9px] font-black uppercase tracking-widest text-black/40">
+                   Session {sessionsCompleted + 1}
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Controls */}
           <div className="flex items-center gap-4">
-            <button onClick={resetTimer} className="p-3 rounded-2xl border border-white/10 text-white/40 hover:text-white transition-all hover:border-white/30">
-              <RotateCcw size={20} />
+            <button onClick={resetTimer} className="p-4 rounded-2xl border-2 border-slate-50 text-black/30 hover:text-black bg-white shadow-sm transition-all hover:border-black/10">
+              <RotateCcw size={24} />
             </button>
             <button onClick={running ? pauseTimer : startTimer}
-              className="flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest text-white shadow-xl transition-all hover:scale-105 active:scale-95"
-              style={{ background: `linear-gradient(135deg, ${phaseColor}, ${phaseColor}BB)`, boxShadow: `0 8px 30px ${phaseColor}50` }}>
-              {running ? <><Pause size={20} /> Pause</> : phase === "idle" ? <><Play size={20} /> Start Session</> : <><Play size={20} /> Resume</>}
+              className="flex items-center gap-4 px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest text-white shadow-2xl transition-all hover:scale-105 active:scale-95 bg-black hover:bg-[#1E4D3B]">
+              {running ? <><Pause size={20} /> Suspend</> : phase === "idle" ? <><Play size={20} /> Inscribe Session</> : <><Play size={20} /> Resume</>}
             </button>
             {phase !== "idle" && (
-              <button onClick={handlePhaseComplete} className="p-3 rounded-2xl border border-white/10 text-white/40 hover:text-white transition-all hover:border-white/30">
-                <CheckCircle2 size={20} />
+              <button onClick={handlePhaseComplete} className="p-4 rounded-2xl border-2 border-slate-50 text-black/30 hover:text-black bg-white shadow-sm transition-all hover:border-black/10">
+                <CheckCircle2 size={24} />
               </button>
             )}
           </div>
-        </motion.div>
+        </div>
 
         {/* Live Distraction Tracker */}
         {(running || phase !== "idle") && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="grid grid-cols-3 gap-4">
+            className="grid grid-cols-3 gap-6">
             {[
-              { label: "Tab Switches", value: tabSwitches, icon: <EyeOff size={16} />, danger: tabSwitches > 3, color: tabSwitches > 3 ? C.red : C.green },
-              { label: "Distractions", value: distractions, icon: <AlertTriangle size={16} />, danger: distractions > 2, color: distractions > 2 ? C.red : C.yellow },
-              { label: "Inactivity", value: `${Math.floor(inactivitySeconds / 60)}m ${inactivitySeconds % 60}s`, icon: <Clock size={16} />, danger: inactivitySeconds > 120, color: inactivitySeconds > 120 ? C.red : C.cyan },
+              { label: "Tab Deviations", value: tabSwitches, icon: <EyeOff size={18} />, color: tabSwitches > 3 ? C.black : C.primary, bg: tabSwitches > 3 ? '#F8FAFC' : '#F0FDF4' },
+              { label: "Neural Noise", value: distractions, icon: <AlertTriangle size={18} />, color: distractions > 2 ? C.black : C.primary, bg: distractions > 2 ? '#F8FAFC' : '#F0FDF4' },
+              { label: "Idle State", value: `${Math.floor(inactivitySeconds / 60)}M ${inactivitySeconds % 60}S`, icon: <Clock size={16} />, color: inactivitySeconds > 120 ? C.black : C.primary, bg: inactivitySeconds > 120 ? '#F8FAFC' : '#F0FDF4' },
             ].map((stat) => (
-              <div key={stat.label} className="p-4 rounded-2xl border-2 text-center" style={{ background: C.card, borderColor: `${stat.color}25` }}>
-                <div className="flex justify-center mb-2" style={{ color: stat.color }}>{stat.icon}</div>
-                <p className="text-xl font-black text-white">{stat.value}</p>
-                <p className="text-[9px] font-black uppercase tracking-widest mt-1" style={{ color: `${stat.color}99` }}>{stat.label}</p>
+              <div key={stat.label} className="p-6 rounded-3xl border-2 text-center bg-white shadow-sm transition-all hover:shadow-md" style={{ borderColor: 'rgba(0,0,0,0.03)' }}>
+                <div className="flex justify-center mb-3" style={{ color: stat.color }}>{stat.icon}</div>
+                <p className="text-2xl font-black text-black">{stat.value}</p>
+                <p className="text-[9px] font-black uppercase tracking-widest mt-1 text-black/30">{stat.label}</p>
               </div>
             ))}
           </motion.div>
@@ -304,12 +328,12 @@ export default function FocusMode() {
         <AnimatePresence>
           {focusScore !== null && (
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-              className="p-6 rounded-2xl border-2 text-center"
-              style={{ background: `${focusScoreColor(focusScore)}08`, borderColor: `${focusScoreColor(focusScore)}30` }}>
-              <p className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-2">Last Session Score</p>
-              <p className="text-5xl font-black mb-2" style={{ color: focusScoreColor(focusScore) }}>{focusScore}%</p>
-              <p className="text-xs text-white/40">
-                {focusScore >= 80 ? "Legendary focus! XP awarded 🏆" : focusScore >= 50 ? "Decent session. Keep improving!" : "Too many distractions. XP reduced."}
+              className="p-8 rounded-[32px] border-2 text-center bg-white shadow-xl"
+              style={{ borderColor: 'rgba(30, 77, 59, 0.1)' }}>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-black/30 mb-3">Efficiency Coefficient</p>
+              <p className="text-6xl font-black mb-3" style={{ color: C.primary }}>{focusScore}%</p>
+              <p className="text-[10px] text-black/40 font-bold uppercase tracking-tight">
+                {focusScore >= 80 ? "Perfect technical execution. XP rewards synchronized." : focusScore >= 50 ? "Satisfactory session. Optimization required." : "Sub-optimal stability. XP penalty applied."}
               </p>
             </motion.div>
           )}
@@ -317,14 +341,14 @@ export default function FocusMode() {
 
         {/* Session Summary */}
         {sessionsCompleted > 0 && (
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 rounded-2xl border border-white/5 text-center" style={{ background: C.card }}>
-              <p className="text-[9px] uppercase font-black tracking-widest text-white/30 mb-1">Sessions Today</p>
-              <p className="text-2xl font-black text-white">{sessionsCompleted}</p>
+          <div className="grid grid-cols-2 gap-6">
+            <div className="p-6 rounded-3xl border-2 border-slate-50 text-center bg-white shadow-sm">
+              <p className="text-[10px] uppercase font-black tracking-widest text-black/20 mb-1">Archived Cycles</p>
+              <p className="text-2xl font-black text-black">{sessionsCompleted}</p>
             </div>
-            <div className="p-4 rounded-2xl border border-white/5 text-center" style={{ background: C.card }}>
-              <p className="text-[9px] uppercase font-black tracking-widest text-white/30 mb-1">Study Time</p>
-              <p className="text-2xl font-black text-white">{sessionsCompleted * settings.focusDuration}m</p>
+            <div className="p-6 rounded-3xl border-2 border-slate-50 text-center bg-white shadow-sm">
+              <p className="text-[10px] uppercase font-black tracking-widest text-black/20 mb-1">Temporal Mastery</p>
+              <p className="text-2xl font-black text-[#1E4D3B]">{sessionsCompleted * settings.focusDuration}M</p>
             </div>
           </div>
         )}

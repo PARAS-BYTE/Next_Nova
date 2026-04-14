@@ -1,38 +1,46 @@
-/* 🎨 Centralized Theme Palette — Premium Dark Mode */
+/* 🎨 Strict Theme Palette — Green, White & Black Only */
 export const palette = {
-  bg: "#0B0D17",
-  bgSecondary: "#111427",
-  card: "#151829",
-  cardHover: "#1C2038",
-  cardGlass: "rgba(21, 24, 41, 0.65)",
+  // Base
+  bg: "#FFFFFF",        // White
+  bgSecondary: "#F9FAFB", // Very light slate/white
+  card: "#FFFFFF",
+  cardHover: "#F0FDF4", // Very soft green tint
+  cardGlass: "rgba(255, 255, 255, 0.95)",
 
-  text: "#E8EAF6",
-  text2: "#8B92B3",
-  textMuted: "#5A6080",
+  // Text
+  text: "#000000",      // Black
+  text2: "#1E293B",     // Deep Black-Grey
+  textMuted: "#475569", // Medium Grey (still neutral)
 
-  accent: "#7C6AFA",
-  accentSoft: "rgba(124, 106, 250, 0.15)",
-  accentDeep: "#6151E0",
-  accentGlow: "rgba(124, 106, 250, 0.35)",
+  // Green Accents (Main Theme)
+  accent: "#1E4D3B",    // Forest Green
+  accentSoft: "#F0FDF4", // Emerald 50
+  accentDeep: "#064E3B", // Darker Green
+  accentGlow: "rgba(30, 77, 59, 0.1)",
 
-  secondary: "#22D3EE",
-  secondarySoft: "rgba(34, 211, 238, 0.12)",
+  // Secondary (Must be Green)
+  secondary: "#1E4D3B",
+  secondarySoft: "#F0FDF4",
 
-  gradient1: "linear-gradient(135deg, #7C6AFA 0%, #22D3EE 100%)",
-  gradient2: "linear-gradient(135deg, #6151E0 0%, #7C6AFA 50%, #22D3EE 100%)",
-  gradient3: "linear-gradient(180deg, #0B0D17 0%, #151829 100%)",
+  // Gradients (Green Only)
+  gradient1: "linear-gradient(135deg, #1E4D3B 0%, #064E3B 100%)",
+  gradient2: "linear-gradient(180deg, #1E4D3B 0%, #064E3B 100%)",
+  gradient3: "linear-gradient(180deg, #FFFFFF 0%, #F9FAFB 100%)",
 
-  border: "rgba(124, 106, 250, 0.12)",
-  borderHover: "rgba(124, 106, 250, 0.3)",
+  // Borders
+  border: "#E2E8F0",
+  borderHover: "#1E4D3B",
 
-  chartLine: "#7C6AFA",
-  chartFill: "rgba(124, 106, 250, 0.15)",
-  chartGrid: "rgba(139, 146, 179, 0.1)",
+  // Progress & Game (All Green now)
+  progressTrack: "#F1F5F9",
+  progressFill: "#1E4D3B",
 
-  progressTrack: "rgba(124, 106, 250, 0.1)",
-  progressFill: "#7C6AFA",
+  chartLine: "#1E4D3B",
+  chartFill: "rgba(30, 77, 59, 0.05)",
+  chartGrid: "#F8FAFC",
 
-  success: "#34D399",
-  warning: "#FBBF24",
-  error: "#F87171",
+  // Semantic (Use Green for everything positive/neutral)
+  success: "#1E4D3B",  // Use Green for success
+  warning: "#1E4D3B",  // Use Green for warnings (if needed)
+  error: "#000000",    // Use Black for errors/critical
 };

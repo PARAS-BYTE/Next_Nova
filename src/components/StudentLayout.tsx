@@ -1,8 +1,9 @@
 "use client";
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
 
 import { cn } from '@/lib/utils';
 import { useGameStore } from '@/game/useGameStore';
@@ -59,27 +60,51 @@ const StudentLayout = ({ children }: StudentLayoutProps) => {
 
   /* Game state */
   const stats = useGameStore(s => s.stats);
+  const syncStats = useGameStore(s => s.syncStats);
   const avatarSkin = useGameStore(s => s.avatarSkin);
-  const rankCfg = getRankForLevel(stats.level);
   const xpProgress = getXPProgress(stats.totalXP);
 
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const headers: any = {};
+        if (token) headers.Authorization = `Bearer ${token}`;
+        
+        const res = await axios.get("/api/auth/profile", { headers, withCredentials: true });
+        const data = res.data;
+        
+        syncStats({
+          totalXP: data.xp || 0,
+          level: data.level || 1,
+          coins: data.coins || 0,
+          streak: data.streak || 0,
+          longestStreak: data.personalBestStreak || 0,
+        });
+      } catch (err) {
+        console.warn("Failed to sync stats in layout");
+      }
+    };
+    fetchStats();
+  }, [syncStats]);
+
   const navigation = [
-    { name: 'Command Center', href: '/student', icon: Gamepad2, glow: true },
+    { name: 'Dashboard', href: '/student', icon: Home, glow: true },
     { name: 'Calendar', href: '/student/calendar', icon: Calendar },
     { name: 'Quest Board', href: '/student/courses', icon: Swords },
     { name: 'Assignments', href: '/student/assignments', icon: FileQuestion },
     { name: 'Battle Arena', href: '/student/quizzes', icon: Shield },
-    { name: 'Arena', href: '/student/arena', icon: Trophy },
+    { name: 'Global Arena', href: '/student/arena', icon: Trophy },
+    { name: 'Scroll Vault', href: '/student/flashcards', icon: BookMarked },
     { name: 'Certificates', href: '/student/certificates', icon: Award },
     { name: 'My Progress', href: '/student/learning', icon: Scroll },
-    { name: 'Notes', href: '/student/notion', icon: FileText },
+    { name: 'Study Notes', href: '/student/notion', icon: FileText },
     { name: 'Guild Hall', href: '/student/forum', icon: MessageSquare },
     { name: 'AI Companion', href: '/student/chatbot', icon: Bot },
     { name: 'Item Shop', href: '/student/store', icon: StoreIcon },
-    { name: 'History', href: '/student/hist', icon: History },
+    { name: 'Histories', href: '/student/hist', icon: History },
     { name: 'Analytics Hub', href: '/student/analytics', icon: BarChart2 },
     { name: 'Focus Mode', href: '/student/focusmode', icon: Timer },
-    { name: 'Scroll Vault', href: '/student/flashcards', icon: BookMarked },
     { name: 'Settings', href: '/student/settings', icon: Settings },
   ];
 
@@ -89,48 +114,38 @@ const StudentLayout = ({ children }: StudentLayoutProps) => {
   };
 
   return (
-    <div className="flex h-screen relative" style={{ background: palette.bg }}>
-      {/* ── Particle Background ── */}
+    <div className="flex h-screen relative" style={{ background: '#FFFFFF' }}>
+      
+      {/* Game Overlays */}
       <ParticleField />
-
-      {/* ── Game Overlay System ── */}
       <XPPopup />
       <LevelUpModal />
       <AchievementToast />
 
-      {/* MOBILE TOP BAR (FIXED) */}
+      {/* MOBILE TOP BAR */}
       <div
         className="md:hidden flex items-center justify-between p-3 z-50 fixed top-0 left-0 w-full"
         style={{
-          background: 'rgba(11, 13, 23, 0.9)',
+          background: 'rgba(255, 255, 255, 0.95)',
           backdropFilter: 'blur(20px)',
           borderBottom: `1px solid ${palette.border}`,
         }}
       >
         <Link href="/" className="flex items-center gap-2">
           <div
-            className="w-8 h-8 rounded-xl flex items-center justify-center"
-            style={{ background: palette.gradient1 }}
+            className="w-9 h-9 rounded-xl flex items-center justify-center bg-black"
           >
-            <Gamepad2 className="w-4 h-4 text-white" />
+            <Gamepad2 className="w-5 h-5 text-white" />
           </div>
-          <span className="text-lg font-bold shimmer-text">
-            LearnNova
+          <span className="text-lg font-bold text-[#1E4D3B]">
+             LearnNova
           </span>
         </Link>
 
         {/* Mobile quick stats */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: palette.accentSoft }}>
-            <Zap className="w-3 h-3 text-[#7C6AFA]" />
-            <span className="text-[10px] font-bold text-[#7C6AFA]">{stats.totalXP}</span>
-          </div>
-          <div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: 'rgba(251, 191, 36, 0.15)' }}>
-            <Flame className="w-3 h-3 text-[#FBBF24]" />
-            <span className="text-[10px] font-bold text-[#FBBF24]">{stats.streak}</span>
-          </div>
           <NotificationBell />
-          <button onClick={() => setOpen(!open)} className="p-2 rounded-xl transition-colors" style={{ color: palette.text }}>
+          <button onClick={() => setOpen(!open)} className="p-2 rounded-xl border border-slate-200" style={{ color: '#000000' }}>
             {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
@@ -145,8 +160,7 @@ const StudentLayout = ({ children }: StudentLayoutProps) => {
           open ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         )}
         style={{ 
-          background: 'rgba(11, 13, 23, 0.95)',
-          backdropFilter: 'blur(20px)',
+          background: '#F9FAFB',
           borderRight: `1px solid ${palette.border}`,
         }}
       >
@@ -162,209 +176,128 @@ const StudentLayout = ({ children }: StudentLayoutProps) => {
             <>
               <Link href="/" className="flex items-center gap-2.5">
                 <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: palette.gradient1 }}
+                  className="w-9 h-9 rounded-xl bg-black flex items-center justify-center flex-shrink-0"
                 >
                   <Gamepad2 className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-lg font-bold shimmer-text">
-                  LearnNova
+                <span className="text-lg font-bold text-[#1E4D3B] tracking-tight">
+                   LEARNNOVA
                 </span>
               </Link>
-
-              <button
-                onClick={() => setCollapsed(!collapsed)}
-                className="p-1.5 rounded-lg transition-all duration-200 hover:scale-110"
-                style={{ color: palette.text2 }}
+              <button 
+                onClick={() => setCollapsed(!collapsed)} 
+                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all text-slate-400"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft size={14} />
               </button>
             </>
           ) : (
             <>
               <Link href="/" className="flex items-center justify-center">
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center"
-                  style={{ background: palette.gradient1 }}
-                >
+                <div className="w-9 h-9 rounded-xl bg-black flex items-center justify-center">
                   <Gamepad2 className="w-5 h-5 text-white" />
                 </div>
               </Link>
-
-              <button
-                onClick={() => setCollapsed(!collapsed)}
-                className="p-1.5 rounded-lg transition-all duration-200 hover:scale-110"
-                style={{ color: palette.text2 }}
+              <button 
+                onClick={() => setCollapsed(!collapsed)} 
+                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-all text-slate-400"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight size={14} />
               </button>
             </>
           )}
         </div>
 
-        {/* Player Card (expanded only) */}
+        {/* Player Status Card */}
         {!collapsed && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="p-3"
-            style={{ borderBottom: `1px solid ${palette.border}` }}
-          >
-            <div className="rounded-xl p-3" style={{ background: palette.bgSecondary }}>
-              <div className="flex items-center gap-3">
-                <GameAvatar skin={avatarSkin} level={stats.level} size={40} mood="idle" showRing={true} />
+          <div className="p-4 border-b border-slate-100 bg-white shadow-sm shadow-[#1E4D3B]/5 mx-2 my-2 rounded-2xl border border-[#1E4D3B]/5">
+             <div className="flex items-center gap-3">
+                <GameAvatar skin={avatarSkin} level={stats.level} size={44} mood="idle" showRing={true} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold truncate" style={{ color: palette.text }}>
-                    Level {stats.level}
-                  </p>
-                  <p className="text-[9px] font-medium" style={{ color: rankCfg.color }}>
-                    {stats.rank} · {stats.title}
+                  <p className="text-xs font-bold text-black leading-none pb-1">LEVEL {stats.level}</p>
+                  <p className="text-[9px] uppercase font-black tracking-widest text-[#1E4D3B] truncate">
+                    {stats.rank}
                   </p>
                 </div>
-              </div>
+             </div>
 
-              {/* XP Mini Bar */}
-              <div className="mt-2">
-                <div className="flex justify-between mb-0.5">
-                  <span className="text-[8px]" style={{ color: palette.text2 }}>XP</span>
-                  <span className="text-[8px] font-mono" style={{ color: palette.accent }}>
-                    {xpProgress.current}/{xpProgress.required}
-                  </span>
+             <div className="mt-4">
+                <div className="flex justify-between text-[8px] font-black uppercase tracking-widest text-[#1E4D3B] mb-1">
+                   <span>XP PROGRESS</span>
+                   <span>{xpProgress.percent}%</span>
                 </div>
-                <div className="h-1 rounded-full overflow-hidden" style={{ background: palette.progressTrack }}>
-                  <motion.div
-                    className="h-full rounded-full"
-                    style={{ background: palette.gradient1 }}
+                <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
+                   <motion.div
+                    className="h-full bg-[#1E4D3B] rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${xpProgress.percent}%` }}
-                    transition={{ duration: 1 }}
-                  />
+                   />
                 </div>
-              </div>
-
-              {/* Quick Stats Row */}
-              <div className="flex items-center justify-between mt-2">
-                <MiniStat icon={<Flame className="w-3 h-3" />} value={stats.streak} color="#FBBF24" />
-                <MiniStat icon={<Coins className="w-3 h-3" />} value={stats.coins} color="#34D399" />
-                <MiniStat icon={<Trophy className="w-3 h-3" />} value={stats.questsCompleted} color="#22D3EE" />
-              </div>
-            </div>
-          </motion.div>
+             </div>
+             
+             <div className="flex items-center justify-between mt-4 px-1">
+                <MiniStat icon={<Flame className="w-3.5 h-3.5" />} value={stats.streak} label="Streak" />
+                <MiniStat icon={<Coins className="w-3.5 h-3.5" />} value={stats.coins} label="Loot" />
+                <MiniStat icon={<Trophy className="w-3.5 h-3.5" />} value={stats.questsCompleted} label="Quests" />
+             </div>
+          </div>
         )}
 
-        {/* Navigation */}
-        <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
+        {/* Navigation - Restoring all features */}
+        <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto custom-scrollbar">
           {navigation.map((item) => {
             const active = isActive(item.href);
             return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={cn(
-                'flex items-center transition-all duration-300 group relative rounded-xl',
-                collapsed ? 'justify-center p-3' : 'gap-3 px-3 py-2.5',
-              )}
-              style={{
-                color: active ? palette.text : palette.text2,
-                background: active ? palette.accentSoft : 'transparent',
-                boxShadow: active ? `inset 3px 0 0 ${palette.accent}, 0 0 15px ${palette.accent}15` : 'none',
-              }}
-              onClick={() => setOpen(false)}
-            >
-              <motion.div
-                whileHover={{ scale: 1.15, rotate: 5 }}
-                transition={{ duration: 0.2 }}
+              <Link
+                key={item.name}
+                href={item.href}
+                className={cn(
+                  'flex items-center transition-all duration-300 group relative rounded-xl',
+                  collapsed ? 'justify-center p-3.5' : 'gap-3 px-3 py-2.5',
+                  active ? 'bg-[#1E4D3B] text-white shadow-lg shadow-[#1E4D3B]/10' : 'bg-transparent text-slate-500 hover:bg-slate-50'
+                )}
+                onClick={() => setOpen(false)}
               >
-                <item.icon className="w-5 h-5 flex-shrink-0" style={{ color: active ? palette.accent : palette.text2 }} />
-              </motion.div>
-              {!collapsed && (
-                <span className={cn("flex-1 text-sm", active && "font-medium")}>{item.name}</span>
-              )}
-
-              {/* Active indicator dot for collapsed */}
-              {collapsed && active && (
-                <div className="absolute -right-0.5 w-1.5 h-1.5 rounded-full" style={{ background: palette.accent }} />
-              )}
-
-              {collapsed && (
-                <div className="absolute left-full ml-3 px-3 py-1.5 rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none"
-                  style={{ background: palette.card, color: palette.text, border: `1px solid ${palette.border}`, boxShadow: `0 4px 20px rgba(0,0,0,0.3)` }}
-                >
-                  {item.name}
-                </div>
-              )}
-            </Link>
+                <item.icon className="w-5 h-5 flex-shrink-0" />
+                {!collapsed && (
+                  <span className="flex-1 text-[11px] font-black uppercase tracking-wider">{item.name}</span>
+                )}
+                {active && !collapsed && (
+                   <motion.div layoutId="activeInd" className="w-1 h-3 bg-white/30 rounded-full" />
+                )}
+              </Link>
           )})}
         </nav>
 
-        {/* Sidebar footer - Notifications + Game tip */}
-        <div className="p-3 space-y-2" style={{ borderTop: `1px solid ${palette.border}` }}>
-          {/* Notification bell row */}
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: palette.text2 }}>
-              {collapsed ? "" : "Alerts"}
-            </span>
-            <NotificationBell align="left" />
-          </div>
-          {!collapsed && (
-            <div className="rounded-xl p-3" style={{ background: 'rgba(124, 106, 250, 0.08)', border: `1px solid ${palette.accent}15` }}>
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4" style={{ color: palette.accent }} />
-                <p className="text-xs font-medium" style={{ color: palette.accent }}>Quest Tip</p>
-              </div>
-              <p className="text-[11px] mt-1" style={{ color: palette.text2 }}>
-                Complete daily challenges to boost your streak and earn bonus XP!
-              </p>
-            </div>
-          )}
-        </div>
+        {/* Sidebar Footer Padding */}
+        <div className="p-4" />
       </aside>
 
-      {/* Mobile Overlay */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 md:hidden z-30"
-            style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-            onClick={() => setOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Main Content */}
-      <main
-        className={cn(
-          "flex-1 overflow-auto transition-all duration-500 pt-14 md:pt-0",
-          collapsed ? "md:ml-0" : "md:ml-0"
-        )}
-        style={{ background: 'transparent' }}
-      >
-        {/* Player HUD removed as per request - moved to Settings/Gamified UI */}
-        <div className="hidden md:block">
-          {/* <PlayerHUD /> */}
-        </div>
-
-        <div className="relative z-10">
-          {children}
-        </div>
-
-        <Footer/>
-      </main>
+      {/* Main Area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <PlayerHUD />
+        <main
+          className="flex-1 overflow-auto pt-14 md:pt-0"
+          style={{ background: '#FFFFFF' }}
+        >
+          <div className="relative z-10 px-4 md:px-8 py-8">
+            {children}
+          </div>
+          <Footer />
+        </main>
+      </div>
     </div>
   );
 };
 
 export default StudentLayout;
 
-/* ── Mini stat for sidebar ── */
-function MiniStat({ icon, value, color }: { icon: React.ReactNode; value: number; color: string }) {
+function MiniStat({ icon, value, label }: { icon: React.ReactNode; value: number; label: string }) {
   return (
-    <div className="flex items-center gap-1">
-      <div style={{ color }}>{icon}</div>
-      <span className="text-[10px] font-bold" style={{ color }}>{value}</span>
+    <div className="flex flex-col items-center gap-1">
+      <div className="p-1 px-1.5 rounded-lg bg-slate-50 text-[#1E4D3B] mb-0.5 border border-[#1E4D3B]/10">{icon}</div>
+      <span className="text-[10px] font-black text-black leading-none">{value}</span>
+      <span className="text-[7px] font-black uppercase tracking-widest text-[#1E4D3B] opacity-50">{label}</span>
     </div>
   );
 }

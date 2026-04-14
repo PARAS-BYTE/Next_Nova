@@ -131,55 +131,54 @@ const Quizzes = () => {
 
   if (loading)
     return (
-      <div className="flex justify-center items-center min-h-screen" style={{ background: palette.bg, color: palette.text2 }}>
-        Loading quizzes...
+      <div className="flex justify-center items-center min-h-screen" style={{ background: '#FFFFFF', color: '#000000' }}>
+         <div className="w-10 h-10 border-2 border-[#1E4D3B] border-t-transparent rounded-full animate-spin" />
       </div>
     );
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-10" style={{ background: palette.bg }}>
+    <div className="min-h-screen p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-10" style={{ background: '#FFFFFF' }}>
       {/* ─── Header with Back Button ─────────────────────────────── */}
       <div className="flex items-center gap-4 mb-4">
         <Button
           variant="outline"
           size="icon"
           onClick={handleBack}
-          className="flex-shrink-0"
+          className="flex-shrink-0 border-2 rounded-xl"
           style={{ 
-            borderColor: palette.border, 
-            color: palette.text,
-            background: palette.card 
+            borderColor: 'rgba(30, 77, 59, 0.1)', 
+            color: '#000000',
+            background: '#FFFFFF' 
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = palette.accentSoft;
-            e.currentTarget.style.borderColor = palette.accent;
+            e.currentTarget.style.background = '#F0FDF4';
+            e.currentTarget.style.borderColor = '#1E4D3B';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = palette.card;
-            e.currentTarget.style.borderColor = palette.border;
+            e.currentTarget.style.background = '#FFFFFF';
+            e.currentTarget.style.borderColor = 'rgba(30, 77, 59, 0.1)';
           }}
         >
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </Button>
         <div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2" style={{ background: `linear-gradient(to right, ${palette.text}, ${palette.text2})`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight italic text-black">
             Quizzes & Assessments
           </h1>
-          <p className="text-sm sm:text-base md:text-lg" style={{ color: palette.text2 }}>
-            Test your skills and boost your XP
+          <p className="text-xs sm:text-sm font-black uppercase tracking-widest text-[#1E4D3B]/60">
+            Test your skills and boost your mastery
           </p>
         </div>
       </div>
 
       {/* ─── Search ─────────────────────────────── */}
       <div className="relative w-full sm:max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5" style={{ color: palette.text2 }} />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-300" />
         <Input
           placeholder="Search quizzes..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9 sm:pl-10 text-sm"
-          style={{ background: palette.card, color: palette.text, borderColor: palette.border }}
+          className="pl-9 sm:pl-10 text-xs h-11 bg-slate-50 border-2 border-slate-50 rounded-xl text-black placeholder:text-slate-200 focus:border-[#1E4D3B]"
         />
       </div>
 
@@ -191,23 +190,20 @@ const Quizzes = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <Card className="hover:scale-105 transition-transform cursor-pointer h-full" style={{ background: palette.cardHover, border: `1px solid ${palette.border}` }}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2" style={{ color: palette.text }}>
-                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: palette.accent }} />
+          <Card className="hover:scale-[1.02] transition-transform cursor-pointer h-full border-2 rounded-2xl bg-white" style={{ borderColor: 'rgba(30, 77, 59, 0.1)' }}>
+            <CardHeader className="p-6">
+              <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-black">
+                <Sparkles className="w-5 h-5" style={{ color: '#1E4D3B' }} />
                 Random Quiz
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-xs sm:text-sm mb-4" style={{ color: palette.text2 }}>
+            <CardContent className="px-6 pb-6 pt-0">
+              <p className="text-[10px] font-bold text-slate-400 mb-6 uppercase tracking-wider">
                 Start a random quiz instantly from the available ones.
               </p>
               <Button
                 variant="outline"
-                className="w-full"
-                style={{ borderColor: palette.border, color: palette.text }}
-                onMouseEnter={(e) => e.currentTarget.style.background = palette.accentSoft}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                className="w-full h-11 rounded-xl text-[9px] font-black uppercase tracking-widest border-2 border-slate-100 hover:bg-[#F0FDF4] hover:text-[#1E4D3B] hover:border-[#1E4D3B] transition-all"
                 onClick={handleRandomQuiz}
               >
                 Surprise Me
@@ -224,18 +220,18 @@ const Quizzes = () => {
         >
           <Dialog open={showAIDialog} onOpenChange={setShowAIDialog}>
             <DialogTrigger asChild>
-              <Card className="hover:scale-105 transition-transform cursor-pointer h-full" style={{ background: palette.cardHover, border: `1px solid ${palette.border}` }}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2" style={{ color: palette.text }}>
-                    <Brain className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: palette.accent }} />
+              <Card className="hover:scale-[1.02] transition-transform cursor-pointer h-full border-2 rounded-2xl bg-white" style={{ borderColor: 'rgba(0,0,0,0.05)' }}>
+                <CardHeader className="p-6">
+                  <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-black">
+                    <Brain className="w-5 h-5" style={{ color: '#1E4D3B' }} />
                     AI Quiz Generator
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-xs sm:text-sm mb-4" style={{ color: palette.text2 }}>
+                <CardContent className="px-6 pb-6 pt-0">
+                  <p className="text-[10px] font-bold text-slate-400 mb-6 uppercase tracking-wider">
                     Instantly create a new quiz using AI on your chosen topic.
                   </p>
-                  <Button className="w-full" style={{ background: palette.accentDeep, color: palette.card }} onMouseEnter={(e) => e.currentTarget.style.background = palette.accent} onMouseLeave={(e) => e.currentTarget.style.background = palette.accentDeep}>
+                  <Button className="w-full h-11 rounded-xl text-[9px] font-black uppercase tracking-widest bg-black text-white hover:bg-[#1E4D3B] transition-all">
                     Generate Quiz
                   </Button>
                 </CardContent>
@@ -243,75 +239,68 @@ const Quizzes = () => {
             </DialogTrigger>
 
             {/* Dialog */}
-            <DialogContent className="sm:max-w-md" style={{ background: palette.card, border: `1px solid ${palette.border}` }}>
+            <DialogContent className="sm:max-w-md rounded-2xl border-2 bg-white" style={{ borderColor: 'rgba(30, 77, 59, 0.2)' }}>
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2" style={{ color: palette.text }}>
-                  <Brain className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: palette.accent }} />
+                <DialogTitle className="flex items-center gap-2 text-lg font-black uppercase tracking-tight italic text-black">
+                  <Brain className="w-6 h-6" style={{ color: '#1E4D3B' }} />
                   Generate AI Quiz
                 </DialogTitle>
               </DialogHeader>
 
               <div className="space-y-4 py-4">
-                <div>
-                  <label className="text-sm font-medium" style={{ color: palette.text2 }}>Topic</label>
-                  <input
-                    className="w-full p-2 rounded-md mt-1 text-sm"
-                    style={{ background: palette.card, color: palette.text, border: `1px solid ${palette.border}` }}
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-300">Topic</label>
+                  <Input
+                    className="h-11 rounded-xl bg-slate-50 border-2 border-slate-50 font-bold text-xs"
                     placeholder="e.g., Data Structures"
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
                   />
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium" style={{ color: palette.text2 }}>Difficulty</label>
-                  <select
-                    className="w-full p-2 rounded-md mt-1 text-sm"
-                    style={{ background: palette.card, color: palette.text, border: `1px solid ${palette.border}` }}
-                    value={difficulty}
-                    onChange={(e) => setDifficulty(e.target.value)}
-                  >
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
-                  </select>
+                <div className="grid grid-cols-2 gap-4">
+                   <div className="space-y-1.5">
+                     <label className="text-[9px] font-black uppercase tracking-widest text-slate-300">Difficulty</label>
+                     <select
+                       className="w-full h-11 rounded-xl border-2 border-slate-50 bg-slate-50 font-bold px-3 text-xs appearance-none"
+                       value={difficulty}
+                       onChange={(e) => setDifficulty(e.target.value)}
+                     >
+                       <option value="easy">Easy</option>
+                       <option value="medium">Medium</option>
+                       <option value="hard">Hard</option>
+                     </select>
+                   </div>
+
+                   <div className="space-y-1.5">
+                     <label className="text-[9px] font-black uppercase tracking-widest text-slate-300">Questions</label>
+                     <Input
+                       type="number"
+                       className="h-11 rounded-xl bg-slate-50 border-2 border-slate-50 font-bold text-xs"
+                       min="5"
+                       max="20"
+                       value={numQuestions}
+                       onChange={(e) => setNumQuestions(Number(e.target.value))}
+                     />
+                   </div>
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium" style={{ color: palette.text2 }}>
-                    Number of Questions
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full p-2 rounded-md mt-1 text-sm"
-                    style={{ background: palette.card, color: palette.text, border: `1px solid ${palette.border}` }}
-                    min="5"
-                    max="20"
-                    value={numQuestions}
-                    onChange={(e) => setNumQuestions(Number(e.target.value))}
-                  />
-                </div>
-
-                <div className="flex gap-4 mt-4">
+                <div className="flex gap-4 mt-6">
                   <Button
                     variant="outline"
-                    className="flex-1"
-                    style={{ borderColor: palette.border, color: palette.text }}
+                    className="flex-1 h-11 rounded-xl font-black text-[9px] uppercase tracking-widest border-2 border-slate-100 hover:bg-slate-50"
                     onClick={() => setShowAIDialog(false)}
                   >
                     Cancel
                   </Button>
                   <Button
-                    className="flex-1 flex items-center justify-center gap-2"
-                    style={{ background: palette.accentDeep, color: palette.card }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = palette.accent}
-                    onMouseLeave={(e) => e.currentTarget.style.background = palette.accentDeep}
+                    className="flex-1 h-11 rounded-xl font-black text-[9px] uppercase tracking-widest bg-black text-white hover:bg-[#1E4D3B] transition-all flex items-center justify-center gap-2"
                     onClick={generateAIQuiz}
                     disabled={aiLoading}
                   >
                     {aiLoading ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin" /> Generating...
+                        <Loader2 className="w-4 h-4 animate-spin" /> SYNCING...
                       </>
                     ) : (
                       "Generate Quiz"
@@ -330,32 +319,34 @@ const Quizzes = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
+          className="space-y-6"
         >
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 flex items-center gap-2" style={{ color: palette.text }}>
-            <Trophy className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: palette.accent }} /> Featured Quizzes
+          <h2 className="text-lg font-black text-black uppercase tracking-wider flex items-center gap-2 italic">
+            <Trophy className="w-5 h-5" style={{ color: '#1E4D3B' }} /> Featured Quizzes
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {featured.map((quiz, i) => (
               <motion.div
                 key={quiz._id || i}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4, delay: i * 0.1 }}
+                onClick={() => handleNavigate(quiz._id)}
+                className="cursor-pointer group"
               >
                 <Card
-                  className="hover:scale-105 transition-transform cursor-pointer"
-                  style={{ background: palette.card, border: `1px solid ${palette.border}` }}
-                  onClick={() => handleNavigate(quiz._id)}
+                  className="h-full border-2 rounded-2xl bg-white group-hover:border-[#1E4D3B]/20 transition-all shadow-sm"
+                  style={{ borderColor: 'rgba(0,0,0,0.03)' }}
                 >
-                  <CardHeader>
-                    <CardTitle className="text-base sm:text-lg" style={{ color: palette.text }}>{quiz.title}</CardTitle>
-                    <p className="text-xs sm:text-sm" style={{ color: palette.text2 }}>
+                  <CardHeader className="p-5">
+                    <CardTitle className="text-sm font-black text-black group-hover:text-[#1E4D3B] transition-colors">{quiz.title}</CardTitle>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#1E4D3B]/60 mt-1">
                       {quiz.category} • {quiz.level}
                     </p>
                   </CardHeader>
-                  <CardContent className="flex justify-between text-xs sm:text-sm" style={{ color: palette.text2 }}>
-                    <span>{quiz.totalMarks} Marks</span>
-                    <span>{quiz.timeLimit} min</span>
+                  <CardContent className="px-5 pb-5 pt-0 flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-slate-300">
+                    <span className="flex items-center gap-1.5"><Clock size={14} className="text-black" /> {quiz.timeLimit} min</span>
+                    <span className="flex items-center gap-1.5"><Zap size={14} className="text-[#1E4D3B]" /> {quiz.totalMarks} Marks</span>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -364,49 +355,49 @@ const Quizzes = () => {
         </motion.div>
       )}
 
-      {/* ─── Paginated Quizzes ───────────────────────────── */}
+      {/* ─── All Quizzes ───────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
+        className="space-y-6"
       >
-        <h2 className="text-xl sm:text-2xl font-bold mb-4" style={{ color: palette.text }}>All Quizzes</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <h2 className="text-lg font-black text-black uppercase tracking-wider italic">All Quizzes</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayedQuizzes.map((quiz, index) => (
             <motion.div
               key={quiz._id}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3, delay: 0.4 + index * 0.1 }}
+              onClick={() => handleNavigate(quiz._id)}
+              className="cursor-pointer group"
             >
               <Card
-                className="hover:scale-105 transition-transform cursor-pointer"
-                style={{ background: palette.card, border: `1px solid ${palette.border}` }}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor = palette.accent}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = palette.border}
-                onClick={() => handleNavigate(quiz._id)}
+                className="h-full border-2 rounded-2xl bg-white group-hover:border-[#1E4D3B]/20 transition-all shadow-sm"
+                style={{ borderColor: 'rgba(0,0,0,0.03)' }}
               >
-                <CardHeader>
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mb-2" style={{ background: palette.accentSoft }}>
-                    <FileQuestion className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: palette.accent }} />
+                <CardHeader className="p-5">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 transition-colors bg-slate-50 group-hover:bg-[#F0FDF4] group-hover:text-[#1E4D3B] text-slate-300">
+                    <FileQuestion className="w-5 h-5" />
                   </div>
-                  <CardTitle className="text-base sm:text-lg" style={{ color: palette.text }}>{quiz.title}</CardTitle>
-                  <p className="text-xs sm:text-sm" style={{ color: palette.text2 }}>
+                  <CardTitle className="text-sm font-black text-black group-hover:text-[#1E4D3B] transition-colors">{quiz.title}</CardTitle>
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-1">
                     {quiz.course?.title || quiz.category}
                   </p>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm">
-                    <div className="flex items-center gap-2" style={{ color: palette.text2 }}>
-                      <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+                <CardContent className="px-5 pb-5 pt-0 space-y-4">
+                  <div className="grid grid-cols-2 gap-3 text-[9px] font-black uppercase tracking-widest text-slate-300">
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5" />
                       <span>{quiz.timeLimit} min</span>
                     </div>
-                    <div className="flex items-center gap-2" style={{ color: palette.text2 }}>
-                      <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <div className="flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5" />
                       <span>{quiz.totalMarks} Marks</span>
                     </div>
                   </div>
-                  <Button className="w-full" style={{ background: palette.accentDeep, color: palette.card }} onMouseEnter={(e) => e.currentTarget.style.background = palette.accent} onMouseLeave={(e) => e.currentTarget.style.background = palette.accentDeep}>
+                  <Button className="w-full h-10 rounded-xl font-black text-[9px] uppercase tracking-widest bg-slate-50 text-black border-2 border-slate-50 hover:bg-black hover:text-white transition-all">
                     Start Quiz
                   </Button>
                 </CardContent>
@@ -417,14 +408,23 @@ const Quizzes = () => {
 
         {/* Pagination */}
         {filtered.length > QUIZZES_PER_PAGE && (
-          <div className="flex justify-center items-center gap-4 mt-6 sm:mt-8">
+          <div className="flex justify-center items-center gap-6 pt-10">
             {hasPrev && (
-              <Button variant="outline" onClick={() => setPage(page - 1)} style={{ borderColor: palette.border, color: palette.text }}>
+              <Button 
+                variant="outline" 
+                onClick={() => setPage(page - 1)} 
+                className="h-10 px-6 rounded-xl font-black text-[9px] uppercase tracking-widest border-2 border-slate-100 hover:bg-slate-50"
+              >
                 Previous
               </Button>
             )}
+            <span className="text-[10px] font-black text-slate-200">PAGE {page}</span>
             {hasNext && (
-              <Button variant="outline" onClick={() => setPage(page + 1)} style={{ borderColor: palette.border, color: palette.text }}>
+              <Button 
+                variant="outline" 
+                onClick={() => setPage(page + 1)} 
+                className="h-10 px-6 rounded-xl font-black text-[9px] uppercase tracking-widest border-2 border-slate-100 hover:bg-slate-50"
+              >
                 Next
               </Button>
             )}
@@ -437,13 +437,13 @@ const Quizzes = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex flex-col items-center justify-center py-16 text-center"
+          className="flex flex-col items-center justify-center py-20 text-center"
         >
-          <FileQuestion className="w-16 h-16 mb-4" style={{ color: palette.text2 }} />
-          <h3 className="text-xl font-semibold mb-2" style={{ color: palette.text }}>No quizzes found</h3>
-          <p style={{ color: palette.text2 }}>
-            {searchQuery ? "Try adjusting your search terms" : "No quizzes available at the moment"}
-          </p>
+          <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mb-6">
+             <FileQuestion className="w-8 h-8 text-slate-200" />
+          </div>
+          <h3 className="text-base font-black text-black uppercase tracking-widest mb-2">No quizzes found</h3>
+          <p className="text-[10px] text-slate-300 uppercase tracking-widest">Recalibrate your search telemetry</p>
         </motion.div>
       )}
     </div>

@@ -24,6 +24,8 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { palette } from '@/theme/palette';
+import { useParams } from 'next/navigation';
+import { useGameStore } from '@/game/useGameStore';
 
 interface Question {
   questionNumber: number;
@@ -50,6 +52,7 @@ interface Task {
 
 const DailyTask = () => {
   const { taskId } = useParams<{ taskId: string }>();
+  const { addXP, addCoins } = useGameStore();
   const router = useRouter();
   const [task, setTask] = useState<Task | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -186,6 +189,12 @@ const DailyTask = () => {
       const score = Math.round((correctCount / task.content.questions.length) * 100);
       
       toast.success(`Task completed! Score: ${score}% (${correctCount}/${task.content.questions.length})`);
+      
+      // SYNC WITH GAME STORE
+      addXP(100, "Daily Task Protocol");
+      const lootBase = 20;
+      const accuracyBonus = Math.floor((score / 100) * 30);
+      addCoins(lootBase + accuracyBonus);
       
       // Navigate back to calendar after showing results
       setTimeout(() => {

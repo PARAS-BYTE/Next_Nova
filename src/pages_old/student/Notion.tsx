@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import MDEditor from '@uiw/react-md-editor';
 import '@uiw/react-md-editor/markdown-editor.css';
+import { useNavStore } from '@/store/useNavStore';
+import { cn } from '@/lib/utils';
 import {
   Plus,
   Search,
@@ -33,6 +36,7 @@ import {
   Crown,
   Zap,
   MessageCircle,
+  RefreshCw,
 } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
@@ -74,8 +78,7 @@ const AIAssistant = ({ onInsert }: { onInsert: (text: string) => void }) => {
       }
     } catch (err: any) {
       console.error('AI generation error:', err);
-      const errorMessage = err.response?.data?.message || err.message || 'AI generation failed. Try again!';
-      toast.error(`AI Scribe Error: ${errorMessage}`);
+      toast.error(`AI Scribe Error: Failed to generate.`);
     } finally {
       setLoading(false);
     }
@@ -87,7 +90,7 @@ const AIAssistant = ({ onInsert }: { onInsert: (text: string) => void }) => {
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
         className="h-8 rounded-lg font-black text-[9px] uppercase tracking-widest"
-        style={{ background: 'linear-gradient(135deg, #7C6AFA, #5D4AD4)', color: '#fff' }}
+        style={{ background: '#1E4D3B', color: '#fff' }}
       >
         <Sparkles className="w-3 h-3 mr-1.5" /> AI Scribe
       </Button>
@@ -98,14 +101,13 @@ const AIAssistant = ({ onInsert }: { onInsert: (text: string) => void }) => {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute right-0 top-12 w-80 rounded-2xl border-2 p-4 z-50"
+            className="absolute right-0 top-12 w-80 rounded-2xl border-2 p-4 z-50 shadow-xl"
             style={{
-              background: '#0A0A0C',
-              borderColor: 'rgba(124, 106, 250, 0.3)',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+              background: '#FFFFFF',
+              borderColor: 'rgba(30, 77, 59, 0.2)',
             }}
           >
-            <p className="text-[9px] uppercase tracking-widest font-black text-white/40 mb-3">
+            <p className="text-[9px] uppercase tracking-widest font-black text-black/40 mb-3">
               Summon AI Knowledge
             </p>
             <Input
@@ -113,14 +115,14 @@ const AIAssistant = ({ onInsert }: { onInsert: (text: string) => void }) => {
               onChange={e => setPrompt(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleGenerate()}
               placeholder="Describe what to generate..."
-              className="h-10 bg-white/5 border-white/10 rounded-xl text-xs text-white placeholder:text-white/20 focus:border-[#7C6AFA] mb-3"
+              className="h-10 bg-slate-50 border-slate-200 rounded-xl text-xs text-black placeholder:text-slate-300 focus:border-[#1E4D3B] mb-3"
             />
             <div className="flex gap-2">
               <Button
                 onClick={handleGenerate}
                 disabled={loading || !prompt.trim()}
-                className="flex-1 h-9 rounded-lg font-black text-[9px] uppercase tracking-widest"
-                style={{ background: 'linear-gradient(135deg, #7C6AFA, #5D4AD4)', color: '#fff' }}
+                className="flex-1 h-9 rounded-lg font-black text-[9px] uppercase tracking-widest text-white hover:bg-black"
+                style={{ background: '#1E4D3B' }}
               >
                 {loading ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Sparkles className="w-3 h-3 mr-1" />}
                 {loading ? 'Channeling...' : 'Generate'}
@@ -130,7 +132,7 @@ const AIAssistant = ({ onInsert }: { onInsert: (text: string) => void }) => {
                 variant="ghost"
                 className="h-9 w-9 rounded-lg p-0"
               >
-                <X className="w-3 h-3 text-white/40" />
+                <X className="w-3 h-3 text-black/40" />
               </Button>
             </div>
           </motion.div>
@@ -161,8 +163,8 @@ const NoteItem = ({
     <motion.div
       className="group flex items-center gap-3 p-3 rounded-xl cursor-pointer mb-1 border-2 transition-all"
       style={{
-        background: isSelected ? 'rgba(124, 106, 250, 0.08)' : 'transparent',
-        borderColor: isSelected ? 'rgba(124, 106, 250, 0.2)' : 'transparent',
+        background: isSelected ? 'rgba(30, 77, 59, 0.08)' : 'transparent',
+        borderColor: isSelected ? 'rgba(30, 77, 59, 0.2)' : 'transparent',
       }}
       onClick={onSelect}
       whileHover={{ x: 3 }}
@@ -171,36 +173,39 @@ const NoteItem = ({
       <div
         className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border"
         style={{
-          background: isSelected ? 'rgba(124, 106, 250, 0.15)' : 'rgba(255, 255, 255, 0.03)',
-          borderColor: isSelected ? 'rgba(124, 106, 250, 0.3)' : 'rgba(255, 255, 255, 0.05)',
+          background: isSelected ? '#1E4D3B' : '#F8FAFC',
+          borderColor: isSelected ? '#1E4D3B' : '#E2E8F0',
         }}
       >
-        <IconComponent className="w-3.5 h-3.5" style={{ color: isSelected ? '#7C6AFA' : 'rgba(255,255,255,0.3)' }} />
+        <IconComponent className="w-3.5 h-3.5" style={{ color: isSelected ? '#FFFFFF' : '#A1A1AA' }} />
       </div>
       <div className="flex-1 min-w-0">
-        <span className={`text-xs font-bold truncate block ${isSelected ? 'text-white' : 'text-white/60'}`}>
+        <span className={cn(
+          "text-xs font-bold truncate block",
+          isSelected ? "text-black" : "text-black/60"
+        )}>
           {note.title}
         </span>
-        <span className="text-[9px] text-white/20">
+        <span className="text-[9px] text-black/20 font-bold uppercase tracking-wider">
           {new Date(note.updatedAt).toLocaleDateString()}
         </span>
       </div>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={e => { e.stopPropagation(); onToggleFavorite(); }}
-          className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"
+          className="p-1.5 rounded-lg hover:bg-black/5 transition-colors"
         >
           {note.isFavorite ? (
-            <Star className="w-3 h-3 text-[#FBBF24]" fill="#FBBF24" />
+            <Star className="w-3 h-3 text-[#1E4D3B]" fill="#1E4D3B" />
           ) : (
-            <StarOff className="w-3 h-3 text-white/20" />
+            <StarOff className="w-3 h-3 text-black/20" />
           )}
         </button>
         <button
           onClick={e => { e.stopPropagation(); onDelete(); }}
           className="p-1.5 rounded-lg hover:bg-red-500/10 transition-colors"
         >
-          <Trash2 className="w-3 h-3 text-red-400/50" />
+          <Trash2 className="w-3 h-3 text-red-400" />
         </button>
       </div>
     </motion.div>
@@ -209,6 +214,7 @@ const NoteItem = ({
 
 // ─── Main Notion Component ────────────────────────────────
 const Notion = () => {
+  const router = useRouter();
   const [notes, setNotes] = useState<PersonalNote[]>([]);
   const [selectedNote, setSelectedNote] = useState<PersonalNote | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -219,8 +225,6 @@ const Notion = () => {
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [folderPath, setFolderPath] = useState<Array<{ id: string | null; name: string }>>([{ id: null, name: 'Home' }]);
-
-  const router = useRouter();
   const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
 
   const getIcon = (iconName: string, isFolder: boolean) => {
@@ -230,21 +234,18 @@ const Notion = () => {
 
   const handleGenerateQuiz = async () => {
     if (!selectedNote || !selectedNote.content || selectedNote.content.length < 50) {
-      toast.error("Not enough knowledge in this scroll to generate a trial. Write more!");
+      toast.error("Not enough knowledge in this scroll.");
       return;
     }
 
     try {
       setIsGeneratingQuiz(true);
-      toast.info("Channeling AI to create your trials...");
-      
       const { data } = await axios.post('/api/ai/quiz-from-content', {
         content: selectedNote.content,
         title: selectedNote.title
       }, { withCredentials: true });
 
       if (data && data.questions) {
-        // Wrap for TakeQuiz
         const quizTrial = {
           title: `Trial of ${selectedNote.title}`,
           timeLimit: 10,
@@ -259,11 +260,9 @@ const Notion = () => {
         
         useNavStore.getState().setNavState(quizTrial);
         router.push('/student/takequiz');
-        toast.success("Trial prepared! Ascending to the Arena...");
       }
     } catch (err) {
-      console.error('Quiz generation error:', err);
-      toast.error("The Oracle is silent. Try again later.");
+      console.error(err);
     } finally {
       setIsGeneratingQuiz(false);
     }
@@ -282,7 +281,6 @@ const Notion = () => {
         }
       }
     } catch (err: any) {
-      console.error('Fetch notes error:', err);
       toast.error('Failed to load scrolls');
     } finally {
       setLoading(false);
@@ -299,10 +297,8 @@ const Notion = () => {
       if (data.success) {
         await fetchNotes(currentFolderId);
         setSelectedNote(data.note); setTitleValue('Untitled Scroll'); setEditingTitle(true);
-        toast.success('New scroll inscribed!');
       }
     } catch (err: any) {
-      console.error('Create note error:', err);
       toast.error('Failed to create scroll');
     }
   };
@@ -315,10 +311,8 @@ const Notion = () => {
       if (data.success) {
         await fetchNotes(currentFolderId);
         setExpandedFolders(new Set([...expandedFolders, data.note._id]));
-        toast.success('New vault opened!');
       }
     } catch (err: any) {
-      console.error('Create folder error:', err);
       toast.error('Failed to create vault');
     }
   };
@@ -346,10 +340,9 @@ const Notion = () => {
         setSelectedNote(data.note);
         setNotes(notes.map(n => n._id === selectedNote._id ? data.note : n));
         setEditingTitle(false);
-        toast.success('Scroll saved to the archives!');
+        toast.success('Scroll saved!');
       }
     } catch (err: any) {
-      console.error('Save note error:', err);
       toast.error('Failed to save scroll');
     } finally {
       setSaving(false);
@@ -370,7 +363,6 @@ const Notion = () => {
         toast.success('Scroll destroyed');
       }
     } catch (err: any) {
-      console.error('Delete note error:', err);
       toast.error('Failed to destroy scroll');
     }
   };
@@ -383,7 +375,7 @@ const Notion = () => {
         if (selectedNote?._id === noteId) setSelectedNote(data.note);
       }
     } catch (err: any) {
-      console.error('Toggle favorite error:', err);
+      console.error(err);
     }
   };
 
@@ -404,22 +396,22 @@ const Notion = () => {
   const regularNotes = filteredNotes.filter(n => !n.isFolder && !n.isFavorite);
 
   return (
-    <div className="flex h-screen" style={{ background: '#050507' }}>
+    <div className="flex h-screen" style={{ background: '#FFFFFF' }}>
       {/* ─── Sidebar - Scroll Archive ───────────────────────────── */}
       <div
         className="w-72 border-r flex flex-col"
-        style={{ background: '#0A0A0C', borderColor: 'rgba(255,255,255,0.05)' }}
+        style={{ background: '#FFFFFF', borderColor: 'rgba(0,0,0,0.05)' }}
       >
         {/* Header */}
-        <div className="p-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-          <h2 className="text-[10px] uppercase font-black tracking-[0.3em] text-white/30 mb-3 flex items-center gap-2">
-            <Scroll className="w-3.5 h-3.5 text-[#7C6AFA]" /> Scroll Archive
+        <div className="p-4 border-b" style={{ borderColor: 'rgba(0,0,0,0.05)' }}>
+          <h2 className="text-[10px] uppercase font-black tracking-[0.3em] text-black/30 mb-3 flex items-center gap-2">
+            <Scroll className="w-3.5 h-3.5 text-[#1E4D3B]" /> Scroll Archive
           </h2>
           <div className="flex gap-2">
             <Button
               onClick={handleCreateNote}
-              className="flex-1 h-9 rounded-xl font-black text-[9px] uppercase tracking-widest"
-              style={{ background: 'linear-gradient(135deg, #7C6AFA, #5D4AD4)', color: '#fff' }}
+              className="flex-1 h-9 rounded-xl font-black text-[9px] uppercase tracking-widest text-[#fff]"
+              style={{ background: '#1E4D3B' }}
             >
               <Plus className="w-3 h-3 mr-1.5" /> New Scroll
             </Button>
@@ -427,40 +419,40 @@ const Notion = () => {
               onClick={handleCreateFolder}
               variant="outline"
               className="h-9 w-9 rounded-xl p-0 border-2"
-              style={{ borderColor: 'rgba(124, 106, 250, 0.2)', background: 'transparent' }}
+              style={{ borderColor: 'rgba(30, 77, 59, 0.2)', background: 'transparent' }}
             >
-              <Folder className="w-3.5 h-3.5 text-[#7C6AFA]" />
+              <Folder className="w-3.5 h-3.5 text-[#1E4D3B]" />
             </Button>
           </div>
         </div>
 
         {/* Breadcrumb Path */}
         {folderPath.length > 1 && (
-          <div className="px-4 py-2 flex items-center gap-1 flex-wrap border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+          <div className="px-4 py-2 flex items-center gap-1 flex-wrap border-b" style={{ borderColor: 'rgba(0,0,0,0.05)' }}>
             {folderPath.map((path, index) => (
               <span key={index} className="flex items-center">
                 <button
                   onClick={() => handleNavigateBack(index)}
-                  className="text-[9px] font-bold uppercase tracking-wider hover:text-[#7C6AFA] transition-colors"
-                  style={{ color: index === folderPath.length - 1 ? '#7C6AFA' : 'rgba(255,255,255,0.3)' }}
+                  className="text-[9px] font-bold uppercase tracking-wider hover:text-[#1E4D3B] transition-colors"
+                  style={{ color: index === folderPath.length - 1 ? '#1E4D3B' : 'rgba(0,0,0,0.3)' }}
                 >
                   {path.name}
                 </button>
-                {index < folderPath.length - 1 && <ChevronRight className="w-3 h-3 text-white/10 mx-0.5" />}
+                {index < folderPath.length - 1 && <ChevronRight className="w-3 h-3 text-black/10 mx-0.5" />}
               </span>
             ))}
           </div>
         )}
 
         {/* Search */}
-        <div className="p-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+        <div className="p-4 border-b" style={{ borderColor: 'rgba(0,0,0,0.05)' }}>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/20" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-black/20" />
             <Input
               placeholder="Search scrolls..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="pl-9 h-9 text-xs bg-white/5 border-white/5 rounded-xl text-white placeholder:text-white/15 focus:border-[#7C6AFA]"
+              className="pl-9 h-9 text-xs bg-slate-50 border-slate-50 rounded-xl text-black placeholder:text-black/15 focus:border-[#1E4D3B]"
             />
           </div>
         </div>
@@ -469,14 +461,14 @@ const Notion = () => {
         <div className="flex-1 overflow-y-auto p-3 scrollbar-thin">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-5 h-5 text-[#7C6AFA] animate-spin" />
+              <Loader2 className="w-5 h-5 text-[#1E4D3B] animate-spin" />
             </div>
           ) : (
             <>
               {/* Vaults (Folders) */}
               {folders.length > 0 && (
                 <div className="mb-4">
-                  <p className="text-[9px] font-black px-2 mb-2 uppercase tracking-[0.2em] text-white/20">
+                  <p className="text-[9px] font-black px-2 mb-2 uppercase tracking-[0.2em] text-black/20">
                     Vaults
                   </p>
                   {folders.map(folder => {
@@ -484,24 +476,24 @@ const Notion = () => {
                     return (
                       <motion.div
                         key={folder._id}
-                        className="group flex items-center gap-3 p-3 rounded-xl cursor-pointer mb-1 border-2 transition-all hover:bg-white/[0.02]"
+                        className="group flex items-center gap-3 p-3 rounded-xl cursor-pointer mb-1 border-2 transition-all hover:bg-black/[0.02]"
                         style={{ borderColor: 'transparent' }}
                         onClick={() => handleOpenFolder(folder)}
                         whileHover={{ x: 3 }}
                       >
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center border bg-[#FBBF24]/5 border-[#FBBF24]/10">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center border bg-[#F0FDF4] border-[#1E4D3B]/10">
                           {expandedFolders.has(folder._id) ? (
-                            <FolderOpen className="w-3.5 h-3.5 text-[#FBBF24]" />
+                            <FolderOpen className="w-3.5 h-3.5 text-[#1E4D3B]" />
                           ) : (
-                            <IconComponent className="w-3.5 h-3.5 text-[#FBBF24]" />
+                            <IconComponent className="w-3.5 h-3.5 text-[#1E4D3B]" />
                           )}
                         </div>
-                        <span className="flex-1 truncate text-xs font-bold text-white/60">{folder.title}</span>
+                        <span className="flex-1 truncate text-xs font-bold text-black/60">{folder.title}</span>
                         <button
                           onClick={e => { e.stopPropagation(); handleDeleteNote(folder._id); }}
                           className="p-1.5 rounded-lg hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all"
                         >
-                          <Trash2 className="w-3 h-3 text-red-400/50" />
+                          <Trash2 className="w-3 h-3 text-red-400" />
                         </button>
                       </motion.div>
                     );
@@ -512,8 +504,8 @@ const Notion = () => {
               {/* Legendary Scrolls (Favorites) */}
               {favoriteNotes.length > 0 && (
                 <div className="mb-4">
-                  <p className="text-[9px] font-black px-2 mb-2 uppercase tracking-[0.2em] text-[#FBBF24]/50">
-                    <Star className="w-3 h-3 inline mr-1" fill="#FBBF24" /> Legendary
+                  <p className="text-[9px] font-black px-2 mb-2 uppercase tracking-[0.2em] text-[#1E4D3B]">
+                    <Star className="w-3 h-3 inline mr-1" fill="#1E4D3B" /> Legendary
                   </p>
                   {favoriteNotes.map(note => (
                     <NoteItem
@@ -532,7 +524,7 @@ const Notion = () => {
               {/* Regular Scrolls */}
               <div>
                 {(folders.length > 0 || favoriteNotes.length > 0) && (
-                  <p className="text-[9px] font-black px-2 mb-2 uppercase tracking-[0.2em] text-white/20">
+                  <p className="text-[9px] font-black px-2 mb-2 uppercase tracking-[0.2em] text-black/20">
                     All Scrolls
                   </p>
                 )}
@@ -551,11 +543,10 @@ const Notion = () => {
 
               {filteredNotes.length === 0 && (
                 <div className="text-center py-12">
-                  <Scroll className="w-8 h-8 text-white/10 mx-auto mb-3" />
-                  <p className="text-xs text-white/20 font-bold uppercase tracking-widest">
+                  <Scroll className="w-8 h-8 text-black/10 mx-auto mb-3" />
+                  <p className="text-xs text-black/20 font-bold uppercase tracking-widest">
                     {searchQuery ? 'No scrolls found' : 'No scrolls yet'}
                   </p>
-                  <p className="text-[9px] text-white/10 mt-1">Create your first scroll to begin</p>
                 </div>
               )}
             </>
@@ -563,8 +554,8 @@ const Notion = () => {
         </div>
 
         {/* Sidebar Footer Stats */}
-        <div className="p-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-          <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-white/20">
+        <div className="p-4 border-t" style={{ borderColor: 'rgba(0,0,0,0.05)' }}>
+          <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-black/20">
             <span>{notes.filter(n => !n.isFolder).length} Scrolls</span>
             <span>{folders.length} Vaults</span>
           </div>
@@ -572,13 +563,13 @@ const Notion = () => {
       </div>
 
       {/* ─── Main Editor - Inscription Table ───────────────────────────── */}
-      <div className="flex-1 flex flex-col" style={{ background: '#050507' }}>
+      <div className="flex-1 flex flex-col" style={{ background: '#FFFFFF' }}>
         {selectedNote && !selectedNote.isFolder ? (
           <>
             {/* Toolbar */}
             <div
               className="p-4 border-b flex items-center justify-between relative"
-              style={{ background: '#0A0A0C', borderColor: 'rgba(255,255,255,0.05)' }}
+              style={{ background: '#FFFFFF', borderColor: 'rgba(0,0,0,0.05)' }}
             >
               <div className="flex items-center gap-3 flex-1">
                 {editingTitle ? (
@@ -586,7 +577,7 @@ const Notion = () => {
                     <Input
                       value={titleValue}
                       onChange={e => setTitleValue(e.target.value)}
-                      className="h-10 bg-white/5 border-white/10 rounded-xl text-sm text-white font-bold focus:border-[#7C6AFA]"
+                      className="h-10 bg-slate-50 border-slate-50 rounded-xl text-sm text-black font-bold focus:border-[#1E4D3B]"
                       onKeyDown={e => {
                         if (e.key === 'Enter') handleSaveNote();
                         else if (e.key === 'Escape') { setTitleValue(selectedNote.title); setEditingTitle(false); }
@@ -598,7 +589,7 @@ const Notion = () => {
                       onClick={handleSaveNote}
                       disabled={saving}
                       className="h-10 w-10 rounded-xl p-0"
-                      style={{ background: '#7C6AFA' }}
+                      style={{ background: '#1E4D3B' }}
                     >
                       <Save className="w-4 h-4 text-white" />
                     </Button>
@@ -608,7 +599,7 @@ const Notion = () => {
                       onClick={() => { setTitleValue(selectedNote.title); setEditingTitle(false); }}
                       className="h-10 w-10 rounded-xl p-0"
                     >
-                      <X className="w-4 h-4 text-white/40" />
+                      <X className="w-4 h-4 text-black/40" />
                     </Button>
                   </div>
                 ) : (
@@ -616,24 +607,24 @@ const Notion = () => {
                     {(() => {
                       const IconComponent = getIcon(selectedNote.icon, selectedNote.isFolder);
                       return (
-                        <div className="w-10 h-10 rounded-xl flex items-center justify-center border-2" style={{ background: 'rgba(124,106,250,0.1)', borderColor: 'rgba(124,106,250,0.2)' }}>
-                          <IconComponent className="w-5 h-5 text-[#7C6AFA]" />
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center border-2 border-[#1E4D3B]/10 bg-[#F0FDF4]">
+                          <IconComponent className="w-5 h-5 text-[#1E4D3B]" />
                         </div>
                       );
                     })()}
                     <div>
                       <h1
-                        className="text-lg font-black cursor-pointer hover:text-[#7C6AFA] transition-colors text-white"
+                        className="text-lg font-black cursor-pointer hover:text-[#1E4D3B] transition-colors text-black"
                         onClick={() => setEditingTitle(true)}
                       >
                         {selectedNote.title}
                       </h1>
                       <div className="flex items-center gap-2">
-                        <p className="text-[9px] text-white/20 uppercase tracking-widest font-bold">
+                        <p className="text-[9px] text-black/20 uppercase tracking-widest font-bold">
                           Last edited {new Date(selectedNote.updatedAt).toLocaleDateString()}
                         </p>
-                        <span className="text-white/10">•</span>
-                        <p className="text-[9px] text-[#7C6AFA] uppercase tracking-widest font-black">
+                        <span className="text-black/10">•</span>
+                        <p className="text-[9px] text-[#1E4D3B] uppercase tracking-widest font-black">
                           {selectedNote.content?.length || 0} Knowledge Bytes
                         </p>
                       </div>
@@ -649,9 +640,8 @@ const Notion = () => {
                   disabled={isGeneratingQuiz}
                   className="h-9 px-4 rounded-xl font-black text-[10px] uppercase tracking-[0.1em] transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
                   style={{ 
-                    background: 'linear-gradient(135deg, #FF6B6B, #EE5253)', 
+                    background: '#000000', 
                     color: '#fff',
-                    boxShadow: '0 4px 15px rgba(238, 82, 83, 0.3)'
                   }}
                 >
                   {isGeneratingQuiz ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sword className="w-3.5 h-3.5" />}
@@ -663,21 +653,20 @@ const Notion = () => {
                   size="sm"
                   variant="outline"
                   onClick={() => handleToggleFavorite(selectedNote._id, selectedNote.isFavorite)}
-                  className="h-9 w-9 rounded-xl p-0 border-2"
-                  style={{ borderColor: 'rgba(255,255,255,0.05)', background: 'transparent' }}
+                  className="h-9 w-9 rounded-xl p-0 border-2 border-slate-50 bg-transparent"
                 >
                   {selectedNote.isFavorite ? (
-                    <Star className="w-4 h-4 text-[#FBBF24]" fill="#FBBF24" />
+                    <Star className="w-4 h-4 text-[#1E4D3B]" fill="#1E4D3B" />
                   ) : (
-                    <StarOff className="w-4 h-4 text-white/20" />
+                    <StarOff className="w-4 h-4 text-black/20" />
                   )}
                 </Button>
                 <Button
                   size="sm"
                   onClick={handleSaveNote}
                   disabled={saving}
-                  className="h-9 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest"
-                  style={{ background: 'linear-gradient(135deg, #34D399, #059669)', color: '#000' }}
+                  className="h-9 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest text-white hover:bg-black transition-all"
+                  style={{ background: '#1E4D3B' }}
                 >
                   {saving ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Save className="w-3 h-3 mr-1" />}
                   {saving ? 'Saving...' : 'Save'}
@@ -686,8 +675,8 @@ const Notion = () => {
             </div>
 
             {/* Editor */}
-            <div className="flex-1 overflow-y-auto p-6" style={{ background: '#050507' }}>
-              <div data-color-mode="dark" className="max-w-4xl mx-auto h-full">
+            <div className="flex-1 overflow-y-auto p-6" style={{ background: '#FFFFFF' }}>
+              <div data-color-mode="light" className="max-w-4xl mx-auto h-full">
                 <MDEditor
                   value={selectedNote.content}
                   onChange={handleContentChange}
@@ -708,33 +697,32 @@ const Notion = () => {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center" style={{ background: '#050507' }}>
+          <div className="flex-1 flex items-center justify-center" style={{ background: '#FFFFFF' }}>
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-center"
             >
-              <div className="w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border-2 border-dashed relative group" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-                <div className="absolute inset-2 rounded-[1.5rem] bg-[#7C6AFA]/5 scale-0 group-hover:scale-100 transition-transform" />
-                <Scroll className="w-12 h-12 text-white/10 group-hover:text-[#7C6AFA]/40 transition-colors" />
+              <div className="w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border-2 border-dashed border-slate-100 bg-slate-50 relative group">
+                <Scroll className="w-12 h-12 text-slate-200 group-hover:text-[#1E4D3B]/40 transition-colors" />
               </div>
-              <h2 className="text-xl font-black mb-2 text-white tracking-widest uppercase">
+              <h2 className="text-xl font-black mb-2 text-black tracking-widest uppercase">
                 The Vault is Closed
               </h2>
-              <p className="text-[10px] text-white/15 mb-8 uppercase tracking-[0.2em] max-w-xs mx-auto leading-relaxed">
+              <p className="text-[10px] text-black/15 mb-8 uppercase tracking-[0.2em] max-w-xs mx-auto leading-relaxed">
                 Select an ancient scroll from the archive or forge a new path of knowledge.
               </p>
               <div className="flex flex-col items-center gap-3">
                 <Button
                   onClick={handleCreateNote}
-                  className="h-12 px-8 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em]"
-                  style={{ background: 'linear-gradient(135deg, #7C6AFA, #5D4AD4)', color: '#fff', boxShadow: '0 8px 30px rgba(124,106,250,0.3)' }}
+                  className="h-12 px-8 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] text-white"
+                  style={{ background: '#1E4D3B' }}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Inscribe New Scroll
                 </Button>
                 <div className="flex gap-2">
-                   <div className="px-3 py-1.5 rounded-lg border border-white/5 bg-white/2 text-[9px] font-black uppercase text-white/20 tracking-widest">
+                   <div className="px-3 py-1.5 rounded-lg border border-slate-50 bg-slate-50 text-[9px] font-black uppercase text-black/20 tracking-widest">
                       Shortcut: Ctrl + S to save
                    </div>
                 </div>
@@ -750,14 +738,14 @@ const Notion = () => {
         }
         .w-md-editor {
           box-shadow: none !important;
-          background-color: #0A0A0C !important;
+          background-color: #FFFFFF !important;
           border-radius: 24px !important;
-          border: 1px solid rgba(255,255,255,0.03) !important;
+          border: 1px solid rgba(0,0,0,0.03) !important;
           overflow: hidden;
         }
         .w-md-editor-toolbar {
-          background-color: #0F0F12 !important;
-          border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+          background-color: #F8FAFC !important;
+          border-bottom: 1px solid rgba(0,0,0,0.05) !important;
           padding: 8px 16px !important;
         }
         .w-md-editor-content {

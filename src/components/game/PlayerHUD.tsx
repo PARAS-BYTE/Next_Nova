@@ -1,12 +1,12 @@
 'use client';
 /* ═══════════════════════════════════════════════════════
-   Player HUD — Heads-Up Display for the game bar
+   Player HUD — Strict G/W/B with original shapes
    ═══════════════════════════════════════════════════════ */
 
 import { motion } from 'framer-motion';
 import { Flame, Coins, Zap, Trophy, Star } from 'lucide-react';
 import { useGameStore } from '@/game/useGameStore';
-import { getXPProgress, getRankForLevel } from '@/game/gameConfig';
+import { getXPProgress } from '@/game/gameConfig';
 import GameAvatar from './AvatarSystem';
 import { palette } from '@/theme/palette';
 
@@ -14,119 +14,98 @@ export default function PlayerHUD() {
   const stats = useGameStore(s => s.stats);
   const avatarSkin = useGameStore(s => s.avatarSkin);
   const xpProgress = getXPProgress(stats.totalXP);
-  const rankCfg = getRankForLevel(stats.level);
 
   return (
     <motion.div
       initial={{ y: -60, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className="flex items-center justify-between px-4 py-2 z-30 relative"
+      className="flex items-center justify-between px-6 py-3 z-30 relative"
       style={{
-        background: 'rgba(11, 13, 23, 0.85)',
+        background: 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(20px)',
         borderBottom: `1px solid ${palette.border}`,
       }}
     >
       {/* Left: Avatar + Player Info */}
-      <div className="flex items-center gap-3">
-        <GameAvatar skin={avatarSkin} level={stats.level} size={44} mood="idle" />
+      <div className="flex items-center gap-4">
+        <GameAvatar skin={avatarSkin} level={stats.level} size={48} mood="idle" showRing={true} />
 
         <div className="hidden sm:block">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-bold" style={{ color: palette.text }}>
+            <span className="text-sm font-bold text-black uppercase tracking-tight">
               Level {stats.level}
             </span>
             <span
-              className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-              style={{
-                background: rankCfg.glowColor,
-                color: rankCfg.color,
-                border: `1px solid ${rankCfg.color}40`,
-              }}
+              className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 bg-[#1E4D3B] text-white rounded-full"
             >
               {stats.title}
             </span>
           </div>
 
-          {/* XP Bar */}
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex items-center gap-3 mt-1.5">
             <div
-              className="w-32 h-1.5 rounded-full overflow-hidden"
-              style={{ background: palette.progressTrack }}
+              className="w-40 h-1.5 bg-slate-100 rounded-full overflow-hidden"
             >
               <motion.div
-                className="h-full rounded-full"
-                style={{ background: palette.gradient1 }}
+                className="h-full bg-[#1E4D3B] rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${xpProgress.percent}%` }}
-                transition={{ duration: 1, ease: 'easeOut' }}
+                transition={{ duration: 1.5 }}
               />
             </div>
-            <span className="text-[10px] font-mono" style={{ color: palette.text2 }}>
-              {xpProgress.current}/{xpProgress.required}
-            </span>
           </div>
         </div>
       </div>
 
       {/* Center: Quick Stats */}
-      <div className="flex items-center gap-2 sm:gap-4">
-        {/* XP */}
+      <div className="flex items-center gap-3 lg:gap-6">
         <HUDStat
-          icon={<Zap className="w-3.5 h-3.5" />}
+          icon={<Zap className="w-4 h-4" />}
           value={stats.totalXP.toLocaleString()}
-          label="XP"
-          color="#7C6AFA"
-          glowColor="rgba(124, 106, 250, 0.15)"
+          label="Total XP"
+          color="#1E4D3B"
+          glowColor="rgba(30, 77, 59, 0.05)"
         />
 
-        {/* Streak */}
         <HUDStat
-          icon={<Flame className="w-3.5 h-3.5" />}
+          icon={<Flame className="w-4 h-4" />}
           value={`${stats.streak}`}
           label="Streak"
-          color="#FBBF24"
-          glowColor="rgba(251, 191, 36, 0.15)"
+          color="#000000"
+          glowColor="rgba(0, 0, 0, 0.05)"
         />
 
-        {/* Coins */}
         <HUDStat
-          icon={<Coins className="w-3.5 h-3.5" />}
+          icon={<Coins className="w-4 h-4" />}
           value={stats.coins.toLocaleString()}
-          label="Coins"
-          color="#34D399"
-          glowColor="rgba(52, 211, 153, 0.15)"
+          label="Loot"
+          color="#1E4D3B"
+          glowColor="rgba(30, 77, 59, 0.05)"
         />
 
-        {/* Quests */}
-        <div className="hidden md:block">
+        <div className="hidden lg:block">
           <HUDStat
-            icon={<Trophy className="w-3.5 h-3.5" />}
+            icon={<Trophy className="w-4 h-4" />}
             value={`${stats.questsCompleted}`}
-            label="Quests"
-            color="#22D3EE"
-            glowColor="rgba(34, 211, 238, 0.15)"
+            label="Modules"
+            color="#000000"
+            glowColor="rgba(0, 0, 0, 0.05)"
           />
         </div>
       </div>
 
-      {/* Right: Rank Badge */}
+      {/* Right: Rank Status */}
       <motion.div
-        className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl"
-        style={{
-          background: rankCfg.glowColor,
-          border: `1px solid ${rankCfg.color}30`,
-        }}
+        className="hidden lg:flex items-center gap-3 px-4 py-2 rounded-xl border border-slate-100 bg-white shadow-sm"
         whileHover={{ scale: 1.05 }}
       >
-        <Star className="w-4 h-4" style={{ color: rankCfg.color }} />
+        <Star className="w-5 h-5 text-[#1E4D3B]" />
         <div>
-          <p className="text-[10px] uppercase tracking-wider font-bold" style={{ color: rankCfg.color }}>
+          <p className="text-[10px] uppercase tracking-wider font-bold text-black leading-none pb-0.5">
             {stats.rank}
           </p>
-          <p className="text-[9px]" style={{ color: palette.text2 }}>
-            Rank
+          <p className="text-[9px] font-bold uppercase tracking-widest text-[#1E4D3B]">
+             Active Portal
           </p>
         </div>
       </motion.div>
@@ -150,15 +129,14 @@ function HUDStat({
 }) {
   return (
     <motion.div
-      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg cursor-default"
+      className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl cursor-default border border-transparent hover:border-slate-100 hover:bg-white hover:shadow-sm"
       style={{ background: glowColor }}
-      whileHover={{ scale: 1.08, boxShadow: `0 0 15px ${glowColor}` }}
-      transition={{ duration: 0.2 }}
+      whileHover={{ y: -2 }}
     >
       <div style={{ color }}>{icon}</div>
-      <div className="text-right">
-        <p className="text-xs font-bold leading-none" style={{ color }}>{value}</p>
-        <p className="text-[8px] uppercase tracking-wider" style={{ color: palette.text2 }}>{label}</p>
+      <div className="text-left">
+        <p className="text-sm font-bold leading-none text-black">{value}</p>
+        <p className="text-[8px] uppercase tracking-widest font-black text-slate-400">{label}</p>
       </div>
     </motion.div>
   );

@@ -46,6 +46,7 @@ interface GameState {
   leaderboard: LeaderboardEntry[];
 
   /* Actions */
+  syncStats: (stats: Partial<PlayerStats>) => void;
   addXP: (amount: number, source: string) => void;
   addCoins: (amount: number) => void;
   incrementStreak: () => void;
@@ -127,6 +128,24 @@ export const useGameStore = create<GameState>()(
       achievementUnlockQueue: [],
 
       leaderboard: initialLeaderboard,
+
+      /* ── Sync from Backend ── */
+      syncStats: (stats) => set(s => {
+        const newTotalXP = stats.totalXP ?? s.stats.totalXP;
+        const derivedLevel = getLevelFromXP(newTotalXP);
+        const rankCfg = getRankForLevel(derivedLevel);
+        
+        return {
+          stats: { 
+            ...s.stats, 
+            ...stats,
+            totalXP: newTotalXP,
+            level: derivedLevel,
+            rank: rankCfg.tier,
+            title: rankCfg.title
+          }
+        };
+      }),
 
       /* ── Add XP ── */
       addXP: (amount, source) => {
