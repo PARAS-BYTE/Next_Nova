@@ -1106,9 +1106,9 @@ Output only JSON, nothing else.
             try {
                 parsed = JSON5.parse(candidate);
             } catch {
-                console.error("❌ Gemini invalid JSON:", rawText);
+                console.error("❌ Mistral invalid JSON:", rawText);
                 return res.status(500).json({
-                    error: "Invalid JSON output from Gemini",
+                    error: "Invalid JSON output from Mistral",
                     raw: rawText,
                 });
             }

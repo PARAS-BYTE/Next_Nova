@@ -245,36 +245,33 @@ class CalendarClass {
   buildTaskPrompt(user) {
     const preferences = this.studyPreferences;
     const userLevel = user.level || 1;
-    const userStreak = this.streak.currentStreak || 0;
+    const userStreak = this.streak?.currentStreak || 0;
+    const onboarding = user.onboardingData || {};
     
     return `
-    Create a personalized daily learning task with 10 questions for a student based on their profile.
+    Create a personalized and RANDOM daily learning task for a student. 
+    BE CREATIVE: Vary the specific topic each day within their field of interest so it feels fresh.
     
     STUDENT PROFILE:
+    - Primary Goal: ${onboarding.primaryGoal || "General Improvement"}
+    - Skill Level: ${onboarding.skillLevel || preferences.difficultyLevel || "beginner"}
+    - Available Time: ${onboarding.availableTimePerDay || preferences.dailyStudyTime + " minutes"}
     - Level: ${userLevel}
     - Current Streak: ${userStreak} days
     - Preferred Subjects: ${preferences.subjects.join(", ")}
-    - Difficulty Level: ${preferences.difficultyLevel}
-    - Daily Study Time: ${preferences.dailyStudyTime} minutes
     - Learning Goals: ${preferences.learningGoals.join(", ")}
-    - Learning Styles: ${preferences.preferredLearningStyles.join(", ")}
     
     TASK REQUIREMENTS:
-    - Create ONE engaging daily task with EXACTLY 10 questions
-    - Duration: ${Math.min(60, preferences.dailyStudyTime)} minutes max
-    - Appropriate for ${preferences.difficultyLevel} level
-    - Related to their preferred subjects: ${preferences.subjects.join(", ")}
-    - Use ONLY these task types: study, quiz, reading, practice, assignment, or review
-    - Make it achievable in one session
+    - Create ONE unique, engaging daily task with EXACTLY 10 questions.
+    - Topic should be a random sub-topic related to: ${preferences.subjects.join(", ")}.
+    - Duration: ${Math.min(60, onboarding.dailyGoalMinutes || preferences.dailyStudyTime)} minutes max.
+    - Appropriate for ${onboarding.skillLevel || preferences.difficultyLevel} level.
+    - Use ONLY these task types: study, quiz, reading, practice, assignment, or review.
     
     QUESTION REQUIREMENTS:
-    - Generate EXACTLY 10 questions
-    - Mix question types: Multiple Choice (MCQ), Short Answer (Q/A), True/False, Fill in the Blank
-    - Questions should be relevant to the task topic and difficulty level
-    - For MCQ: provide 4 options with one correct answer
-    - For Q/A: provide clear, concise questions that can be answered in 1-3 sentences
-    - For True/False: provide statements that test understanding
-    - For Fill in the Blank: provide sentences with one key word missing
+    - Generate EXACTLY 10 questions.
+    - Mix question types: Multiple Choice (MCQ), Short Answer (Q/A), True/False, Fill in the Blank.
+    - Questions must be relevant to the chosen random sub-topic.
     
     RESPONSE FORMAT (JSON only):
     {

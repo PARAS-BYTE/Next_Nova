@@ -8,11 +8,7 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
-import { Timer, Sword, ChevronRight, SendHorizontal, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
-// import gsap from "gsap"; // GSAP removed
-import axios from "axios";
-import { palette } from "@/theme/palette";
+import CodeBox from "@/components/CodeBox";
 
 const BattleGround = () => {
   const state = useNavStore(s => s.navState);
@@ -33,6 +29,32 @@ const BattleGround = () => {
   const progressRef = useRef<HTMLDivElement | null>(null);
   const questions = battleData?.questions || [];
   const currentQuestion = questions[currentIndex];
+
+  // Helper to render question with code detection
+  const renderQuestionText = (text: string) => {
+    if (!text) return null;
+    
+    // Check for code blocks ```code```
+    const parts = text.split(/```/);
+    if (parts.length === 1) return text;
+
+    return (
+      <div className="space-y-4">
+        {parts.map((part, i) => {
+          if (i % 2 === 1) {
+            // This is code
+            // Check for optional language identifier
+            const lines = part.trim().split('\n');
+            const lang = lines[0].length < 15 && lines[0].match(/^[a-z]+$/i) ? lines[0] : 'javascript';
+            const code = lang !== lines[0] ? lines.slice(1).join('\n') : part.trim();
+            
+            return <CodeBox key={i} code={code} language={lang} />;
+          }
+          return <span key={i}>{part}</span>;
+        })}
+      </div>
+    );
+  };
 
   // ⏱️ Timer per question type
   const getTimeLimit = (type: string) => (type === "mcq" ? 60 : 150);
@@ -311,7 +333,7 @@ const BattleGround = () => {
           >
             <CardHeader>
               <h2 className="text-lg sm:text-xl font-semibold leading-snug" style={{ color: palette.text }}>
-                {currentQuestion?.question}
+                {renderQuestionText(currentQuestion?.question)}
               </h2>
             </CardHeader>
 

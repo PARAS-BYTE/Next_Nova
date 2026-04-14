@@ -77,7 +77,7 @@ const Quizzes = () => {
   const handleNavigate = (id) => (useNavStore.getState().setNavState(id), router.push("/student/takequiz"));
 
   // ─── Handle Back Navigation ───────────────────────────────
-  const handleBack = () => router.push(-1);
+  const handleBack = () => router.back();
 
   // ─── Search Filter ───────────────────────────────
   useEffect(() => {

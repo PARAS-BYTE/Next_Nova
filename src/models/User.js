@@ -32,6 +32,10 @@ const userSchema = new Schema(
       reason: String,
       amount: Number
     }],
+    studyTimerHistory: [{
+      date: { type: Date, default: Date.now },
+      totalMinutes: { type: Number, default: 0 }
+    }],
 
     // ─── Calendar & Tasks ────────────────────────
     calendarData: [
@@ -143,6 +147,7 @@ const userSchema = new Schema(
         progressChange: Number,
       },
     ],
+    deletedNotificationTitles: { type: [String], default: [] },
   },
   { timestamps: true }
 );
@@ -161,9 +166,18 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-userSchema.methods.addXP = function (amount) {
+userSchema.methods.addXP = function (amount, reason = "Learning Activity") {
   this.xp += amount;
   this.weeklyXP += amount;
+  
+  // Record history
+  if (!this.xpHistory) this.xpHistory = [];
+  this.xpHistory.push({
+    date: new Date(),
+    reason: reason,
+    amount: amount
+  });
+
   const threshold = this.level * 100;
   if (this.xp >= threshold) {
     this.level += 1;
@@ -265,7 +279,7 @@ userSchema.methods.recordBattleAnalytics = function (data) {
   const totalQuestions = playerAnalytics?.completedQuestions || 1;
 
   // XP
-  this.addXP(correctCount * 10);
+  this.addXP(correctCount * 10, `Battle: ${battleName}`);
 
   // Accuracy Score
   this.accuracyScore = accuracy;

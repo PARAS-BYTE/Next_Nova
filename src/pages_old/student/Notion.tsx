@@ -220,9 +220,53 @@ const Notion = () => {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [folderPath, setFolderPath] = useState<Array<{ id: string | null; name: string }>>([{ id: null, name: 'Home' }]);
 
+  const router = useRouter();
+  const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
+
   const getIcon = (iconName: string, isFolder: boolean) => {
     const IconComponent = (LucideIcons as any)[iconName] || (isFolder ? Folder : FileText);
     return IconComponent;
+  };
+
+  const handleGenerateQuiz = async () => {
+    if (!selectedNote || !selectedNote.content || selectedNote.content.length < 50) {
+      toast.error("Not enough knowledge in this scroll to generate a trial. Write more!");
+      return;
+    }
+
+    try {
+      setIsGeneratingQuiz(true);
+      toast.info("Channeling AI to create your trials...");
+      
+      const { data } = await axios.post('/api/ai/quiz-from-content', {
+        content: selectedNote.content,
+        title: selectedNote.title
+      }, { withCredentials: true });
+
+      if (data && data.questions) {
+        // Wrap for TakeQuiz
+        const quizTrial = {
+          title: `Trial of ${selectedNote.title}`,
+          timeLimit: 10,
+          questions: data.questions.map((q: any, i: number) => ({
+            id: `temp-${i}`,
+            questionText: q.questionText,
+            options: q.options,
+            correctAnswer: q.options[q.correctIndex - 1],
+            marks: 1
+          }))
+        };
+        
+        useNavStore.getState().setNavState(quizTrial);
+        router.push('/student/takequiz');
+        toast.success("Trial prepared! Ascending to the Arena...");
+      }
+    } catch (err) {
+      console.error('Quiz generation error:', err);
+      toast.error("The Oracle is silent. Try again later.");
+    } finally {
+      setIsGeneratingQuiz(false);
+    }
   };
 
   const fetchNotes = async (folderId: string | null = null) => {
@@ -584,39 +628,55 @@ const Notion = () => {
                       >
                         {selectedNote.title}
                       </h1>
-                      <p className="text-[9px] text-white/20 uppercase tracking-widest font-bold">
-                        Last edited {new Date(selectedNote.updatedAt).toLocaleDateString()}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[9px] text-white/20 uppercase tracking-widest font-bold">
+                          Last edited {new Date(selectedNote.updatedAt).toLocaleDateString()}
+                        </p>
+                        <span className="text-white/10">•</span>
+                        <p className="text-[9px] text-[#7C6AFA] uppercase tracking-widest font-black">
+                          {selectedNote.content?.length || 0} Knowledge Bytes
+                        </p>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => setEditingTitle(true)}
-                      className="p-2 rounded-lg hover:bg-white/5 transition"
-                    >
-                      <Edit2 className="w-3.5 h-3.5 text-white/20" />
-                    </button>
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
+                {/* ASCEND TO QUIZ BUTTON */}
+                <Button
+                  size="sm"
+                  onClick={handleGenerateQuiz}
+                  disabled={isGeneratingQuiz}
+                  className="h-9 px-4 rounded-xl font-black text-[10px] uppercase tracking-[0.1em] transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+                  style={{ 
+                    background: 'linear-gradient(135deg, #FF6B6B, #EE5253)', 
+                    color: '#fff',
+                    boxShadow: '0 4px 15px rgba(238, 82, 83, 0.3)'
+                  }}
+                >
+                  {isGeneratingQuiz ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sword className="w-3.5 h-3.5" />}
+                  {isGeneratingQuiz ? 'Channeling Trials...' : 'Ascend to Quiz'}
+                </Button>
+
                 <AIAssistant onInsert={handleAIInsert} />
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => handleToggleFavorite(selectedNote._id, selectedNote.isFavorite)}
-                  className="h-8 w-8 rounded-lg p-0 border-2"
+                  className="h-9 w-9 rounded-xl p-0 border-2"
                   style={{ borderColor: 'rgba(255,255,255,0.05)', background: 'transparent' }}
                 >
                   {selectedNote.isFavorite ? (
-                    <Star className="w-3.5 h-3.5 text-[#FBBF24]" fill="#FBBF24" />
+                    <Star className="w-4 h-4 text-[#FBBF24]" fill="#FBBF24" />
                   ) : (
-                    <StarOff className="w-3.5 h-3.5 text-white/20" />
+                    <StarOff className="w-4 h-4 text-white/20" />
                   )}
                 </Button>
                 <Button
                   size="sm"
                   onClick={handleSaveNote}
                   disabled={saving}
-                  className="h-8 rounded-lg font-black text-[9px] uppercase tracking-widest"
+                  className="h-9 px-4 rounded-xl font-black text-[10px] uppercase tracking-widest"
                   style={{ background: 'linear-gradient(135deg, #34D399, #059669)', color: '#000' }}
                 >
                   {saving ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Save className="w-3 h-3 mr-1" />}
@@ -627,17 +687,20 @@ const Notion = () => {
 
             {/* Editor */}
             <div className="flex-1 overflow-y-auto p-6" style={{ background: '#050507' }}>
-              <div data-color-mode="dark">
+              <div data-color-mode="dark" className="max-w-4xl mx-auto h-full">
                 <MDEditor
                   value={selectedNote.content}
                   onChange={handleContentChange}
-                  height={600}
-                  previewOptions={{ rehypePlugins: [] }}
+                  height="100%"
+                  preview="edit"
+                  extraCommands={[]}
+                  className="premium-md-editor"
                   textareaProps={{
+                    placeholder: "Inscribe your knowledge onto the scroll here...",
                     style: {
-                      background: '#0A0A0C',
-                      color: '#FFFFFF',
-                      borderColor: 'rgba(255,255,255,0.05)',
+                      fontSize: '14px',
+                      lineHeight: '1.6',
+                      padding: '2rem',
                     }
                   }}
                 />
@@ -651,27 +714,59 @@ const Notion = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-center"
             >
-              <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-5 border-2 border-dashed" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-                <Scroll className="w-10 h-10 text-white/10" />
+              <div className="w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border-2 border-dashed relative group" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+                <div className="absolute inset-2 rounded-[1.5rem] bg-[#7C6AFA]/5 scale-0 group-hover:scale-100 transition-transform" />
+                <Scroll className="w-12 h-12 text-white/10 group-hover:text-[#7C6AFA]/40 transition-colors" />
               </div>
-              <p className="text-sm font-black mb-2 text-white/30 uppercase tracking-widest">
-                No Scroll Selected
+              <h2 className="text-xl font-black mb-2 text-white tracking-widest uppercase">
+                The Vault is Closed
+              </h2>
+              <p className="text-[10px] text-white/15 mb-8 uppercase tracking-[0.2em] max-w-xs mx-auto leading-relaxed">
+                Select an ancient scroll from the archive or forge a new path of knowledge.
               </p>
-              <p className="text-[10px] text-white/15 mb-6 uppercase tracking-wider">
-                Select a scroll from the archive or create a new one
-              </p>
-              <Button
-                onClick={handleCreateNote}
-                className="h-11 px-6 rounded-xl font-black text-xs uppercase tracking-widest"
-                style={{ background: 'linear-gradient(135deg, #7C6AFA, #5D4AD4)', color: '#fff', boxShadow: '0 4px 15px rgba(124,106,250,0.3)' }}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create New Scroll
-              </Button>
+              <div className="flex flex-col items-center gap-3">
+                <Button
+                  onClick={handleCreateNote}
+                  className="h-12 px-8 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em]"
+                  style={{ background: 'linear-gradient(135deg, #7C6AFA, #5D4AD4)', color: '#fff', boxShadow: '0 8px 30px rgba(124,106,250,0.3)' }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Inscribe New Scroll
+                </Button>
+                <div className="flex gap-2">
+                   <div className="px-3 py-1.5 rounded-lg border border-white/5 bg-white/2 text-[9px] font-black uppercase text-white/20 tracking-widest">
+                      Shortcut: Ctrl + S to save
+                   </div>
+                </div>
+              </div>
             </motion.div>
           </div>
         )}
       </div>
+      <style jsx global>{`
+        .premium-md-editor {
+          background-color: transparent !important;
+          border: none !important;
+        }
+        .w-md-editor {
+          box-shadow: none !important;
+          background-color: #0A0A0C !important;
+          border-radius: 24px !important;
+          border: 1px solid rgba(255,255,255,0.03) !important;
+          overflow: hidden;
+        }
+        .w-md-editor-toolbar {
+          background-color: #0F0F12 !important;
+          border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+          padding: 8px 16px !important;
+        }
+        .w-md-editor-content {
+          background-color: transparent !important;
+        }
+        .w-md-editor-text-pre, .w-md-editor-text-input {
+          font-family: 'Inter', sans-serif !important;
+        }
+      `}</style>
     </div>
   );
 };

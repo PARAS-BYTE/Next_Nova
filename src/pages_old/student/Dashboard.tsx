@@ -14,6 +14,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend
 } from "recharts";
 import {
   Target,
@@ -160,6 +161,9 @@ const Dashboard = () => {
   const upcomingTasks = user?.upcomingTasks || [];
   const streakStats =
     user?.streakStats || { currentStreak: stats.streak, longestStreak: stats.longestStreak };
+
+  const dailyGoalMinutes = user?.onboardingData?.dailyGoalMinutes || 30;
+  const goalHours = Math.round((dailyGoalMinutes / 60) * 10) / 10;
 
   return (
     <div
@@ -341,7 +345,12 @@ const Dashboard = () => {
                 .filter(q => q.status !== 'locked' && q.status !== 'completed')
                 .slice(0, 3)
                 .map((quest, i) => (
-                  <QuestCard key={quest.id} quest={quest} index={i} />
+                  <QuestCard 
+                    key={quest.id} 
+                    quest={quest} 
+                    index={i} 
+                    onStart={() => router.push('/student/courses')}
+                  />
                 ))}
               <Link href="/student/courses">
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
@@ -370,42 +379,68 @@ const Dashboard = () => {
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-bold flex items-center gap-2" style={{ color: palette.text }}>
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(251, 191, 36, 0.15)' }}>
-                  <Calendar className="w-4 h-4 text-[#FBBF24]" />
+                  <Sparkles className="w-4 h-4 text-[#FBBF24]" />
                 </div>
-                Daily Challenges
+                Nova AI Daily Mission
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {dailyChallenges.map((challenge, i) => (
+              {upcomingTasks.length > 0 ? (
                 <motion.div
-                  key={challenge.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 + i * 0.1 }}
-                  className={`p-3 rounded-xl transition-all duration-200 ${challenge.completed ? 'opacity-60' : 'hover:scale-[1.01]'}`}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="p-4 rounded-xl transition-all duration-300 border-2"
                   style={{
-                    background: palette.bgSecondary,
-                    border: `1px solid ${challenge.completed ? 'rgba(52, 211, 153, 0.3)' : palette.border}`,
+                    background: 'linear-gradient(135deg, rgba(124,106,250,0.1), rgba(34,211,238,0.1))',
+                    borderColor: 'rgba(124,106,250,0.2)',
                   }}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <p className={`font-medium text-sm ${challenge.completed ? 'line-through' : ''}`} style={{ color: palette.text }}>
-                      {challenge.title}
-                    </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Target Acquired</span>
                     <div className="flex items-center gap-1">
                       <Zap className="w-3 h-3 text-[#7C6AFA]" />
-                      <span className="text-[10px] font-bold text-[#7C6AFA]">+{challenge.xpReward}</span>
+                      <span className="text-[10px] font-bold text-[#7C6AFA]">+50 XP</span>
                     </div>
                   </div>
-                  <p className="text-[11px]" style={{ color: palette.text2 }}>{challenge.description}</p>
+                  <h3 className="font-bold text-base text-white mb-1">{upcomingTasks[0].title}</h3>
+                  <p className="text-[11px] text-white/50 mb-5 line-clamp-2 leading-relaxed">
+                    Primary Objective: Master this {upcomingTasks[0].type} module to stay on track with your {user?.onboardingData?.primaryGoal || 'learning goal'}.
+                  </p>
                   
-                  {!challenge.completed && (
-                    <div className="mt-2 w-full py-1.5 rounded-lg text-[11px] font-bold text-center" style={{ background: palette.bg, color: palette.text2, border: `1px dashed ${palette.border}` }}>
-                      In Progress...
-                    </div>
-                  )}
+                  <Link href={`/student/daily-task?taskId=${upcomingTasks[0].taskId}`}>
+                    <Button 
+                      className="w-full h-10 rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-indigo-500/20"
+                      style={{ background: palette.gradient1, color: '#fff' }}
+                    >
+                      Commence Trial
+                    </Button>
+                  </Link>
                 </motion.div>
-              ))}
+              ) : (
+                <div className="text-center py-8 px-4 border-2 border-dashed border-white/5 rounded-2xl">
+                  <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
+                    <Calendar className="w-6 h-6 text-white/10" />
+                  </div>
+                  <p className="text-sm font-bold text-white/20 mb-1 uppercase tracking-widest">No Active Objective</p>
+                  <p className="text-[10px] text-white/10 mb-6 font-medium">Consult the library or calendar to forge a new path.</p>
+                  <Link href="/student/calendar">
+                    <Button variant="outline" className="text-[9px] font-black uppercase tracking-widest h-9 px-6 rounded-xl border-white/10 hover:bg-white/5 text-white/40">
+                      Sync New Goal
+                    </Button>
+                  </Link>
+                </div>
+              )}
+              
+              <div className="pt-3 border-t border-white/5">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-white/20">Mastery Level</p>
+                  <span className="text-[10px] font-black text-[#FBBF24]">{user?.onboardingData?.skillLevel || 'Aspirant'}</span>
+                </div>
+                <div className="flex items-center gap-2 text-[10px] text-white/40 bg-white/5 p-2.5 rounded-xl border border-white/5">
+                  <Trophy size={12} className="text-yellow-500/50" />
+                  <span>Reach your best streak of {streakStats.longestStreak + 1}!</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
@@ -415,18 +450,19 @@ const Dashboard = () => {
       <div className="grid lg:grid-cols-2 gap-5">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
           <ChartCard
-            title="Weekly Study Time"
-            icon={Clock}
+            title="Goal Performance (Actual vs Target)"
+            icon={Target}
             type="area"
-            data={studyTimeData}
+            data={studyTimeData.map((d: any) => ({ ...d, target: goalHours }))}
             xKey="day"
-            yKey="hours"
+            yKeys={["hours", "target"]}
+            colors={[palette.accent, "#FBBF24"]}
           />
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
           <ChartCard
-            title="XP Growth"
+            title="XP Growth Trend"
             icon={Zap}
             type="line"
             data={xpGrowthData}
@@ -515,7 +551,7 @@ const PlayerStatCard = ({ title, icon: Icon, value, sub, progress, streak, iconC
         </div>
       )}
 
-      {streak && (
+      {streak !== undefined && (
         <div className="flex gap-0.5 sm:gap-1 mt-2 sm:mt-3">
           {Array.from({ length: 7 }).map((_, i) => (
             <motion.div
@@ -525,7 +561,7 @@ const PlayerStatCard = ({ title, icon: Icon, value, sub, progress, streak, iconC
               transition={{ delay: 0.5 + i * 0.05 }}
               className="flex-1 h-1.5 sm:h-2 rounded-full"
               style={{
-                background: i < streak
+                background: i < (streak || 0)
                   ? `linear-gradient(180deg, #FBBF24, #F59E0B)`
                   : palette.progressTrack,
               }}
@@ -538,7 +574,11 @@ const PlayerStatCard = ({ title, icon: Icon, value, sub, progress, streak, iconC
 );
 
 /* ── CHART CARD ── */
-const ChartCard = ({ title, icon: Icon, type, data, xKey, yKey }: any) => (
+const ChartCard = ({ title, icon: Icon, type, data, xKey, yKey, yKeys, colors }: any) => {
+  const keys = yKeys || [yKey];
+  const itemColors = colors || [palette.accent, palette.secondary, "#FBBF24"];
+
+  return (
   <Card
     className="rounded-2xl border-0 overflow-hidden"
     style={{
@@ -559,69 +599,112 @@ const ChartCard = ({ title, icon: Icon, type, data, xKey, yKey }: any) => (
     </CardHeader>
 
     <CardContent>
-      <ResponsiveContainer width="100%" height={220}>
+      <ResponsiveContainer width="100%" height={260}>
         {type === "area" ? (
-          <AreaChart data={data}>
+          <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <defs>
-              <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={palette.accent} stopOpacity={0.25}/>
-                <stop offset="95%" stopColor={palette.accent} stopOpacity={0}/>
-              </linearGradient>
+              {keys.map((k: string, i: number) => (
+                <linearGradient key={k} id={`areaGradient-${k}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={itemColors[i]} stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor={itemColors[i]} stopOpacity={0}/>
+                </linearGradient>
+              ))}
             </defs>
-            <CartesianGrid stroke={palette.chartGrid} strokeDasharray="3 3" />
-            <XAxis dataKey={xKey} stroke={palette.textMuted} tick={{ fontSize: 12 }} />
-            <YAxis stroke={palette.textMuted} tick={{ fontSize: 12 }} />
+            <CartesianGrid stroke={palette.chartGrid} strokeDasharray="3 3" vertical={false} />
+            <XAxis 
+              dataKey={xKey} 
+              stroke={palette.textMuted} 
+              tick={{ fontSize: 11 }} 
+              axisLine={false}
+              tickLine={false}
+              dy={10}
+            />
+            <YAxis 
+              stroke={palette.textMuted} 
+              tick={{ fontSize: 11 }} 
+              axisLine={false}
+              tickLine={false}
+            />
             <Tooltip
               contentStyle={{
-                background: palette.card,
+                background: "#0F111A",
                 border: `1px solid ${palette.border}`,
                 color: palette.text,
                 borderRadius: '12px',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
               }}
+              itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
             />
-            <Area
-              type="monotone"
-              dataKey={yKey}
-              stroke={palette.accent}
-              fill="url(#areaGradient)"
-              strokeWidth={2.5}
+            <Legend 
+              verticalAlign="top" 
+              align="right" 
+              height={36}
+              iconType="circle"
+              wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}
             />
+            {keys.map((k: string, i: number) => (
+              <Area
+                key={k}
+                type="monotone"
+                dataKey={k}
+                stroke={itemColors[i]}
+                fill={`url(#areaGradient-${k})`}
+                strokeWidth={3}
+                name={k === "hours" ? "Hours Plays" : k === "target" ? "Goal Target" : "Daily XP"}
+                animationDuration={1500}
+              />
+            ))}
           </AreaChart>
         ) : (
-          <LineChart data={data}>
-            <defs>
-              <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor={palette.accent} />
-                <stop offset="100%" stopColor={palette.secondary} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid stroke={palette.chartGrid} strokeDasharray="3 3" />
-            <XAxis dataKey={xKey} stroke={palette.textMuted} tick={{ fontSize: 12 }} />
-            <YAxis stroke={palette.textMuted} tick={{ fontSize: 12 }} />
+          <LineChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <CartesianGrid stroke={palette.chartGrid} strokeDasharray="3 3" vertical={false} />
+            <XAxis 
+              dataKey={xKey} 
+              stroke={palette.textMuted} 
+              tick={{ fontSize: 11 }} 
+              axisLine={false}
+              tickLine={false}
+              dy={10}
+            />
+            <YAxis 
+              stroke={palette.textMuted} 
+              tick={{ fontSize: 11 }} 
+              axisLine={false}
+              tickLine={false}
+            />
             <Tooltip
               contentStyle={{
-                background: palette.card,
+                background: "#0F111A",
                 border: `1px solid ${palette.border}`,
                 color: palette.text,
                 borderRadius: '12px',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
               }}
+              itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
+            />
+            <Legend 
+              verticalAlign="top" 
+              align="right" 
+              height={36}
+              iconType="circle"
+              wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}
             />
             <Line
               type="monotone"
               dataKey={yKey}
-              stroke="url(#lineGradient)"
-              strokeWidth={3}
-              dot={{ fill: palette.accent, r: 4, stroke: palette.card, strokeWidth: 2 }}
-              activeDot={{ r: 6, fill: palette.accent, stroke: palette.card, strokeWidth: 2 }}
+              stroke={palette.accent}
+              strokeWidth={4}
+              dot={{ fill: palette.accent, r: 4, stroke: "#0F111A", strokeWidth: 2 }}
+              activeDot={{ r: 6, fill: palette.secondary, stroke: "#0F111A", strokeWidth: 2 }}
+              name="Mastery Trend"
+              animationDuration={2000}
             />
           </LineChart>
         )}
       </ResponsiveContainer>
     </CardContent>
   </Card>
-);
+)};
 
 /* ── COURSES SECTION (Quest Style) ── */
 const CoursesSection = ({ courses }: any) => (

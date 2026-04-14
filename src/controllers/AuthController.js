@@ -196,9 +196,11 @@ const ensureCalendarForUser = async (user) => {
             "General Learning",
           ],
         difficultyLevel:
-          user.level > 2 ? "advanced" : user.level > 1 ? "intermediate" : "beginner",
-        dailyStudyTime: 60,
-        learningGoals: ["Improve knowledge", "Build consistent study habits"],
+          user.onboardingData?.skillLevel || (user.level > 2 ? "advanced" : user.level > 1 ? "intermediate" : "beginner"),
+        dailyStudyTime: user.onboardingData?.dailyGoalMinutes || 60,
+        learningGoals: user.onboardingData?.primaryGoal 
+          ? [user.onboardingData.primaryGoal, "Build consistent study habits"]
+          : ["Improve knowledge", "Build consistent study habits"],
         preferredLearningStyles: ["visual", "practical"],
       },
     });
@@ -270,8 +272,11 @@ export const getStudentDashboard = asyncHandler(async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const last7DaysStudy = [];
-    const xpHistory = [];
+    let cumulativeXPTotal = user.xp || 0; // Start with current actual XP
+    // Or better, let's reverse calculate from current XP
+    // but the xpHistory is what matters for the graph.
+    
+    let currentTrendXP = 0; // We will build up the monthly trend
 
     for (let i = 6; i >= 0; i -= 1) {
       const target = new Date();
@@ -308,17 +313,19 @@ export const getStudentDashboard = asyncHandler(async (req, res) => {
         return sum;
       }, 0);
 
-      // Total XP for the day (tasks + quizzes + lessons + assignments)
-      const totalXP = taskXP + historyXP;
+      // Total XP gained on this specific day
+      const dailyXPGain = taskXP + historyXP;
+      currentTrendXP += dailyXPGain;
 
       last7DaysStudy.push({
         day: dailyLabel(target),
         hours: minutesToHours(totalMinutes),
+        xp: dailyXPGain
       });
 
       xpHistory.push({
         day: dailyLabel(target),
-        xp: totalXP,
+        xp: currentTrendXP, // Cumulative growth
       });
     }
 
@@ -346,6 +353,7 @@ export const getStudentDashboard = asyncHandler(async (req, res) => {
       : calendar.statistics || {};
 
     const summary = user.getDashboardSummary();
+    summary.onboardingData = user.onboardingData;
     summary.last7DaysStudy = last7DaysStudy;
     summary.xpHistory = xpHistory;
     summary.upcomingTasks = upcomingTasks;

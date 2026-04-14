@@ -28,6 +28,21 @@ const TakeQuiz = () => {
 
   // ─── Fetch Quiz Data ───────────────────────────────
   async function fetchQuiz() {
+    // Check if quizId is actually a raw quiz object (from AI or Note)
+    if (typeof quizId === 'object' && quizId !== null && quizId.questions) {
+      setQuiz(quizId);
+      setTimeLeft((quizId.timeLimit || 20) * 60);
+      setStartTime(Date.now());
+      setLoading(false);
+      return;
+    }
+
+    if (!quizId) {
+      setError("No quiz ID provided.");
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const { data } = await axios.post(
@@ -40,6 +55,7 @@ const TakeQuiz = () => {
       setStartTime(Date.now());
     } catch (err) {
       console.error("[ERROR] Fetch Quiz Error:", err);
+      setError("Failed to load quiz from system.");
     } finally {
       setLoading(false);
     }

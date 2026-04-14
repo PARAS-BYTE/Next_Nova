@@ -92,8 +92,8 @@ const processQuestionBreakdown = (questions) => {
 
 
 const BattleShow = () => {
-    const state = useNavStore(s => s.navState);
     const router = useRouter();
+    const state = useNavStore(s => s.navState);
 
     const battleId = state?.battleId;
 
@@ -172,6 +172,8 @@ const BattleShow = () => {
         axisLine: { stroke: extendedPalette.border },
     };
 
+    const handleBack = () => router.back();
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -193,7 +195,7 @@ const BattleShow = () => {
 
                 <Button
                     variant="outline"
-                    onClick={() => router.push(-1)}
+                    onClick={handleBack}
                     className="w-full sm:w-auto text-sm"
                     style={{ 
                         borderColor: extendedPalette.border, 

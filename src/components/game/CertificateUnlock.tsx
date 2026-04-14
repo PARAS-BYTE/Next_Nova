@@ -234,11 +234,18 @@ export default function CertificateUnlock({ isOpen, onClose, certificate }: Cert
                   }}
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = '#';
+                    link.download = `Certificate-${certificate.courseName}.pdf`;
+                    // Mocking download for now
+                    alert(`Downloading certificate for ${certificate.courseName}...`);
+                  }}
                 >
                   <Download className="w-4 h-4" />
                   Download
                 </motion.button>
-
+ 
                 <motion.button
                   className="flex items-center justify-center p-3 rounded-xl"
                   style={{
@@ -248,6 +255,17 @@ export default function CertificateUnlock({ isOpen, onClose, certificate }: Cert
                   }}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
+                  onClick={() => {
+                    if (navigator.share) {
+                      navigator.share({
+                        title: `Achievement: ${certificate.courseName}`,
+                        text: `Check out my verified on-chain certificate for completing ${certificate.courseName} on Nova!`,
+                        url: certificate.verifyUrl || window.location.href,
+                      }).catch(() => {});
+                    } else {
+                      alert("Sharing link copied to clipboard!");
+                    }
+                  }}
                 >
                   <Share2 className="w-4 h-4" />
                 </motion.button>

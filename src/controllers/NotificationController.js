@@ -146,10 +146,14 @@ export const generateSmartNotifications = asyncHandler(async (req, res) => {
     // Push only NEW, unique notifications
     if (generated.length > 0) {
       const recentTitles = user.notifications
-        .slice(-20) // Check last 20 notifications
+        .slice(-20)
         .map(n => n.title);
+      const deletedTitles = user.deletedNotificationTitles || [];
 
-      const uniqueNew = generated.filter(n => !recentTitles.includes(n.title));
+      const uniqueNew = generated.filter(n => 
+        !recentTitles.includes(n.title) && 
+        !deletedTitles.includes(n.title)
+      );
 
       if (uniqueNew.length > 0) {
         user.notifications.push(
@@ -178,7 +182,16 @@ export const deleteNotification = asyncHandler(async (req, res) => {
   try {
     const user = await authenticateUser(req);
     const { id } = req.params;
-    user.notifications = user.notifications.filter((n) => n._id.toString() !== id);
+    const noteToDelete = user.notifications.id(id);
+    if (noteToDelete) {
+      if (!user.deletedNotificationTitles) user.deletedNotificationTitles = [];
+      user.deletedNotificationTitles.push(noteToDelete.title);
+      // Keep last 20 deleted titles
+      if (user.deletedNotificationTitles.length > 20) {
+        user.deletedNotificationTitles = user.deletedNotificationTitles.slice(-20);
+      }
+      user.notifications = user.notifications.filter((n) => n._id.toString() !== id);
+    }
     await user.save();
     res.json({ success: true, message: "Notification deleted" });
   } catch (error) {

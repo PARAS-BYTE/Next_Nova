@@ -8,6 +8,7 @@ import {
   generateFlashcards,
   getFlashcards,
   reviewFlashcard,
+  generateQuizFromContent,
 } from "../controllers/AIController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -37,5 +38,8 @@ router.get("/flashcards", getFlashcards);
 
 // PUT  /api/ai/flashcards/review  - Review a flashcard (SM-2 algorithm)
 router.put("/flashcards/review", reviewFlashcard);
+
+// POST /api/ai/quiz-from-content    - Generate quiz from note content
+router.post("/quiz-from-content", generateQuizFromContent);
 
 export default router;
