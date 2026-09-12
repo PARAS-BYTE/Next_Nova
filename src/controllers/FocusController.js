@@ -1,6 +1,6 @@
 import asyncHandler from "express-async-handler";
 import jwt from "jsonwebtoken";
-import User from "../Models/User.js";
+import User from "../models/User.js";
 
 // ─── AUTH HELPER ───────────────────────────────────────────────
 const authenticateUser = async (req) => {

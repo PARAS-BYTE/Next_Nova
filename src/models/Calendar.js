@@ -1,13 +1,8 @@
 import mongoose from "mongoose";
-import { Mistral } from "@mistralai/mistralai";
+import { generateAIJson, isAIConfigured } from "../lib/aiService.js";
 
 const { Schema } = mongoose;
 
-const getMistralClient = () => {
-  const apiKey = process.env.MISTRAL_API_KEY;
-  if (!apiKey) throw new Error("MISTRAL_API_KEY is missing");
-  return new Mistral({ apiKey });
-};
 const taskSchema = new Schema({
   taskId: {
     type: String,
@@ -179,22 +174,22 @@ class CalendarClass {
     };
 
     try {
-      if (!process.env.MISTRAL_API_KEY) {
-        console.warn("⚠️ MISTRAL_API_KEY not set, using fallback");
+      if (!isAIConfigured()) {
+        console.warn("⚠️ No AI API key configured, using fallback daily task");
         return applyTask(this.generateFallbackTask(user), false);
       }
 
-      console.log("🤖 Generating daily task with Nova AI (Mistral)...");
-      const client = getMistralClient();
+      console.log("🤖 Generating daily task with Nova AI...");
       const prompt = this.buildTaskPrompt(user);
       
-      const response = await client.chat.complete({
-        model: "mistral-large-latest",
-        messages: [{ role: "user", content: prompt }],
-        responseFormat: { type: "json_object" }
+      const fallbackTask = this.generateFallbackTask(user);
+      const taskData = await generateAIJson({
+        prompt,
+        systemPrompt: "You are an intelligent study planner. Output strictly valid JSON.",
+        fallback: fallbackTask,
+        fastMode: true,
       });
 
-      const taskData = JSON.parse(response.choices[0].message.content);
       const task = applyTask(taskData, true);
       console.log("✅ Daily task generated successfully:", task.title);
       return task;

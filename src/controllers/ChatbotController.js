@@ -1,8 +1,8 @@
-import { Mistral } from "@mistralai/mistralai";
 import ChatMessage from "../models/ChatMessage.js";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 import asyncHandler from "express-async-handler";
+import { generateAIResponse, generateAIJson } from "../lib/aiService.js";
 
 const authenticateUser = async (req) => {
   const token = req.cookies.jwt || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
@@ -14,28 +14,12 @@ const authenticateUser = async (req) => {
 };
 
 export const chatWithAI = async (req, res) => {
-  // Version: 1.5 - Optimized for Mistral AI
   try {
     const { message, context, history, mode = "standard", language = "english", voiceStyle = false } = req.body;
 
     if (!message) {
       return res.status(400).json({ message: "Message is required" });
     }
-
-    const apiKey = process.env.MISTRAL_API_KEY;
-
-    if (!apiKey) {
-      return res.status(500).json({
-        message: "AI service not configured",
-        reply: "The Mistral seal is missing. Please check your .env file."
-      });
-    }
-
-    const client = new Mistral({ apiKey });
-    const model = "mistral-large-latest";
-
-    console.log(`🌀 [Server] Consulting Mistral AI (${model})...`);
-
 
     let systemPrompt = `You are NovaAI, a highly intelligent and supportive study companion.\n`;
     systemPrompt += `CRITICAL: Always use Markdown formatting for your responses. For any code snippets, use triple backticks with the appropriate language name (e.g., \`\`\`javascript). This is essential for rendering.\n`;
@@ -63,40 +47,34 @@ export const chatWithAI = async (req, res) => {
 
     if (context) systemPrompt += `Context: ${context}\n`;
 
-    const messages = [
-      { role: "system", content: systemPrompt }
-    ];
-
+    const formattedHistory = [];
     if (history && history.length > 0) {
       history.forEach(msg => {
-        messages.push({
+        formattedHistory.push({
           role: msg.role === 'user' || msg.role === 'student' ? 'user' : 'assistant',
           content: msg.content || msg.text || ''
         });
       });
     }
 
-    messages.push({ role: "user", content: message });
-
-    const chatResponse = await client.chat.complete({
-      model: model,
-      messages: messages,
+    const { text, provider, model } = await generateAIResponse({
+      prompt: message,
+      systemPrompt,
+      messages: formattedHistory,
+      fastMode: true,
     });
-
-    const text = chatResponse.choices[0].message.content;
-    const cleanText = text.trim();
-
-    console.log(`✅ [Server] SUCCESS: Mistral responded.`);
 
     return res.json({
       success: true,
-      reply: cleanText,
-      message: cleanText
+      reply: text,
+      message: text,
+      provider,
+      model,
     });
   } catch (error) {
-    console.error("❌ [Server] Mistral Controller Critical Error:", error.message);
+    console.error("❌ [Server] Chatbot Controller Critical Error:", error.message);
     
-    let userReply = "The Mistral winds are currently still. Mana leakage detected.";
+    let userReply = "The AI winds are currently still. Mana leakage detected.";
     if (error.message.includes("401")) userReply = "The AI seal is broken (Invalid API key).";
     if (error.message.includes("429")) userReply = "The AI realm is overcrowded (Rate limit). Retrying soon...";
 
@@ -123,9 +101,6 @@ export const smartChat = async (req, res) => {
     if (!message) {
       return res.status(400).json({ message: "Talk to me, sensei! (Message required)" });
     }
-
-    const apiKey = process.env.MISTRAL_API_KEY;
-    const client = new Mistral({ apiKey });
 
     // Save user message
     await ChatMessage.create({
@@ -160,21 +135,18 @@ export const smartChat = async (req, res) => {
       systemPrompt += "Reply in a mix of Hindi and English (Hinglish). Example: 'Yeh loop samajhna easy hai, bas is condition ka dhyan rakho...'\n";
     }
 
-    const messages = [
-      { role: "system", content: systemPrompt },
-      ...history.reverse().map(m => ({
-        role: m.role === 'user' ? 'user' : 'assistant',
-        content: m.content
-      })),
-      { role: "user", content: message }
-    ];
+    const messages = history.reverse().map(m => ({
+      role: m.role === 'user' ? 'user' : 'assistant',
+      content: m.content
+    }));
 
-    const chatResponse = await client.chat.complete({
-      model: "mistral-large-latest",
-      messages: messages,
+    const { text: reply, provider, model } = await generateAIResponse({
+      prompt: message,
+      systemPrompt,
+      messages,
+      fastMode: true,
     });
 
-    const reply = chatResponse.choices[0].message.content;
     const xpGained = Math.random() > 0.6 ? 15 : 0;
 
     // Save AI reply
@@ -200,7 +172,9 @@ export const smartChat = async (req, res) => {
       reply: reply,
       xpGained: xpGained,
       emotionDetected: "curious",
-      emotionAdjusted: false
+      emotionAdjusted: false,
+      provider,
+      model,
     });
 
   } catch (error) {
@@ -222,9 +196,6 @@ export const getDailyChallenge = asyncHandler(async (req, res) => {
   const topic = weakAreas[Math.floor(Math.random() * weakAreas.length)];
   
   try {
-    const apiKey = process.env.MISTRAL_API_KEY;
-    const client = new Mistral({ apiKey });
-
     const prompt = `
       You are NovaAI. Generate a CHALLENGING multiple-choice question for a student focused on their weak area: "${topic}".
       The question should be academic and testing deep understanding.
@@ -239,13 +210,26 @@ export const getDailyChallenge = asyncHandler(async (req, res) => {
       }
     `;
 
-    const response = await client.chat.complete({
-      model: "mistral-large-latest",
-      messages: [{ role: "user", content: prompt }],
-      responseFormat: { type: "json_object" }
+    const fallbackChallenge = {
+      question: `Which fundamental principle is most critical when learning ${topic}?`,
+      options: [
+        "Consistent deliberate practice",
+        "Memorizing without application",
+        "Skipping fundamentals for shortcuts",
+        "Studying only once a month"
+      ],
+      correctAnswer: "Consistent deliberate practice",
+      explanation: "Deliberate practice with feedback builds neural pathways and long-term mastery.",
+      difficulty: "medium"
+    };
+
+    const challenge = await generateAIJson({
+      prompt,
+      systemPrompt: "Generate a rigorous study challenge question in pure JSON.",
+      fallback: fallbackChallenge,
+      fastMode: true,
     });
 
-    const challenge = JSON.parse(response.choices[0].message.content);
     res.status(200).json({ success: true, challenge });
   } catch (error) {
     console.error("Daily Challenge Error:", error);
@@ -273,4 +257,3 @@ export const completeDailyChallenge = asyncHandler(async (req, res) => {
     message: isCorrect ? "Excellent mastery demonstrated." : "Incorrect. Review the explanation provided."
   });
 });
-

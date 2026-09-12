@@ -1,6 +1,6 @@
 import asyncHandler from "express-async-handler";
-import Certificate from "../Models/Certificate.js";
-import User from "../Models/User.js";
+import Certificate from "../models/Certificate.js";
+import User from "../models/User.js";
 import blockchainService from "../utils/blockchainService.js";
 
 // @desc    Get all certificates for a user

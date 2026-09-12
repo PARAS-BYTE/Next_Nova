@@ -1,33 +1,11 @@
 import asyncHandler from 'express-async-handler';
-import { Mistral } from '@mistralai/mistralai';
-import User from '../Models/User.js';
-
-// Setup Mistral
-const getMistralClient = () => {
-  const apiKey = process.env.MISTRAL_API_KEY;
-  if (!apiKey) throw new Error("MISTRAL_API_KEY is missing");
-  return new Mistral({ apiKey });
-};
-
-// Robust JSON Extraction
-const extractJSON = (text) => {
-  try {
-    // Strip markdown indicators
-    const clean = text.replace(/```json/g, "").replace(/```/g, "").trim();
-    const jsonMatch = clean.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
-    if (!jsonMatch) return null;
-    return JSON.parse(jsonMatch[0]);
-  } catch (err) {
-    console.error("JSON Extraction failed:", text);
-    return null;
-  }
-};
+import User from '../models/User.js';
+import { generateAIResponse, generateAIJson, extractAndParseJSON } from '../lib/aiService.js';
 
 export const getMotivation = asyncHandler(async (req, res) => {
   try {
     const { message } = req.body;
     const user = req.user;
-    const client = getMistralClient();
     
     // Provide user context for a more personalized "therapy" session
     const context = {
@@ -59,16 +37,25 @@ export const getMotivation = asyncHandler(async (req, res) => {
       },
       "dailyGoal": "A small, achievable goal for today"
     }`;
-    
-    const response = await client.chat.complete({
-      model: "mistral-large-latest",
-      messages: [{ role: "user", content: prompt }],
-      responseFormat: { type: "json_object" }
+
+    const fallbackData = {
+      burnoutLevel: "none",
+      motivationalMessage: "Stay resilient! Every concept mastered is a milestone toward your ultimate breakthrough.",
+      actionSuggestions: ["Review your current progress summary", "Take a 5-minute deep breathing break", "Hydrate and continue the quest"],
+      breakRecommendation: {
+        shouldTakeBreak: false,
+        breakDuration: 0,
+        activity: "None"
+      },
+      dailyGoal: "Complete the next module in your current journey"
+    };
+
+    const therapyData = await generateAIJson({
+      prompt,
+      systemPrompt: "You are an expert educational counselor and study therapist.",
+      fallback: fallbackData,
+      fastMode: true,
     });
-    
-    const therapyData = extractJSON(response.choices[0].message.content);
-    
-    if (!therapyData) throw new Error("AI returned unparseable advice");
     
     res.status(200).json(therapyData);
   } catch (error) {
@@ -93,9 +80,8 @@ export const generateQuizFromContent = asyncHandler(async (req, res) => {
     const { content, title, difficulty = "medium" } = req.body;
     if (!content) return res.status(400).json({ message: "Content is required" });
 
-    const client = getMistralClient();
     const prompt = `Create a 5-question quiz based on the following study notes. 
-    Notes Content: "${content}"
+    Notes Content: "${content.slice(0, 4000)}"
     Difficulty: "${difficulty}"
 
     Return strictly as JSON:
@@ -110,13 +96,13 @@ export const generateQuizFromContent = asyncHandler(async (req, res) => {
       ]
     }`;
 
-    const response = await client.chat.complete({
-      model: "mistral-large-latest",
-      messages: [{ role: "user", content: prompt }],
-      responseFormat: { type: "json_object" }
+    const quizData = await generateAIJson({
+      prompt,
+      systemPrompt: "Generate a high quality study quiz strictly in JSON format.",
+      fallback: { questions: [] },
+      fastMode: true,
     });
 
-    const quizData = extractJSON(response.choices[0].message.content);
     res.status(200).json(quizData);
   } catch (error) {
     console.error("❌ Quiz Gen Error:", error);
@@ -138,7 +124,6 @@ export const predictPerformance = asyncHandler(async (req, res) => {
       accuracy: user.accuracyScore
     };
 
-    const client = getMistralClient();
     const prompt = `Based on this student's learning data: ${JSON.stringify(stats)}, predict their performance.
     Return strictly as JSON:
     {
@@ -153,14 +138,25 @@ export const predictPerformance = asyncHandler(async (req, res) => {
       "improvementTips": [string]
     }`;
     
-    const response = await client.chat.complete({
-      model: "mistral-large-latest",
-      messages: [{ role: "user", content: prompt }],
-      safePrompt: true,
-      responseFormat: { type: "json_object" }
+    const fallbackPrediction = {
+      predictedScore: Math.min(100, Math.max(50, (user.accuracyScore || 70) + 5)),
+      examSuccessProbability: 80,
+      nextScoreTrend: "up",
+      predictedNextScore: 85,
+      confidenceLevel: 85,
+      estimatedDaysToMastery: 14,
+      strengthAreas: ["Consistent Study Habits"],
+      weakAreas: ["Deep Revision"],
+      improvementTips: ["Practice with active recall and flashcards", "Complete daily challenges"]
+    };
+
+    const prediction = await generateAIJson({
+      prompt,
+      systemPrompt: "You are an expert academic performance analyst.",
+      fallback: fallbackPrediction,
+      fastMode: true,
     });
-    
-    const prediction = extractJSON(response.choices[0].message.content);
+
     res.status(200).json(prediction);
   } catch (error) {
     console.error("Prediction Error:", error);
@@ -180,7 +176,6 @@ export const detectLearningStyle = asyncHandler(async (req, res) => {
       enrolledCourses: user.enrolledCourses?.length
     };
 
-    const client = getMistralClient();
     const prompt = `Analyze this student's behavior: ${JSON.stringify(behaviorData)}.
     Detect their dominant learning style (Visual, Auditory, Kinesthetic, Reading/Writing).
     Return strictly as JSON:
@@ -197,14 +192,26 @@ export const detectLearningStyle = asyncHandler(async (req, res) => {
       }
     }`;
     
-    const response = await client.chat.complete({
-      model: "mistral-large-latest",
-      messages: [{ role: "user", content: prompt }],
-      safePrompt: true,
-      responseFormat: { type: "json_object" }
+    const fallbackStyle = {
+      primaryStyle: "Visual & Reading",
+      description: "You absorb information effectively when concepts are visually organized and supplemented by structured notes.",
+      confidence: 82,
+      recommendations: {
+        idealSessionLength: 25,
+        breakFrequency: 5,
+        contentFormat: "Diagrams & Markdown Notes",
+        difficultyAdjustment: "Moderate",
+        revisionFrequency: "Every 2 days"
+      }
+    };
+
+    const styleData = await generateAIJson({
+      prompt,
+      systemPrompt: "You are an educational psychologist analyzing cognitive study styles.",
+      fallback: fallbackStyle,
+      fastMode: true,
     });
-    
-    const styleData = extractJSON(response.choices[0].message.content);
+
     res.status(200).json(styleData);
   } catch (error) {
     res.status(500).json({ message: "Failed to detect learning style" });
@@ -223,7 +230,6 @@ export const getRecommendations = asyncHandler(async (req, res) => {
       learningStyle: user.learningPreferences?.pace
     };
 
-    const client = getMistralClient();
     const prompt = `Based on student profile: ${JSON.stringify(context)}, suggest study topics and a plan.
     Return strictly as JSON:
     {
@@ -233,14 +239,22 @@ export const getRecommendations = asyncHandler(async (req, res) => {
       ]
     }`;
     
-    const response = await client.chat.complete({
-      model: "mistral-large-latest",
-      messages: [{ role: "user", content: prompt }],
-      safePrompt: true,
-      responseFormat: { type: "json_object" }
+    const fallbackRecs = {
+      nextTopics: ["Core Foundations", "Problem Solving", "Speed Drills"],
+      weeklyPlan: [
+        { day: "Monday", focus: "Core Concepts", duration: 30, type: "learn" },
+        { day: "Wednesday", focus: "Hands-on Practice", duration: 45, type: "practice" },
+        { day: "Friday", focus: "Weekly Review & Quiz", duration: 25, type: "revision" }
+      ]
+    };
+
+    const recs = await generateAIJson({
+      prompt,
+      systemPrompt: "You are an expert curriculum counselor.",
+      fallback: fallbackRecs,
+      fastMode: true,
     });
-    
-    const recs = extractJSON(response.choices[0].message.content);
+
     res.status(200).json(recs);
   } catch (error) {
     res.status(500).json({ message: "Failed to get recommendations" });
@@ -261,7 +275,6 @@ export const generateReportCard = asyncHandler(async (req, res) => {
       weeklyXP: user.weeklyXP
     };
 
-    const client = getMistralClient();
     const prompt = `Generate a comprehensive AI Report Card for this student metric: ${JSON.stringify(metrics)}.
     Return strictly as JSON:
     {
@@ -276,14 +289,26 @@ export const generateReportCard = asyncHandler(async (req, res) => {
       "nextMilestone": string
     }`;
     
-    const response = await client.chat.complete({
-      model: "mistral-large-latest",
-      messages: [{ role: "user", content: prompt }],
-      safePrompt: true,
-      responseFormat: { type: "json_object" }
+    const fallbackReport = {
+      overallGrade: "A",
+      overallScore: 88,
+      personalizedAdvice: "Consistent effort is paying off. Keep your daily streak intact to build compounding momentum.",
+      categories: [
+        { name: "Consistency", score: 90, grade: "A", feedback: "Excellent daily habit formation." },
+        { name: "Focus", score: 85, grade: "B+", feedback: "Great attention during study sessions." }
+      ],
+      strengths: ["Regular practice", "Quick concept adoption"],
+      areasToImprove: ["Time management on complex problems"],
+      nextMilestone: "Reach Level " + (user.level + 1)
+    };
+
+    const report = await generateAIJson({
+      prompt,
+      systemPrompt: "You are a master academic evaluator generating a constructive report card.",
+      fallback: fallbackReport,
+      fastMode: true,
     });
-    
-    const report = extractJSON(response.choices[0].message.content);
+
     res.status(200).json(report);
   } catch (error) {
     res.status(500).json({ message: "Failed to generate report card" });
@@ -294,24 +319,24 @@ export const generateReportCard = asyncHandler(async (req, res) => {
 export const generateFlashcards = asyncHandler(async (req, res) => {
   try {
     const { topic, count } = req.body;
-    const client = getMistralClient();
     const prompt = `Generate ${count || 5} spaced-repetition flashcards for topic: "${topic}". Return strictly as JSON array of objects with "question" and "answer" keys. Or a JSON object with a "flashcards" key containing the array.`;
     
-    const response = await client.chat.complete({
-      model: "mistral-large-latest",
-      messages: [{ role: "user", content: prompt }],
-      safePrompt: true,
-      responseFormat: { type: "json_object" }
+    const fallbackCards = [
+      { question: `What is the core definition of ${topic}?`, answer: `A fundamental concept in ${topic} representing key foundational principles.` },
+      { question: `Why is ${topic} important?`, answer: `It provides essential problem solving capabilities and structural foundations.` }
+    ];
+
+    const generated = await generateAIJson({
+      prompt,
+      systemPrompt: "Generate concise, clear spaced repetition flashcards in JSON.",
+      fallback: fallbackCards,
+      fastMode: true,
     });
     
-    let generated = extractJSON(response.choices[0].message.content);
-    
-    // Handle both array and object responses
     let flashcards = Array.isArray(generated) ? generated : generated.flashcards || [];
     
     if (req.user && flashcards.length > 0) {
        flashcards.forEach(card => {
-         // Map different possible key names from AI
          const q = card.question || card.front || card.q;
          const a = card.answer || card.back || card.a;
          if (q && a) {

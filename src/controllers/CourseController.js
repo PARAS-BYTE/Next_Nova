@@ -2,18 +2,11 @@ import asyncHandler from "express-async-handler";
 import Course from "../models/Course.js";
 import User from "../models/User.js";
 import jwt from 'jsonwebtoken'
-import { Mistral } from "@mistralai/mistralai";
-import Groq from "groq-sdk";
 import axios from 'axios';
 import JSON5 from 'json5';
 import blockchainService from "../utils/blockchainService.js";
-import Certificate from "../Models/Certificate.js";
-
-const getMistralClient = () => {
-  const apiKey = process.env.MISTRAL_API_KEY;
-  if (!apiKey) throw new Error("MISTRAL_API_KEY is missing");
-  return new Mistral({ apiKey });
-};
+import Certificate from "../models/Certificate.js";
+import { generateAIJson, generateAIResponse } from "../lib/aiService.js";
 
 
 const DEFAULT_THUMBNAIL =
@@ -1084,35 +1077,35 @@ JSON structure:
 Output only JSON, nothing else.
 `;
 
-        const response = await client.chat.complete({
-          model: "mistral-large-latest",
-          messages: [{ role: "user", content: prompt }],
-          responseFormat: { type: "json_object" }
-        });
-
-        let rawText = response.choices[0].message.content;
-
-        // Helper: extract JSON safely
-        const extractJson = (text) => {
-            const match = text.match(/({[\s\S]*})/);
-            return match ? match[1] : text;
+        const fallbackCourse = {
+          title: prompt.slice(0, 50),
+          description: "AI Generated Course Outline",
+          thumbnail: DEFAULT_THUMBNAIL,
+          modules: [
+            {
+              title: "Module 1: Introduction",
+              description: "Getting Started",
+              order: 1,
+              lessons: [
+                {
+                  title: "Lesson 1: Overview",
+                  videoUrl: "",
+                  content: "Foundational overview of the subject.",
+                  duration: 10,
+                  order: 1
+                }
+              ]
+            }
+          ],
+          tags: ["Learning", "Education"]
         };
 
-        let candidate = extractJson(rawText);
-        let parsed;
-        try {
-            parsed = JSON.parse(candidate);
-        } catch {
-            try {
-                parsed = JSON5.parse(candidate);
-            } catch {
-                console.error("❌ Mistral invalid JSON:", rawText);
-                return res.status(500).json({
-                    error: "Invalid JSON output from Mistral",
-                    raw: rawText,
-                });
-            }
-        }
+        const parsed = await generateAIJson({
+          prompt,
+          systemPrompt: "You are an expert curriculum designer. Return strictly valid JSON.",
+          fallback: fallbackCourse,
+          fastMode: true,
+        });
 
         // Sanitize & default values
         parsed.modules = Array.isArray(parsed.modules) ? parsed.modules : [];
@@ -1410,22 +1403,37 @@ The output MUST include:
 }
 Return ONLY the raw JSON format, no markdown tags.`;
 
-    const response = await client.chat.complete({
-      model: "mistral-large-latest",
-      messages: [{ role: "user", content: prompt }],
-      responseFormat: { type: "json_object" }
+    const fallbackCourse = {
+      title: title || "Video Course",
+      description: "Auto-structured course from video content.",
+      category: "General",
+      level: "Beginner",
+      modules: [
+        {
+          title: "Full Video Lesson",
+          description: "Primary content breakdown",
+          order: 1,
+          lessons: [
+            {
+              title: "Complete Video Tutorial",
+              videoUrl: url,
+              content: "Watch the video and review the core principles.",
+              duration: 15,
+              order: 1,
+              subtopics: ["Introduction", "Core Lesson", "Key Takeaways"]
+            }
+          ]
+        }
+      ],
+      timestamps: [{ time: "0:00", label: "Start" }]
+    };
+
+    const courseData = await generateAIJson({
+      prompt,
+      systemPrompt: "You are an expert curriculum developer. Return strictly valid JSON.",
+      fallback: fallbackCourse,
+      fastMode: true,
     });
-    
-    let text = response.choices[0].message.content;
-    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
-    
-    let courseData;
-    try {
-      courseData = JSON5.parse(text);
-    } catch(err) {
-      console.error("Failed to parse YouTube course JSON", err, text);
-      return res.status(500).json({ message: "Failed to generate valid course structure from AI" });
-    }
 
     // Save newly generated course in Database
     const newCourse = new Course({

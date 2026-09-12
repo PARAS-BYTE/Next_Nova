@@ -2,13 +2,7 @@ import asyncHandler from "express-async-handler";
 import Quiz from "../models/Quiz.js";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
-import { Mistral } from "@mistralai/mistralai";
-
-const getMistralClient = () => {
-  const apiKey = process.env.MISTRAL_API_KEY;
-  if (!apiKey) throw new Error("MISTRAL_API_KEY is missing");
-  return new Mistral({ apiKey });
-};
+import { generateAIJson } from "../lib/aiService.js";
 
 // ─── AUTH HELPER ───────────────────────────────────────────────
 const authenticateUser = async (req) => {
@@ -117,7 +111,6 @@ export const generateAIQuiz = asyncHandler(async (req, res) => {
   if (!topic) return res.status(400).json({ message: "Topic is required" });
 
   try {
-    const client = getMistralClient();
     const prompt = `
       Generate a ${numberOfQuestions}-question quiz on "${topic}" with difficulty "${difficulty}".
       Return strictly as JSON with this structure:
@@ -133,13 +126,25 @@ export const generateAIQuiz = asyncHandler(async (req, res) => {
       }
     `;
 
-    const response = await client.chat.complete({
-      model: "mistral-large-latest",
-      messages: [{ role: "user", content: prompt }],
-      responseFormat: { type: "json_object" }
+    const fallbackQuiz = {
+      questions: [
+        {
+          questionText: `What is a core concept in ${topic}?`,
+          options: ["Core Foundation", "Unrelated Idea", "Random Variable", "None of these"],
+          correctIndex: 1,
+          marks: 1
+        }
+      ]
+    };
+
+    const parsedResponse = await generateAIJson({
+      prompt,
+      systemPrompt: "You are an expert exam creator. Return valid JSON only.",
+      fallback: fallbackQuiz,
+      fastMode: true,
     });
 
-    const quizData = JSON.parse(response.choices[0].message.content).questions;
+    const quizData = parsedResponse?.questions || fallbackQuiz.questions;
 
     const newQuiz = new Quiz({
       title: `AI Quiz: ${topic}`,

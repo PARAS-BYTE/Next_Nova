@@ -2,13 +2,7 @@ import asyncHandler from "express-async-handler";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import Roadmap from "../models/RoadMapSchema.js";
-import { Mistral } from "@mistralai/mistralai";
-
-const getMistralClient = () => {
-  const apiKey = process.env.MISTRAL_API_KEY;
-  if (!apiKey) throw new Error("MISTRAL_API_KEY is missing");
-  return new Mistral({ apiKey });
-};
+import { generateAIJson } from "../lib/aiService.js";
 
 // ─── AUTH HELPER ───────────────────────────────────────────────
 const authenticateUser = async (req) => {
@@ -85,7 +79,6 @@ export const createRoadmapWithAI = asyncHandler(async (req, res) => {
   if (!topic || !level) return res.status(400).json({ success: false, message: "Topic and level are required" });
 
   try {
-    const client = getMistralClient();
     const prompt = `
       You are an expert curriculum designer. Return ONLY pure JSON.
       Generate a deep learning roadmap for topic: "${topic}" and level: "${level}".
@@ -93,13 +86,31 @@ export const createRoadmapWithAI = asyncHandler(async (req, res) => {
       Rules: 6 modules total, each with several topics and subtopics.
     `;
 
-    const response = await client.chat.complete({
-      model: "mistral-large-latest",
-      messages: [{ role: "user", content: prompt }],
-      responseFormat: { type: "json_object" }
-    });
+    const fallbackJson = {
+      title: `${topic} Roadmap (${level})`,
+      modules: [
+        {
+          name: `${topic} Foundations`,
+          topics: [
+            { name: `Introduction to ${topic}`, subtopics: [{ name: "Core Concepts" }, { name: "Setup and Tools" }] },
+            { name: "Fundamental Principles", subtopics: [{ name: "Key Patterns" }, { name: "Best Practices" }] }
+          ]
+        },
+        {
+          name: `${topic} Intermediate Concepts`,
+          topics: [
+            { name: "Practical Implementation", subtopics: [{ name: "Hands-on Project" }] }
+          ]
+        }
+      ]
+    };
 
-    const json = JSON.parse(response.choices[0].message.content);
+    const json = await generateAIJson({
+      prompt,
+      systemPrompt: "You are an expert curriculum designer.",
+      fallback: fallbackJson,
+      fastMode: true,
+    });
     const roadmap = await Roadmap.create({
       title: json.title || `${topic} Roadmap (${level})`,
       modules: json.modules || [],

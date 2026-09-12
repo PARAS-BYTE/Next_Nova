@@ -1,0 +1,50 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nova_learn_app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MONGO_URI=mongodb://mongodb:27017/nova_learn
+      - JWT_SECRET=${JWT_SECRET:-novalearn_super_secret_jwt_key_2026}
+      - ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET:-novalearn_admin_jwt_secret_2026}
+      # AI Provider Keys (Set any or all in your .env file)
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - nova_network
+
+  mongodb:
+    image: mongo:7.0
+    container_name: nova_learn_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - nova_network
+
+networks:
+  nova_network:
+    driver: bridge
+
+volumes:
+  mongo_data:
+    driver: local

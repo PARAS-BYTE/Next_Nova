@@ -1,10 +1,6 @@
 import mongoose from 'mongoose';
 
-const mongoURI = process.env.MONGO_URI;
-
-if (!mongoURI) {
-  throw new Error('Please define the MONGO_URI environment variable inside .env');
-}
+const getMongoURI = () => process.env.MONGO_URI || process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/nova_learn";
 
 /**
  * Global is used here to maintain a cached connection across hot reloads
@@ -27,7 +23,7 @@ async function dbConnect() {
       bufferCommands: false,
     };
 
-    cached.promise = mongoose.connect(mongoURI, opts).then((mongoose) => {
+    cached.promise = mongoose.connect(getMongoURI(), opts).then((mongoose) => {
       console.log('✅ MongoDB Connected (Next.js API)');
       return mongoose;
     });

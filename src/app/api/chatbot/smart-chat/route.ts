@@ -1,9 +1,9 @@
-import { Mistral } from "@mistralai/mistralai";
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import ChatMessage from '@/models/ChatMessage';
 import User from '@/models/User';
 import jwt from 'jsonwebtoken';
+import { generateAIResponse } from '@/lib/aiService';
 
 export async function POST(req: Request) {
   try {
@@ -11,17 +11,19 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { message, topic = "general" } = body;
 
-    const token = req.headers.get('cookie')?.split(';')
+    const cookieToken = req.headers.get('cookie')?.split(';')
       .find(c => c.trim().startsWith('jwt='))
       ?.split('=')[1];
+    const bearerToken = req.headers.get('authorization')?.split(' ')[1];
+    const token = cookieToken || bearerToken;
 
     if (!token) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    let userId;
+    let userId: string;
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'novalearn_dev_secret_key') as any;
       userId = decoded.userId;
     } catch (err) {
       return NextResponse.json({ message: "Invalid session" }, { status: 401 });
@@ -31,17 +33,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Message is required" }, { status: 400 });
     }
 
-    const apiKey = process.env.MISTRAL_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ 
-        message: "Mistral API Key is missing in .env",
-        reply: "Error: AI not configured."
-      }, { status: 500 });
-    }
-
-    const client = new Mistral({ apiKey });
-    const model = "mistral-large-latest";
-
     // Save user message
     await ChatMessage.create({
       userId,
@@ -50,36 +41,34 @@ export async function POST(req: Request) {
       content: message
     });
 
-    // Get history for context (optional but better)
+    // Get history for context
     const history = await ChatMessage.find({ userId, topic })
       .sort({ timestamp: -1 })
-      .limit(10);
+      .limit(8);
     
-    const messages = [
-      { role: "system", content: "You are NovaAI, a professional and extremely helpful study assistant. Use markdown for better readability. Provide concise and accurate answers." },
-      ...history.reverse().map((m: any) => ({
-        role: m.role === 'user' ? 'user' : 'assistant',
-        content: m.content
-      })),
-      { role: "user", content: message }
-    ];
+    const formattedHistory = history.reverse().map((m: any) => ({
+      role: m.role === 'user' ? 'user' : 'assistant',
+      content: m.content
+    }));
 
-    const chatResponse = await client.chat.complete({
-      model: model,
-      messages: messages as any,
+    const systemPrompt = "You are NovaAI, a professional and extremely helpful study assistant. Use markdown for better readability. Provide concise and accurate answers.";
+
+    const { text: reply, provider, model } = await generateAIResponse({
+      prompt: message,
+      systemPrompt,
+      messages: formattedHistory,
+      fastMode: true,
     });
-
-    const reply = chatResponse.choices![0].message.content || "I'm sorry, I couldn't process that.";
     
-    // XP and Emotions logic - now actually updating User
-    const xpGained = 5; // Gain 5 XP per meaningful message
-    const emotionsDetected = "searching"; 
+    // XP and Emotions logic
+    const xpGained = 5;
+    const emotionsDetected = "curious"; 
     const emotionAdjusted = false;
 
-    // Update User XP in reality
+    // Update User XP
     const user = await User.findById(userId);
-    if (user) {
-      user.addXP(xpGained, "Interaction with NovaAI");
+    if (user && (user as any).addXP) {
+      (user as any).addXP(xpGained, "Interaction with NovaAI");
       await user.save();
     }
 
@@ -100,11 +89,13 @@ export async function POST(req: Request) {
       xpGained,
       newTotalXp: user?.xp || 0,
       emotionDetected: emotionsDetected,
-      emotionAdjusted: emotionAdjusted
+      emotionAdjusted: emotionAdjusted,
+      provider,
+      model,
     });
 
   } catch (error: any) {
-    console.error("❌ Mistral Error:", error);
+    console.error("❌ SmartChat Route Error:", error);
     return NextResponse.json({
       message: "AI Failure",
       reply: "The AI is currently unavailable. Please try again later.",

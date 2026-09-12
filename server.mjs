@@ -57,14 +57,14 @@ app.prepare().then(() => {
   server.use(cookieParser());
 
   // MongoDB Connection 
-  const mongoURI = process.env.MONGO_URI;
+  const mongoURI = process.env.MONGO_URI || process.env.MONGODB_URI;
   if (!mongoURI) {
-    console.error("❌ CRITICAL: MONGO_URI missing from environment variables.");
-    process.exit(1);
+    console.warn("⚠️ WARNING: MONGO_URI / MONGODB_URI missing from environment variables. Falling back to local default.");
   }
+  const effectiveMongoURI = mongoURI || "mongodb://127.0.0.1:27017/nova_learn";
 
   console.log('⏳ Connecting to MongoDB...');
-  mongoose.connect(mongoURI, {
+  mongoose.connect(effectiveMongoURI, {
     serverSelectionTimeoutMS: 5000, 
   }).then(() => {
     console.log('✅ MongoDB connected successfully');
@@ -72,7 +72,7 @@ app.prepare().then(() => {
     console.error('❌ MongoDB connection error:', err.message);
     
     if (err.message.includes('querySrv ETIMEOUT') || err.message.includes('ECONNREFUSED')) {
-      if (mongoURI.includes('mongodb+srv')) {
+      if (effectiveMongoURI.includes('mongodb+srv')) {
         console.log('💡 Tip: This looks like a DNS issue with MongoDB Atlas.');
         console.log('   - Try switching your DNS to 8.8.8.8 or 1.1.1.1');
         console.log('   - Or use a local MongoDB URI in .env: MONGO_URI=mongodb://127.0.0.1:27017/nova_learn');
@@ -129,9 +129,9 @@ app.prepare().then(() => {
   // Initialize features that need socket.io
   initBattleSocket(io);
 
-  httpServer.listen(PORT, (err) => {
+  httpServer.listen(PORT, '0.0.0.0', (err) => {
     if (err) throw err;
-    console.log(`> Ready on http://localhost:${PORT}`);
+    console.log(`> Ready on http://0.0.0.0:${PORT} (http://localhost:${PORT})`);
     console.log(`> Nova Learn API active at http://localhost:${PORT}/api`);
     console.log(`> Socket.io Live Battle system active`);
   });
